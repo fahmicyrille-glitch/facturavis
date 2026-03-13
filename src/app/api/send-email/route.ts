@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const { email, nomPatient, lienFacture, nomTherapeute, cabinetNom } = await request.json();
 
     const { data, error } = await resend.emails.send({
-      from: 'Hilary Farid <onboarding@resend.dev>', // Garde ça tant que tu n'as pas de domaine validé
+      from: 'Hilary Farid <facture@facturavis.fr>', // Garde ça tant que tu n'as pas de domaine validé
       to: [email],
       subject: `Votre facture d'ostéopathie - ${nomTherapeute}`,
       html: `
