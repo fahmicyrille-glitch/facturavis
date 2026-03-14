@@ -5,11 +5,18 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { UploadCloud, CheckCircle, Copy, LogOut, MapPin, Loader2 } from 'lucide-react';
 
-// Type pour nos cabinets
 interface Cabinet {
   id: string;
   nom: string;
   lien_avis_google: string;
+}
+
+interface Therapeute {
+  nom: string;
+  titre: string;
+  telephone: string;
+  email: string; // 👈 Récupéré depuis la BDD pour le Reply-To
+  logo_url: string; // 👈 Récupéré pour l'affichage
 }
 
 export default function Dashboard() {
@@ -19,12 +26,12 @@ export default function Dashboard() {
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
 
-  // États pour la gestion dynamique des cabinets
+  const [therapeuteInfo, setTherapeuteInfo] = useState<Therapeute | null>(null);
   const [cabinets, setCabinets] = useState<Cabinet[]>([]);
   const [selectedCabinetId, setSelectedCabinetId] = useState<string>('');
 
   const [loading, setLoading] = useState(false);
-  const [fetchingCabinets, setFetchingCabinets] = useState(true);
+  const [fetchingData, setFetchingData] = useState(true);
   const [successLink, setSuccessLink] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
@@ -41,17 +48,29 @@ export default function Dashboard() {
       const uid = session.user.id;
       setUserId(uid);
 
-      // RÉCUPÉRATION DES CABINETS DEPUIS LA BDD
-      const { data, error } = await supabase
+      // 1. RÉCUPÉRATION DES INFOS DU THÉRAPEUTE (Avec Email et Logo !)
+      const { data: dataTherapeute, error: errTherapeute } = await supabase
+        .from('therapeutes')
+        .select('nom, titre, telephone, email, logo_url')
+        .eq('id', uid)
+        .single();
+
+      if (!errTherapeute && dataTherapeute) {
+        setTherapeuteInfo(dataTherapeute);
+      }
+
+      // 2. RÉCUPÉRATION DES CABINETS
+      const { data: dataCabinets, error: errCabinets } = await supabase
         .from('cabinets')
         .select('*')
         .eq('therapeute_id', uid);
 
-      if (!error && data) {
-        setCabinets(data);
-        if (data.length > 0) setSelectedCabinetId(data[0].id);
+      if (!errCabinets && dataCabinets) {
+        setCabinets(dataCabinets);
+        if (dataCabinets.length > 0) setSelectedCabinetId(dataCabinets[0].id);
       }
-      setFetchingCabinets(false);
+
+      setFetchingData(false);
     };
 
     initDashboard();
@@ -64,13 +83,12 @@ export default function Dashboard() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !userId || !patientEmail || !selectedCabinetId) return;
+    if (!file || !userId || !patientEmail || !selectedCabinetId || !therapeuteInfo) return;
 
     setLoading(true);
     setSuccessLink(null);
 
     try {
-      // 1. Upload du PDF
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
@@ -81,17 +99,15 @@ export default function Dashboard() {
 
       if (uploadError) throw uploadError;
 
-      // 2. Préparation des données
       const nomComplet = `${civilite} ${nom.toUpperCase()} ${prenom}`;
       const currentCabinet = cabinets.find(c => c.id === selectedCabinetId);
 
-      // 3. Insertion en base de données (avec la clé étrangère cabinet_id)
       const { data: dbData, error: dbError } = await supabase
         .from('factures')
         .insert([
           {
             therapeute_id: userId,
-            cabinet_id: selectedCabinetId, // L'ID propre au cabinet
+            cabinet_id: selectedCabinetId,
             patient_email: patientEmail,
             patient_nom: nomComplet,
             fichier_path: filePath,
@@ -105,7 +121,7 @@ export default function Dashboard() {
       const lien = `${window.location.origin}/facture/${dbData.id}`;
       setSuccessLink(lien);
 
-      // 4. Envoi de l'e-mail via l'API Resend
+      // ENVOI À L'API AVEC TOUTES LES INFOS
       await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,12 +129,15 @@ export default function Dashboard() {
           email: patientEmail,
           nomPatient: nomComplet,
           lienFacture: lien,
-          nomTherapeute: "Hilary Farid", // Pourra être rendu dynamique aussi
+          nomTherapeute: therapeuteInfo.nom,
+          titreTherapeute: therapeuteInfo.titre,
+          telephoneTherapeute: therapeuteInfo.telephone,
+          emailTherapeute: therapeuteInfo.email, // 👈 100% sûr et fiable pour le Reply-To
+          logoUrlTherapeute: therapeuteInfo.logo_url, // 👈 On envoie le logo
           cabinetNom: currentCabinet?.nom
         }),
       });
 
-      // 5. Reset
       setFile(null);
       setPatientEmail('');
       setNom('');
@@ -126,16 +145,16 @@ export default function Dashboard() {
 
     } catch (error) {
       console.error('Erreur:', error);
-      alert("Une erreur est survenue.");
+      alert("Une erreur est survenue lors de l'envoi.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetchingCabinets) return (
+  if (fetchingData) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
-      <p className="text-gray-500">Chargement de vos cabinets...</p>
+      <p className="text-gray-500">Chargement de votre espace...</p>
     </div>
   );
 
@@ -144,8 +163,13 @@ export default function Dashboard() {
       <div className="max-w-3xl mx-auto">
 
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
-          <button onClick={handleLogout} className="flex items-center text-sm text-gray-500 hover:text-gray-700">
+          <div>
+             <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
+             <p className="text-sm text-gray-500 mt-1">
+               Connecté en tant que <span className="font-semibold">{therapeuteInfo?.nom}</span>
+             </p>
+          </div>
+          <button onClick={handleLogout} className="flex items-center text-sm text-gray-500 hover:text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm">
             <LogOut size={16} className="mr-2" /> Déconnexion
           </button>
         </div>
@@ -155,7 +179,6 @@ export default function Dashboard() {
 
           <form onSubmit={handleUpload} className="space-y-6">
 
-            {/* SÉLECTEUR DE CABINET DYNAMIQUE */}
             <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                <div className="flex items-center gap-3 mb-4 text-blue-800">
                  <MapPin size={20} />
