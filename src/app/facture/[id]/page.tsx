@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Download, Star, Heart, Loader2 } from 'lucide-react';
+import { Download, Star, Loader2, MessageSquare, CheckCircle, X, Info } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
 export default function PagePatient() {
@@ -15,12 +15,21 @@ export default function PagePatient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // États pour la Popup et les étoiles
+  const [showModal, setShowModal] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // États pour le formulaire privé
+  const [feedback, setFeedback] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
   useEffect(() => {
     if (!factureId) return;
 
     const fetchData = async () => {
       try {
-        // 1. On récupère la facture
         const { data: dataFacture, error: errFacture } = await supabase
           .from('factures')
           .select('*')
@@ -30,7 +39,14 @@ export default function PagePatient() {
         if (errFacture) throw new Error("Facture introuvable.");
         setFacture(dataFacture);
 
-        // 2. On récupère le CABINET lié à cette facture (Version Architecte !)
+        // 📡 LE RADAR EST ICI : On met à jour le statut silencieusement
+        if (dataFacture.statut_email !== 'Ouvert') {
+          await supabase
+            .from('factures')
+            .update({ statut_email: 'Ouvert' })
+            .eq('id', factureId);
+        }
+
         const { data: dataCabinet, error: errCabinet } = await supabase
           .from('cabinets')
           .select('*')
@@ -40,7 +56,6 @@ export default function PagePatient() {
         if (errCabinet) throw new Error("Informations du cabinet introuvables.");
         setCabinet(dataCabinet);
 
-        // 3. On récupère le thérapeute pour le nom et le logo
         const { data: dataTherapeute, error: errTherapeute } = await supabase
           .from('therapeutes')
           .select('*')
@@ -60,8 +75,8 @@ export default function PagePatient() {
     fetchData();
   }, [factureId]);
 
-  const handleDownloadAndReview = async () => {
-    if (!facture || !cabinet) return;
+  const handleDownloadAndShowModal = async () => {
+    if (!facture) return;
 
     try {
       const { data, error } = await supabase.storage
@@ -79,26 +94,61 @@ export default function PagePatient() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      // REDIRECTION DYNAMIQUE : On utilise le lien stocké dans la table cabinets
-      if (cabinet.lien_avis_google) {
-        setTimeout(() => {
-            window.location.href = cabinet.lien_avis_google;
-        }, 800);
-      }
+      setShowModal(true);
     } catch (err) {
       alert("Erreur lors du téléchargement.");
     }
   };
 
+  const handleStarClick = async (selectedStar: number) => {
+      setRating(selectedStar);
+
+      // 1. On prépare ce qu'on va sauvegarder
+      const donneesASauvegarder: any = { note: selectedStar };
+
+      // 2. LA CORRECTION : Si c'est 4 ou 5 étoiles, on efface le commentaire !
+      if (selectedStar >= 4) {
+        donneesASauvegarder.commentaire = null;
+        setFeedback(''); // On vide aussi la case de texte à l'écran par sécurité
+      }
+
+      // 3. 💾 SAUVEGARDE EN BASE DE DONNÉES
+      await supabase
+        .from('factures')
+        .update(donneesASauvegarder)
+        .eq('id', factureId);
+
+      // 4. LOGIQUE DE REDIRECTION (Uniquement pour 5 étoiles !)
+      if (selectedStar === 5 && cabinet?.lien_avis_google) {
+        setIsRedirecting(true);
+        setTimeout(() => {
+          window.location.href = cabinet.lien_avis_google;
+        }, 800);
+      }
+    };
+
+  const handleSendFeedback = async () => {
+    // 💾 SAUVEGARDE EN BASE DE DONNÉES (Le commentaire)
+    await supabase
+      .from('factures')
+      .update({ commentaire: feedback })
+      .eq('id', factureId);
+
+    setFeedbackSent(true);
+    setTimeout(() => {
+      setShowModal(false);
+    }, 3000);
+  };
+
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-400">
-      <Loader2 className="animate-spin mr-2" /> Chargement de votre facture...
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f4f1] text-[#7a6a5f]">
+      <Loader2 className="animate-spin mr-2" size={32} /> Chargement de votre document...
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-red-100 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f4f1]">
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-red-100 text-center max-w-md w-full mx-4">
         <h1 className="text-xl font-bold text-red-600 mb-2">Oups !</h1>
         <p className="text-gray-600">{error}</p>
       </div>
@@ -106,42 +156,156 @@ export default function PagePatient() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-6 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100 text-center">
+    <div className="min-h-screen bg-[#f7f4f1] flex items-center justify-center p-4">
 
-          <div className="flex justify-center mb-6">
-            <div className="bg-green-50 p-4 rounded-full border border-green-100">
-              <Star size={48} className="text-green-500 fill-current" />
+      {/* 💳 LA CARTE CENTRÉE */}
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 sm:p-10 text-center relative">
+
+        {/* LOGO PLUS GROS OU ÉTOILE VERTE */}
+        <div className="flex justify-center mb-6">
+          {therapeute?.logo_url ? (
+            <img
+              src={therapeute.logo_url}
+              alt="Logo"
+              className="h-28 w-28 sm:h-32 sm:w-32 object-contain rounded-full shadow-sm border border-gray-100 bg-white"
+            />
+          ) : (
+            <div className="bg-[#e8f5e9] p-6 rounded-full">
+              <Star size={48} className="text-[#4caf50] fill-[#4caf50]" />
             </div>
-          </div>
+          )}
+        </div>
 
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
-            Bonjour {facture.patient_nom} !
-          </h2>
-          <p className="text-gray-600 mb-8 text-lg">
-            Voici votre facture pour votre séance à <span className="font-semibold text-gray-900">{cabinet.nom}</span> avec <span className="font-semibold text-gray-900">{therapeute.nom}</span>.
+        {/* TITRE & TEXTE PLUS LISIBLE */}
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3e2f25] mb-4">
+          Bonjour {facture.patient_nom} !
+        </h1>
+        <p className="text-[#7a6a5f] mb-8 text-base sm:text-lg leading-relaxed">
+          Voici votre facture pour votre séance à <span className="font-bold text-[#3e2f25]">{cabinet?.nom}</span> avec <span className="font-bold text-[#3e2f25]">{therapeute?.nom}</span>.
+        </p>
+
+        {/* BOUTON TÉLÉCHARGEMENT */}
+        <button
+          onClick={handleDownloadAndShowModal}
+          className="w-full flex items-center justify-center py-4 px-4 rounded-xl text-white font-bold text-lg bg-[#a9825a] hover:bg-[#8b6a48] transition-all transform hover:-translate-y-1 shadow-md hover:shadow-lg mb-6"
+        >
+          <Download size={24} className="mr-2" />
+          Télécharger ma facture
+        </button>
+
+        {/* PETIT ENCART INFO PLUS LISIBLE */}
+        <div className="bg-[#fdfaf8] border border-[#f0e6de] rounded-xl p-5 flex items-start text-left">
+          <Info className="text-[#a9825a] shrink-0 mt-0.5 mr-3" size={20} />
+          <p className="text-sm text-[#7a6a5f] leading-relaxed">
+            En téléchargeant votre facture, vous serez invité(e) à laisser un avis sur votre séance au cabinet. Merci !
           </p>
-
-          <button
-            onClick={handleDownloadAndReview}
-            className="w-full flex items-center justify-center py-4 px-4 border border-transparent rounded-xl shadow-md text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all transform hover:scale-105"
-          >
-            <Download size={24} className="mr-2" />
-            Télécharger ma facture
-          </button>
-
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
-            <div className="flex items-start">
-              <Heart className="text-blue-500 mt-1 flex-shrink-0" size={20} />
-              <p className="ml-3 text-sm font-semibold text-blue-800 text-left leading-relaxed">
-                En téléchargeant votre facture, vous serez redirigé(e) vers Google pour laisser un avis sur le cabinet de <strong>{cabinet.nom}</strong>. Merci !
-              </p>
-            </div>
-          </div>
-
         </div>
       </div>
+
+      {/* 🌟 POPUP (MODAL) DES ÉTOILES */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300">
+
+            {/* 🟢 BANDEAU VERT */}
+            <div className="bg-green-100 text-green-800 py-4 px-4 flex items-center justify-center font-bold border-b border-green-200">
+              <CheckCircle size={22} className="mr-2 text-green-600" />
+              Votre facture a bien été téléchargée !
+            </div>
+
+            {!isRedirecting && !feedbackSent && (
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-16 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors z-10"
+              >
+                <X size={20} />
+              </button>
+            )}
+
+            <div className="p-8 text-center pt-10">
+              {isRedirecting ? (
+                // 🟢 ÉCRAN REDIRECTION (5 Étoiles uniquement)
+                <div className="py-8">
+                  <div className="text-5xl mb-4">🎉</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Merci infiniment !</h3>
+                  <p className="text-lg text-gray-600 mb-6 font-medium">Redirection vers Google en cours...</p>
+                  <Loader2 className="animate-spin mx-auto text-blue-500" size={36} />
+                </div>
+              ) : rating === 4 ? (
+                // 🟡 ÉCRAN 4 ÉTOILES (Juste merci, pas de redirection)
+                <div className="py-8 animate-in zoom-in duration-300">
+                  <div className="text-5xl mb-4">✨</div>
+                  <h3 className="text-2xl font-bold text-[#3e2f25] mb-2">Merci pour votre retour !</h3>
+                  <p className="text-[#7a6a5f] mb-6">Nous sommes ravis que la séance se soit bien passée. Votre note a bien été transmise au cabinet.</p>
+                  <button onClick={() => setShowModal(false)} className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg transition-colors">
+                    Fermer
+                  </button>
+                </div>
+              ) : (
+                // ⚪ ÉCRAN DE NOTATION DE BASE (ou formulaire 1-3 étoiles)
+                <>
+                  <h3 className="text-2xl font-extrabold text-[#3e2f25] mb-3">Un petit service ?</h3>
+                  <p className="text-md font-medium text-[#5d4a3e] mb-8">
+                    Votre avis est précieux.<br/>Comment s'est passée votre séance ?
+                  </p>
+
+                  {/* Les 5 Étoiles */}
+                  <div className="flex justify-center gap-2 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => handleStarClick(star)}
+                        className="focus:outline-none transition-transform hover:scale-110"
+                      >
+                        <Star
+                          size={44}
+                          className={`${(hoverRating || rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} transition-colors duration-200`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 🟠 FORMULAIRE PRIVÉ (1 à 3 étoiles) */}
+                  {rating > 0 && rating <= 3 && !feedbackSent && (
+                    <div className="mt-8 text-left animate-in slide-in-from-bottom-2 duration-300">
+                      <div className="bg-[#fdfaf8] rounded-xl p-5 border border-[#f0e6de]">
+                        <h4 className="font-bold text-[#a9825a] mb-3 flex items-center text-sm">
+                          <MessageSquare size={16} className="mr-2" /> Aidez-nous à nous améliorer
+                        </h4>
+                        <textarea
+                          className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-[#a9825a] focus:border-[#a9825a] bg-white mb-3"
+                          rows={3}
+                          placeholder="Que pourrions-nous faire de mieux ? (Message privé)"
+                          value={feedback}
+                          onChange={(e) => setFeedback(e.target.value)}
+                        ></textarea>
+                        <button
+                          onClick={handleSendFeedback}
+                          className="w-full bg-[#3e2f25] hover:bg-black text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm shadow-sm"
+                        >
+                          Envoyer au praticien
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Message de remerciement privé */}
+                  {feedbackSent && (
+                    <div className="mt-8 bg-green-50 rounded-xl p-6 border border-green-100 animate-in fade-in">
+                       <CheckCircle size={36} className="mx-auto text-green-500 mb-3" />
+                       <h4 className="font-bold text-gray-800 text-lg mb-1">Bien reçu !</h4>
+                       <p className="text-base text-gray-600">Votre retour a été enregistré.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
