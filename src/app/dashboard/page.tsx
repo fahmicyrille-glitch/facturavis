@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { UploadCloud, CheckCircle, Copy, LogOut, MapPin, Loader2, Settings, Star, FileText, MessageSquare, Search, Calendar, Download, X } from 'lucide-react';
@@ -29,7 +29,7 @@ interface Facture {
   fichier_path: string;
   note: number | null;
   commentaire: string | null;
-  statut_email: string; // 👈 NOUVEAU
+  statut_email: string;
 }
 
 export default function Dashboard() {
@@ -38,6 +38,9 @@ export default function Dashboard() {
   const [civilite, setCivilite] = useState('Mme');
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
+
+  // 1. Référence pour l'input file (Correction du bug de sélection identique)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [therapeuteInfo, setTherapeuteInfo] = useState<Therapeute | null>(null);
   const [cabinets, setCabinets] = useState<Cabinet[]>([]);
@@ -56,7 +59,6 @@ export default function Dashboard() {
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
 
-  // 🛠️ FONCTIONS UTILITAIRES POUR LES FILTRES
   const formatLocalYYYYMMDD = (date: Date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -66,7 +68,6 @@ export default function Dashboard() {
 
   const handleDateDebutChange = (val: string) => {
     setDateDebut(val);
-    // Auto-remplissage magique de la date de fin !
     if (!dateFin || dateFin < val) {
       setDateFin(val);
     }
@@ -103,7 +104,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    let channel: any; // 📡 On prépare la variable pour l'antenne temps réel
+    let channel: any;
 
     const initDashboard = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -126,20 +127,18 @@ export default function Dashboard() {
       await fetchHistorique(uid);
       setFetchingData(false);
 
-      // 📡 L'ANTENNE TEMPS RÉEL (MAGIE SUPABASE)
       channel = supabase
         .channel('changements-factures')
         .on(
           'postgres_changes',
           {
-            event: '*', // On écoute tout : ajouts, modifications, suppressions
+            event: '*',
             schema: 'public',
             table: 'factures',
-            filter: `therapeute_id=eq.${uid}` // Uniquement les factures de ce praticien
+            filter: `therapeute_id=eq.${uid}`
           },
           (payload) => {
-            console.log("Un changement a eu lieu en direct !", payload);
-            fetchHistorique(uid); // On rafraîchit le tableau automatiquement sans F5 !
+            fetchHistorique(uid);
           }
         )
         .subscribe();
@@ -147,7 +146,6 @@ export default function Dashboard() {
 
     initDashboard();
 
-    // Nettoyage de l'antenne quand on quitte la page
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
@@ -209,11 +207,15 @@ export default function Dashboard() {
         }),
       });
 
-      // Plus besoin de rafraichir manuellement ici, l'antenne s'en charge ! 📡
+      // 🌟 NETTOYAGE DU FORMULAIRE ET DE L'INPUT FILE
       setFile(null);
       setPatientEmail('');
       setNom('');
       setPrenom('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Réinitialise physiquement l'input
+      }
+
     } catch (error) {
       console.error('Erreur:', error);
       alert("Une erreur est survenue lors de l'envoi.");
@@ -338,7 +340,15 @@ export default function Dashboard() {
                 </div>
 
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors">
-                  <input type="file" accept=".pdf" required id="file-upload" className="hidden" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} />
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    required
+                    id="file-upload"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+                  />
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
                     <UploadCloud size={28} className={file ? "text-green-500" : "text-blue-500"} />
                     <span className="mt-2 text-xs font-medium text-gray-900">{file ? file.name : "Sélectionner le PDF"}</span>
@@ -389,11 +399,8 @@ export default function Dashboard() {
           <div className="lg:col-span-8 flex flex-col">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
 
-              {/* BARRE DE RECHERCHE ET FILTRES */}
               <div className="p-4 sm:p-5 border-b border-gray-100 bg-gray-50 flex flex-col gap-3">
-
                 <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                  {/* Recherche Texte */}
                   <div className="flex-1 w-full relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Search size={16} className="text-gray-400" />
@@ -407,7 +414,6 @@ export default function Dashboard() {
                     />
                   </div>
 
-                  {/* Choix des dates */}
                   <div className="flex w-full sm:w-auto items-center gap-2">
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
@@ -432,7 +438,6 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Bouton Export */}
                   <button
                     onClick={exportCSV}
                     disabled={facturesFiltrees.length === 0}
@@ -443,7 +448,6 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                {/* Boutons d'actions rapides sous les filtres */}
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="text-xs text-gray-500 font-medium mr-1">Raccourcis :</span>
                   <button onClick={setFilterToday} className="text-xs bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 px-3 py-1 rounded-full transition-colors">
@@ -453,17 +457,14 @@ export default function Dashboard() {
                     Ce mois-ci
                   </button>
 
-                  {/* Bouton Effacer qui n'apparaît que si un filtre est actif */}
                   {(searchTerm || dateDebut || dateFin) && (
                     <button onClick={clearFilters} className="text-xs flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors ml-auto">
                       <X size={12} className="mr-1" /> Effacer les filtres
                     </button>
                   )}
                 </div>
-
               </div>
 
-              {/* TABLEAU */}
               <div className="overflow-x-auto flex-1">
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead className="bg-white border-b border-gray-100 text-gray-500 uppercase text-xs">
@@ -493,7 +494,6 @@ export default function Dashboard() {
                               <div className="font-semibold text-gray-900">{facture.patient_nom}</div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-xs text-gray-500">{facture.patient_email}</span>
-                                {/* 🏷️ LE BADGE DE STATUT */}
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                                   facture.statut_email === 'Ouvert'
                                   ? 'bg-green-100 text-green-700 border border-green-200'
@@ -538,10 +538,8 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </div>
