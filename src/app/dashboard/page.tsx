@@ -137,7 +137,7 @@ export default function Dashboard() {
             table: 'factures',
             filter: `therapeute_id=eq.${uid}`
           },
-          (payload) => {
+          () => {
             fetchHistorique(uid);
           }
         )
@@ -260,55 +260,55 @@ export default function Dashboard() {
   const noteMoyenne = notesExistantes.length > 0 ? (notesExistantes.reduce((a, b) => a + b, 0) / notesExistantes.length).toFixed(1) : '-';
 
   if (fetchingData) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
-      <p className="text-gray-500">Chargement de votre espace...</p>
+      <p className="text-black font-bold">Chargement de votre espace...</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-[#F8FAFC] p-4 sm:p-6 text-black">
       <div className="max-w-6xl mx-auto space-y-6">
 
-        {/* EN-TÊTE DU DASHBOARD */}
+        {/* EN-TÊTE DU DASHBOARD - Haute Lisibilité */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
-             <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
-             <p className="text-sm text-gray-500 mt-1">
-               Connecté en tant que <span className="font-semibold">{therapeuteInfo?.nom}</span>
+             <h1 className="text-3xl font-black text-[#0F172A]">Espace Praticien</h1>
+             <p className="text-base text-gray-800 mt-1 font-bold">
+               Connecté : <span className="text-blue-700 font-black">{therapeuteInfo?.nom}</span>
              </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <Link href="/dashboard/settings" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
+            <Link href="/dashboard/settings" className="flex-1 sm:flex-none flex items-center justify-center font-black text-sm text-gray-900 bg-white border-2 border-gray-400 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
               <Settings size={16} className="mr-2" /> Paramètres
             </Link>
-            <button onClick={handleLogout} className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-500 hover:text-red-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
+            <button onClick={handleLogout} className="flex-1 sm:flex-none flex items-center justify-center font-black text-sm text-red-700 bg-white border-2 border-red-300 px-4 py-2 rounded-xl shadow-sm hover:bg-red-50 transition-colors">
               <LogOut size={16} className="mr-2" /> Déconnexion
             </button>
           </div>
         </div>
 
-        {/* STATISTIQUES */}
+        {/* STATISTIQUES - Contrastées */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-            <div className="bg-blue-50 p-3 rounded-lg mr-4"><FileText className="text-blue-600" size={24} /></div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border-2 border-gray-200 flex items-center">
+            <div className="bg-blue-100 p-3 rounded-xl mr-4"><FileText className="text-blue-700" size={24} /></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Factures affichées</p>
-              <h3 className="text-2xl font-bold text-gray-900">{totalFactures}</h3>
+              <p className="text-sm font-black text-gray-600 uppercase tracking-tight">Factures affichées</p>
+              <h3 className="text-3xl font-black text-gray-900">{totalFactures}</h3>
             </div>
           </div>
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-            <div className="bg-green-50 p-3 rounded-lg mr-4"><MessageSquare className="text-green-600" size={24} /></div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border-2 border-gray-200 flex items-center">
+            <div className="bg-green-100 p-3 rounded-xl mr-4"><MessageSquare className="text-green-700" size={24} /></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Avis récoltés</p>
-              <h3 className="text-2xl font-bold text-gray-900">{avisRecoltes}</h3>
+              <p className="text-sm font-black text-gray-600 uppercase tracking-tight">Avis récoltés</p>
+              <h3 className="text-3xl font-black text-gray-900">{avisRecoltes}</h3>
             </div>
           </div>
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-            <div className="bg-yellow-50 p-3 rounded-lg mr-4"><Star className="text-yellow-600" size={24} /></div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border-2 border-gray-200 flex items-center">
+            <div className="bg-yellow-100 p-3 rounded-xl mr-4"><Star className="text-yellow-700" size={24} /></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Note moyenne</p>
-              <h3 className="text-2xl font-bold text-gray-900">{noteMoyenne} <span className="text-sm text-gray-400 font-normal">/ 5</span></h3>
+              <p className="text-sm font-black text-gray-600 uppercase tracking-tight">Note moyenne</p>
+              <h3 className="text-3xl font-black text-gray-900">{noteMoyenne} <span className="text-sm text-gray-500 font-bold">/ 5</span></h3>
             </div>
           </div>
         </div>
@@ -317,29 +317,29 @@ export default function Dashboard() {
 
           {/* COLONNE GAUCHE : FORMULAIRE D'ENVOI */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-6">Nouvelle facture</h2>
+            <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-6">
+              <h2 className="text-xl font-black text-gray-900 mb-6 underline decoration-blue-500 decoration-4 underline-offset-4">Nouvelle facture</h2>
 
               <form onSubmit={handleUpload} className="space-y-5">
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                  <div className="flex items-center gap-2 mb-3 text-blue-800">
+                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200">
+                  <div className="flex items-center gap-2 mb-3 text-blue-900 font-black text-sm uppercase">
                     <MapPin size={18} />
-                    <span className="font-bold text-sm uppercase tracking-wider">Lieu</span>
+                    <span>Lieu</span>
                   </div>
                   <div className="flex flex-col gap-2">
                     {cabinets.map((cab) => (
-                      <label key={cab.id} className={`flex items-center p-2 rounded-lg border-2 cursor-pointer transition-all ${selectedCabinetId === cab.id ? 'border-blue-500 bg-white shadow-sm' : 'border-transparent hover:bg-blue-100/50'}`}>
+                      <label key={cab.id} className={`flex items-center p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedCabinetId === cab.id ? 'border-blue-600 bg-white shadow-md' : 'border-gray-200 bg-white/50 hover:border-blue-300'}`}>
                         <input type="radio" className="hidden" name="cabinet" checked={selectedCabinetId === cab.id} onChange={() => setSelectedCabinetId(cab.id)} />
-                        <div className={`w-3 h-3 rounded-full border-2 mr-3 flex items-center justify-center ${selectedCabinetId === cab.id ? 'border-blue-500' : 'border-gray-400'}`}>
-                            {selectedCabinetId === cab.id && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+                        <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${selectedCabinetId === cab.id ? 'border-blue-600' : 'border-gray-400'}`}>
+                            {selectedCabinetId === cab.id && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />}
                         </div>
-                        <span className={`text-sm font-bold ${selectedCabinetId === cab.id ? 'text-blue-700' : 'text-gray-600'}`}>{cab.nom}</span>
+                        <span className={`text-base font-black ${selectedCabinetId === cab.id ? 'text-blue-900' : 'text-gray-800'}`}>{cab.nom}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors">
+                <div className="border-2 border-dashed border-gray-400 rounded-2xl p-5 text-center bg-gray-50 hover:bg-gray-100 transition-colors">
                   <input
                     type="file"
                     accept=".pdf"
@@ -350,191 +350,153 @@ export default function Dashboard() {
                     onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
                   />
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
-                    <UploadCloud size={28} className={file ? "text-green-500" : "text-blue-500"} />
-                    <span className="mt-2 text-xs font-medium text-gray-900">{file ? file.name : "Sélectionner le PDF"}</span>
+                    <UploadCloud size={32} className={file ? "text-green-600" : "text-blue-700"} />
+                    <span className="mt-2 text-sm font-black text-gray-900">{file ? file.name : "SÉLECTIONNER LE PDF"}</span>
                   </label>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-1">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Civilité</label>
-                    <select className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
+                    <label className="block text-sm font-black text-gray-900 mb-1">Civilité</label>
+                    <select className="w-full border-2 border-gray-400 rounded-xl py-2 px-3 text-base font-bold text-gray-900 bg-white" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
                       <option value="Mme">Mme</option>
                       <option value="M.">M.</option>
                       <option value="Enfant">Enfant</option>
                     </select>
                   </div>
                   <div className="col-span-1">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Prénom</label>
-                    <input type="text" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+                    <label className="block text-sm font-black text-gray-900 mb-1">Prénom</label>
+                    <input type="text" required className="w-full border-2 border-gray-400 rounded-xl py-2 px-3 text-base font-bold text-gray-900 placeholder-gray-400" value={prenom} onChange={(e) => setPrenom(e.target.value)} />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Nom de famille</label>
-                    <input type="text" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={nom} onChange={(e) => setNom(e.target.value)} />
+                    <label className="block text-sm font-black text-gray-900 mb-1">Nom de famille</label>
+                    <input type="text" required className="w-full border-2 border-gray-400 rounded-xl py-2 px-3 text-base font-bold text-gray-900" value={nom} onChange={(e) => setNom(e.target.value)} />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Email du patient *</label>
-                    <input type="email" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
+                    <label className="block text-sm font-black text-gray-900 mb-1">Email du patient *</label>
+                    <input type="email" required className="w-full border-2 border-gray-400 rounded-xl py-2 px-3 text-base font-bold text-gray-900" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
                   </div>
                 </div>
 
-                <button type="submit" disabled={loading || !file || cabinets.length === 0} className="w-full flex justify-center py-3 px-4 rounded-xl shadow-md text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 transition-all">
-                  {loading ? <Loader2 className="animate-spin" size={20} /> : 'Envoyer la facture'}
+                <button type="submit" disabled={loading || !file || cabinets.length === 0} className="w-full flex justify-center py-4 px-4 rounded-2xl shadow-lg text-lg font-black text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 transition-all">
+                  {loading ? <Loader2 className="animate-spin" size={24} /> : 'ENVOYER LA FACTURE'}
                 </button>
               </form>
 
               {successLink && (
-                <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 text-center">
-                  <CheckCircle size={16} className="mx-auto text-green-500 mb-1" />
-                  <p className="text-xs font-bold text-green-800 mb-2">Facture envoyée !</p>
-                  <button onClick={() => navigator.clipboard.writeText(successLink)} className="text-xs bg-white border border-green-200 text-green-700 px-3 py-1 rounded hover:bg-green-100 transition">
-                    Copier le lien direct
+                <div className="mt-4 bg-green-100 border-2 border-green-300 rounded-2xl p-4 text-center">
+                  <CheckCircle size={20} className="mx-auto text-green-700 mb-1" />
+                  <p className="text-sm font-black text-green-900 mb-2">Facture envoyée !</p>
+                  <button onClick={() => navigator.clipboard.writeText(successLink)} className="text-sm bg-white border-2 border-green-400 text-green-800 px-4 py-2 rounded-xl font-black hover:bg-green-50 transition">
+                    COPIER LE LIEN DIRECT
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* COLONNE DROITE : HISTORIQUE, RECHERCHE ET EXPORT */}
+          {/* COLONNE DROITE : HISTORIQUE - Contrastée */}
           <div className="lg:col-span-8 flex flex-col">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 flex flex-col h-full overflow-hidden">
 
-              <div className="p-4 sm:p-5 border-b border-gray-100 bg-gray-50 flex flex-col gap-3">
+              <div className="p-4 sm:p-5 border-b-2 border-gray-100 bg-gray-50 flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
                   <div className="flex-1 w-full relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search size={16} className="text-gray-400" />
+                      <Search size={18} className="text-gray-900" />
                     </div>
                     <input
                       type="text"
                       placeholder="Rechercher un patient..."
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-3 py-2 border-2 border-gray-400 rounded-xl text-sm font-bold text-gray-900 focus:border-blue-600"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
 
                   <div className="flex w-full sm:w-auto items-center gap-2">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                        <Calendar size={14} className="text-gray-400" />
-                      </div>
-                      <input
-                        type="date"
-                        className="pl-8 pr-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500"
-                        value={dateDebut} onChange={(e) => handleDateDebutChange(e.target.value)} title="Date de début"
-                      />
-                    </div>
-                    <span className="text-gray-400">-</span>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                        <Calendar size={14} className="text-gray-400" />
-                      </div>
-                      <input
-                        type="date"
-                        className="pl-8 pr-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500"
-                        value={dateFin} onChange={(e) => setDateFin(e.target.value)} title="Date de fin"
-                      />
-                    </div>
+                    <input
+                      type="date"
+                      className="px-2 py-2 border-2 border-gray-400 rounded-xl text-xs font-black bg-white"
+                      value={dateDebut} onChange={(e) => handleDateDebutChange(e.target.value)}
+                    />
+                    <span className="font-black">-</span>
+                    <input
+                      type="date"
+                      className="px-2 py-2 border-2 border-gray-400 rounded-xl text-xs font-black bg-white"
+                      value={dateFin} onChange={(e) => setDateFin(e.target.value)}
+                    />
                   </div>
 
                   <button
                     onClick={exportCSV}
                     disabled={facturesFiltrees.length === 0}
-                    className="flex w-full sm:w-auto justify-center items-center bg-gray-800 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300"
+                    className="flex w-full sm:w-auto justify-center items-center bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-black transition-colors disabled:bg-gray-300 shadow-md"
                   >
-                    <Download size={16} className="mr-2" />
-                    Compta
+                    <Download size={18} className="mr-2" />
+                    COMPTA
                   </button>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <span className="text-xs text-gray-500 font-medium mr-1">Raccourcis :</span>
-                  <button onClick={setFilterToday} className="text-xs bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 px-3 py-1 rounded-full transition-colors">
-                    Aujourd'hui
-                  </button>
-                  <button onClick={setFilterMonth} className="text-xs bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 px-3 py-1 rounded-full transition-colors">
-                    Ce mois-ci
-                  </button>
-
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={setFilterToday} className="text-xs font-black bg-white border-2 border-gray-300 text-gray-900 px-3 py-1.5 rounded-lg hover:border-blue-500">AUJOURD'HUI</button>
+                  <button onClick={setFilterMonth} className="text-xs font-black bg-white border-2 border-gray-300 text-gray-900 px-3 py-1.5 rounded-lg hover:border-blue-500">CE MOIS-CI</button>
                   {(searchTerm || dateDebut || dateFin) && (
-                    <button onClick={clearFilters} className="text-xs flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors ml-auto">
-                      <X size={12} className="mr-1" /> Effacer les filtres
-                    </button>
+                    <button onClick={clearFilters} className="text-xs font-black flex items-center text-red-700 ml-auto uppercase underline">Effacer</button>
                   )}
                 </div>
               </div>
 
               <div className="overflow-x-auto flex-1">
                 <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-white border-b border-gray-100 text-gray-500 uppercase text-xs">
+                  <thead className="bg-gray-100 border-b-2 border-gray-200 text-gray-900 uppercase text-xs font-black">
                     <tr>
-                      <th className="px-6 py-3 font-medium">Date</th>
-                      <th className="px-6 py-3 font-medium">Patient</th>
-                      <th className="px-6 py-3 font-medium">Avis</th>
-                      <th className="px-6 py-3 font-medium text-right">Action</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4">Patient</th>
+                      <th className="px-6 py-4 text-center">Avis</th>
+                      <th className="px-6 py-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {facturesFiltrees.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">
-                          Aucune facture trouvée pour cette recherche.
-                        </td>
-                      </tr>
-                    ) : (
-                      facturesFiltrees.map((facture) => {
-                        const date = new Date(facture.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        const lien = `${window.location.origin}/facture/${facture.id}`;
+                  <tbody className="divide-y-2 divide-gray-100">
+                    {facturesFiltrees.map((facture) => {
+                      const date = new Date(facture.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                      const lien = `${window.location.origin}/facture/${facture.id}`;
 
-                        return (
-                          <tr key={facture.id} className="hover:bg-blue-50/30 transition-colors">
-                            <td className="px-6 py-4 text-gray-500">{date}</td>
-                            <td className="px-6 py-4">
-                              <div className="font-semibold text-gray-900">{facture.patient_nom}</div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-gray-500">{facture.patient_email}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                                  facture.statut_email === 'Ouvert'
-                                  ? 'bg-green-100 text-green-700 border border-green-200'
-                                  : facture.statut_email === 'Relancé'
-                                  ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                                  : 'bg-gray-100 text-gray-600 border border-gray-200'
-                                }`}>
-                                  {facture.statut_email}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              {facture.note ? (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex text-yellow-400">
-                                    {[1,2,3,4,5].map(star => (
-                                      <Star key={star} size={14} className={star <= facture.note! ? "fill-current" : "text-gray-200"} />
-                                    ))}
-                                  </div>
-                                  {facture.commentaire && (
-                                    <span className="text-xs text-gray-500 max-w-[150px] truncate" title={facture.commentaire}>
-                                      💬 {facture.commentaire}
-                                    </span>
-                                  )}
+                      return (
+                        <tr key={facture.id} className="hover:bg-blue-50 transition-colors">
+                          <td className="px-6 py-4 text-gray-900 font-bold">{date}</td>
+                          <td className="px-6 py-4">
+                            <div className="font-black text-gray-900 text-base">{facture.patient_nom}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs font-bold text-gray-700">{facture.patient_email}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-md font-black bg-gray-200 text-gray-900 border border-gray-300">
+                                {facture.statut_email}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {facture.note ? (
+                              <div className="flex flex-col items-center">
+                                <div className="flex text-yellow-500 font-black items-center gap-0.5">
+                                  <Star size={16} className="fill-current" />
+                                  <span>{facture.note}/5</span>
                                 </div>
-                              ) : (
-                                <span className="text-xs text-gray-400 italic">En attente</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => navigator.clipboard.writeText(lien)}
-                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium"
-                              >
-                                Copier le lien
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-500 font-black italic uppercase">En attente</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => navigator.clipboard.writeText(lien)}
+                              className="text-blue-800 bg-blue-100 border border-blue-200 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-xs font-black shadow-sm"
+                            >
+                              LIEN DIRECT
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
