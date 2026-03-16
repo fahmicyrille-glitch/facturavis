@@ -166,7 +166,7 @@ export default function SuperAdmin() {
       <div className="max-w-[1400px] mx-auto space-y-6">
 
         {/* EN-TÊTE */}
-        <div className="flex items-center justify-between bg-gray-900 text-white p-6 rounded-2xl shadow-lg">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-900 text-white p-6 rounded-2xl shadow-lg gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-purple-500/20 p-3 rounded-xl border border-purple-500/30">
               <ShieldAlert className="text-purple-400" size={32} />
@@ -176,9 +176,16 @@ export default function SuperAdmin() {
               <p className="text-gray-400 text-sm">Analyse des performances et gestion des utilisateurs</p>
             </div>
           </div>
-          <Link href="/dashboard" className="flex items-center text-sm font-medium text-gray-300 hover:text-white bg-gray-800 px-4 py-2 rounded-lg transition">
-            <ArrowLeft size={16} className="mr-2" /> Retour au Dashboard
-          </Link>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* LE NOUVEAU BOUTON VERS LES PROSPECTS */}
+            <Link href="/admin/prospects" className="flex-1 sm:flex-none flex items-center justify-center text-sm font-bold text-blue-900 bg-blue-400 hover:bg-blue-300 px-4 py-2 rounded-lg transition shadow-sm">
+              <Users size={16} className="mr-2" /> Prospects
+            </Link>
+
+            <Link href="/dashboard" className="flex-1 sm:flex-none flex items-center justify-center text-sm font-medium text-gray-300 hover:text-white bg-gray-800 px-4 py-2 rounded-lg transition">
+              <ArrowLeft size={16} className="mr-2" /> Dashboard
+            </Link>
+          </div>
         </div>
 
         {/* KPI GLOBAUX */}
