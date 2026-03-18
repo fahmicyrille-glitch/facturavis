@@ -76,29 +76,41 @@ export default function PagePatient() {
   }, [factureId]);
 
   const handleDownloadAndShowModal = async () => {
-    if (!facture) return;
+      if (!facture) return;
+      try {
+        const { data, error } = await supabase.storage
+          .from('factures_pdf')
+          .download(facture.fichier_path);
 
-    try {
-      const { data, error } = await supabase.storage
-        .from('factures_pdf')
-        .download(facture.fichier_path);
+        if (error) throw error;
 
-      if (error) throw error;
+        // 1. Création du Blob avec un type MIME forcé pour le téléchargement
+        const blob = new Blob([data], { type: 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
 
-      const url = window.URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Facture_${facture.patient_nom.replace(/\s+/g, '_')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+        // 2. Création d'un élément <a> invisible
+        const link = document.createElement('a');
+        link.href = url;
 
-      setShowModal(true);
-    } catch (err) {
-      alert("Erreur lors du téléchargement.");
-    }
-  };
+        // 3. LE POINT CRUCIAL : l'attribut download
+        // C'est lui qui dit au navigateur : "Ne l'affiche pas, enregistre-le"
+        link.download = `Facture_${facture.patient_nom.replace(/\s+/g, '_')}.pdf`;
+
+        // Ajout temporaire au DOM pour que Safari accepte l'événement
+        document.body.appendChild(link);
+        link.click();
+
+        // Nettoyage immédiat
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        // 4. On affiche la modal. L'utilisateur est TOUJOURS sur la même page.
+        setShowModal(true);
+
+      } catch (err) {
+        alert("Erreur lors du téléchargement.");
+      }
+    };
 
   const handleStarClick = async (selectedStar: number) => {
       setRating(selectedStar);
