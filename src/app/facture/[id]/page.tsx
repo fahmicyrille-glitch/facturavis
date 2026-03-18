@@ -181,7 +181,7 @@ export default function PagePatient() {
           Bonjour {facture.patient_nom} !
         </h1>
         <p className="text-[#7a6a5f] mb-8 text-base sm:text-lg leading-relaxed">
-          Voici votre facture pour votre séance à <span className="font-bold text-[#3e2f25]">{cabinet?.nom}</span> avec <span className="font-bold text-[#3e2f25]">{therapeute?.nom}</span>.
+          Voici votre facture pour votre séance avec <span className="font-bold text-[#3e2f25]">{therapeute?.nom}</span>.
         </p>
 
         {/* BOUTON TÉLÉCHARGEMENT */}

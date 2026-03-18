@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
             <p>J'espère que vous vous portez bien depuis votre dernière séance.</p>
 
-            <p>Vous trouverez ci-dessous le lien pour accéder à votre <span class="highlight">facture</span> pour votre consultation au cabinet de <strong>${cabinetNom}</strong>. Ce document vous sera utile pour votre remboursement mutuelle.</p>
+            <p>Vous trouverez ci-dessous le lien pour accéder à votre <span class="highlight">facture</span> pour votre consultation. Ce document vous sera utile pour votre remboursement mutuelle.</p>
 
             <div class="cta-container">
               <a href="${lienFacture}" class="cta-button">Télécharger ma facture</a>
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
             <div class="info-box">
               <div class="info-title">✨ Un petit service ?</div>
               <p style="margin: 0; font-size: 14px; color: #5d4a3e;">
-                Le cabinet se développe grâce à votre confiance. En téléchargeant votre facture, vous pourrez laisser un <strong style="color:#a9825a;">avis Google</strong> pour le cabinet de <strong>${cabinetNom}</strong> en un clic. Votre retour est précieux !
+                Le cabinet se développe grâce à votre confiance. En téléchargeant votre facture, vous pourrez laisser un <strong style="color:#a9825a;">avis Google</strong> en un clic. Votre retour est précieux !
               </p>
             </div>
 

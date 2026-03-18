@@ -39,7 +39,6 @@ export default function Dashboard() {
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
 
-  // 1. Référence pour l'input file (Correction du bug de sélection identique)
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [therapeuteInfo, setTherapeuteInfo] = useState<Therapeute | null>(null);
@@ -127,8 +126,9 @@ export default function Dashboard() {
       await fetchHistorique(uid);
       setFetchingData(false);
 
+      // 🌟 CORRECTION REALTIME : On écoute tous les changements pour rafraîchir proprement
       channel = supabase
-        .channel('changements-factures')
+        .channel('schema-db-changes')
         .on(
           'postgres_changes',
           {
@@ -138,6 +138,7 @@ export default function Dashboard() {
             filter: `therapeute_id=eq.${uid}`
           },
           (payload) => {
+            // Si c'est un UPDATE (le patient a mis une note), on fetch tout pour être sûr de la synchro
             fetchHistorique(uid);
           }
         )
@@ -182,11 +183,17 @@ export default function Dashboard() {
           patient_email: patientEmail,
           patient_nom: nomComplet,
           fichier_path: filePath,
+          statut_email: 'Envoyé'
         }])
-        .select('id')
+        .select('*')
         .single();
 
       if (dbError) throw dbError;
+
+      // 🌟 AFFICHAGE IMMÉDIAT : On utilise l'objet complet renvoyé par la BDD
+      if (dbData) {
+        setFacturesHistorique(prev => [dbData, ...prev]);
+      }
 
       const lien = `${window.location.origin}/facture/${dbData.id}`;
       setSuccessLink(lien);
@@ -207,13 +214,11 @@ export default function Dashboard() {
         }),
       });
 
-      // 🌟 NETTOYAGE DU FORMULAIRE ET DE L'INPUT FILE
       setFile(null);
       setPatientEmail('');
       setNom('');
       setPrenom('');
 
-      // Reset physique de l'input pour autoriser la sélection consécutive du même fichier
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -250,7 +255,7 @@ export default function Dashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Factures_Compta_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.csv`);
+    link.setAttribute('download', `Compta_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -389,7 +394,7 @@ export default function Dashboard() {
                 <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 text-center">
                   <CheckCircle size={16} className="mx-auto text-green-500 mb-1" />
                   <p className="text-xs font-bold text-green-800 mb-2">Facture envoyée !</p>
-                  <button onClick={() => navigator.clipboard.writeText(successLink)} className="text-xs bg-white border border-green-200 text-green-700 px-3 py-1 rounded hover:bg-green-100 transition">
+                  <button onClick={() => {navigator.clipboard.writeText(successLink); alert("Lien copié !");}} className="text-xs bg-white border border-green-200 text-green-700 px-3 py-1 rounded hover:bg-green-100 transition">
                     Copier le lien direct
                   </button>
                 </div>
@@ -491,9 +496,9 @@ export default function Dashboard() {
 
                         return (
                           <tr key={facture.id} className="hover:bg-blue-50/30 transition-colors">
-                            <td className="px-6 py-4 text-gray-500">{date}</td>
+                            <td className="px-6 py-4 text-gray-500 font-medium">{date}</td>
                             <td className="px-6 py-4">
-                              <div className="font-semibold text-gray-900">{facture.patient_nom}</div>
+                              <div className="font-bold text-gray-900">{facture.patient_nom}</div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-xs text-gray-500">{facture.patient_email}</span>
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
@@ -503,7 +508,7 @@ export default function Dashboard() {
                                   ? 'bg-orange-100 text-orange-700 border border-orange-200'
                                   : 'bg-gray-100 text-gray-600 border border-gray-200'
                                 }`}>
-                                  {facture.statut_email}
+                                  {facture.statut_email || 'Envoyé'}
                                 </span>
                               </div>
                             </td>
@@ -512,12 +517,12 @@ export default function Dashboard() {
                                 <div className="flex flex-col gap-1">
                                   <div className="flex text-yellow-400">
                                     {[1,2,3,4,5].map(star => (
-                                      <Star key={star} size={14} className={star <= facture.note! ? "fill-current" : "text-gray-200"} />
+                                      <Star key={star} size={14} className={star <= facture.note! ? "fill-current" : "text-gray-100"} />
                                     ))}
                                   </div>
                                   {facture.commentaire && (
-                                    <span className="text-xs text-gray-500 max-w-[150px] truncate" title={facture.commentaire}>
-                                      💬 {facture.commentaire}
+                                    <span className="text-[10px] text-gray-400 truncate max-w-[150px] italic" title={facture.commentaire}>
+                                      "{facture.commentaire}"
                                     </span>
                                   )}
                                 </div>
@@ -527,8 +532,11 @@ export default function Dashboard() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <button
-                                onClick={() => navigator.clipboard.writeText(lien)}
-                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-medium"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(lien);
+                                  alert("Lien copié !");
+                                }}
+                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                               >
                                 Copier le lien
                               </button>
