@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { UploadCloud, CheckCircle, Copy, LogOut, MapPin, Loader2, Settings, Star, FileText, MessageSquare, Search, Calendar, Download, X } from 'lucide-react';
+import { UploadCloud, CheckCircle, Copy, LogOut, MapPin, Loader2, Settings, Star, FileText, MessageSquare, Search, Calendar, Download, X, Edit, Mail } from 'lucide-react'; // 🌟 Ajouté Mail
 import Link from 'next/link';
 
 interface Cabinet {
@@ -32,6 +32,12 @@ interface Facture {
   statut_email: string;
 }
 
+// Type pour notre jolie notification toast
+interface ToastMessage {
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 export default function Dashboard() {
   const [file, setFile] = useState<File | null>(null);
   const [patientEmail, setPatientEmail] = useState('');
@@ -57,6 +63,22 @@ export default function Dashboard() {
   const [successLink, setSuccessLink] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
+
+  // État pour la notification Toast
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+
+  // 🌟 NOUVEAU : États pour contrôler la modale personnalisée de modification d'e-mail
+  const [isEditEmailModalOpen, setIsEditEmailModalOpen] = useState(false);
+  const [factureToEdit, setFactureToEdit] = useState<Facture | null>(null);
+  const [emailToEdit, setEmailToEdit] = useState('');
+
+  // Fonction pour afficher la notification pendant 3 secondes
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
 
   const formatLocalYYYYMMDD = (date: Date) => {
     const y = date.getFullYear();
@@ -126,7 +148,6 @@ export default function Dashboard() {
       await fetchHistorique(uid);
       setFetchingData(false);
 
-      // 🌟 CORRECTION REALTIME : On écoute tous les changements pour rafraîchir proprement
       channel = supabase
         .channel('schema-db-changes')
         .on(
@@ -138,7 +159,6 @@ export default function Dashboard() {
             filter: `therapeute_id=eq.${uid}`
           },
           (payload) => {
-            // Si c'est un UPDATE (le patient a mis une note), on fetch tout pour être sûr de la synchro
             fetchHistorique(uid);
           }
         )
@@ -172,7 +192,8 @@ export default function Dashboard() {
       const { error: uploadError } = await supabase.storage.from('factures_pdf').upload(filePath, file);
       if (uploadError) throw uploadError;
 
-      const nomComplet = `${civilite} ${nom.toUpperCase()} ${prenom}`;
+      const prenomFormatte = prenom ? ` ${prenom}` : '';
+      const nomComplet = `${civilite} ${nom.toUpperCase()}${prenomFormatte}`.trim();
       const currentCabinet = cabinets.find(c => c.id === selectedCabinetId);
 
       const { data: dbData, error: dbError } = await supabase
@@ -190,13 +211,14 @@ export default function Dashboard() {
 
       if (dbError) throw dbError;
 
-      // 🌟 AFFICHAGE IMMÉDIAT : On utilise l'objet complet renvoyé par la BDD
       if (dbData) {
         setFacturesHistorique(prev => [dbData, ...prev]);
       }
 
       const lien = `${window.location.origin}/facture/${dbData.id}`;
       setSuccessLink(lien);
+
+      showToast("Facture créée et prête à être envoyée !", "success");
 
       await fetch('/api/send-email', {
         method: 'POST',
@@ -225,9 +247,91 @@ export default function Dashboard() {
 
     } catch (error) {
       console.error('Erreur:', error);
-      alert("Une erreur est survenue lors de l'envoi.");
+      showToast("Une erreur est survenue lors de l'envoi.", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🌟 CORRECTION 4 : Fonction pour OUVRIR la modale personnalisée au lieu de window.prompt()
+  const handleEditEmail = (facture: Facture) => {
+    setFactureToEdit(facture);
+    setEmailToEdit(facture.patient_email);
+    setIsEditEmailModalOpen(true);
+  };
+
+  // 🌟 CORRECTION 5 : Fonction pour CONFIRMER la modification dans la modale personnalisée
+  const handleConfirmEditEmail = async () => {
+    if (!factureToEdit || !emailToEdit || emailToEdit === factureToEdit.patient_email) {
+      setIsEditEmailModalOpen(false); // Pas de changement, on ferme
+      return;
+    }
+
+    setLoading(true); // Afficher le spinner pendant l'envoi
+
+    try {
+      // Met à jour la BDD
+      const { error: updateError } = await supabase
+        .from('factures')
+        .update({ patient_email: emailToEdit, statut_email: 'Renvoyé' })
+        .eq('id', factureToEdit.id);
+
+      if (updateError) throw updateError;
+
+      // Met à jour l'UI localement immédiatement
+      setFacturesHistorique(prev => prev.map(f => f.id === factureToEdit.id ? { ...f, patient_email: emailToEdit, statut_email: 'Renvoyé' } : f));
+
+      // Renvoi de l'email
+      const lien = `${window.location.origin}/facture/${factureToEdit.id}`;
+      const currentCabinet = cabinets.find(c => c.id === factureToEdit.cabinet_id);
+
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailToEdit,
+          nomPatient: factureToEdit.patient_nom,
+          lienFacture: lien,
+          nomTherapeute: therapeuteInfo?.nom,
+          titreTherapeute: therapeuteInfo?.titre,
+          telephoneTherapeute: therapeuteInfo?.telephone,
+          emailTherapeute: therapeuteInfo?.email,
+          logoUrlTherapeute: therapeuteInfo?.logo_url,
+          cabinetNom: currentCabinet?.nom
+        }),
+      });
+
+      // On remplace l'alert par une belle notif toast
+      showToast("L'email a été mis à jour et la facture renvoyée !", "success");
+
+      setIsEditEmailModalOpen(false); // Fermer la modale en cas de succès
+
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'email :", error);
+      // On remplace l'alert d'erreur
+      showToast("Une erreur est survenue lors de la modification.", "error");
+    } finally {
+      setLoading(false); // Masquer le spinner
+    }
+  };
+
+  const handleDownloadPdf = async (filePath: string, patientNom: string) => {
+    try {
+      showToast("Préparation du téléchargement...", "info");
+      const { data, error } = await supabase.storage.from('factures_pdf').download(filePath);
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Facture_${patientNom.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur de téléchargement :", error);
+      showToast("Impossible de télécharger la facture.", "error");
     }
   };
 
@@ -274,7 +378,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 relative">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* EN-TÊTE DU DASHBOARD */}
@@ -373,10 +477,10 @@ export default function Dashboard() {
                   </div>
                   <div className="col-span-1">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Prénom</label>
-                    <input type="text" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+                    <input type="text" className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={prenom} onChange={(e) => setPrenom(e.target.value)} />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Nom de famille</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Nom (ou Nom Prénom) *</label>
                     <input type="text" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={nom} onChange={(e) => setNom(e.target.value)} />
                   </div>
                   <div className="col-span-2">
@@ -394,7 +498,11 @@ export default function Dashboard() {
                 <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 text-center">
                   <CheckCircle size={16} className="mx-auto text-green-500 mb-1" />
                   <p className="text-xs font-bold text-green-800 mb-2">Facture envoyée !</p>
-                  <button onClick={() => {navigator.clipboard.writeText(successLink); alert("Lien copié !");}} className="text-xs bg-white border border-green-200 text-green-700 px-3 py-1 rounded hover:bg-green-100 transition">
+                  <button onClick={() => {
+                      navigator.clipboard.writeText(successLink);
+                      showToast("Lien copié avec succès !");
+                    }}
+                    className="text-xs bg-white border border-green-200 text-green-700 px-3 py-1 rounded hover:bg-green-100 transition">
                     Copier le lien direct
                   </button>
                 </div>
@@ -501,9 +609,16 @@ export default function Dashboard() {
                               <div className="font-bold text-gray-900">{facture.patient_nom}</div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-xs text-gray-500">{facture.patient_email}</span>
+
+                                <button onClick={() => handleEditEmail(facture)} className="text-gray-400 hover:text-blue-600 transition-colors" title="Modifier l'email et renvoyer la facture">
+                                  <Edit size={12} />
+                                </button>
+
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                                   facture.statut_email === 'Ouvert'
                                   ? 'bg-green-100 text-green-700 border border-green-200'
+                                  : facture.statut_email === 'Renvoyé'
+                                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
                                   : facture.statut_email === 'Relancé'
                                   ? 'bg-orange-100 text-orange-700 border border-orange-200'
                                   : 'bg-gray-100 text-gray-600 border border-gray-200'
@@ -530,16 +645,25 @@ export default function Dashboard() {
                                 <span className="text-xs text-gray-400 italic">En attente</span>
                               )}
                             </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(lien);
-                                  alert("Lien copié !");
-                                }}
-                                className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
-                              >
-                                Copier le lien
-                              </button>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-end items-center gap-2">
+                                <button
+                                  onClick={() => handleDownloadPdf(facture.fichier_path, facture.patient_nom)}
+                                  className="text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold inline-flex items-center"
+                                  title="Télécharger la facture PDF"
+                                >
+                                  <Download size={14} className="mr-1" /> PDF
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(lien);
+                                    showToast("Lien copié avec succès !");
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                                >
+                                  Copier le lien
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -552,6 +676,57 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* 🌟 NOUVEAU : Modale personnalisée pour modifier l'e-mail */}
+      {isEditEmailModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-md border border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-blue-50 p-2 rounded-lg"><Mail className="text-blue-600" size={20}/></div>
+              <h3 className="text-lg font-semibold text-gray-900">Corriger l'email et renvoyer la facture :</h3>
+            </div>
+
+            <input
+              type="email"
+              value={emailToEdit}
+              onChange={(e) => setEmailToEdit(e.target.value)}
+              placeholder="Nouvel email du patient"
+              className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 mb-6"
+              autoFocus // Met le focus automatiquement sur le champ
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsEditEmailModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmEditEmail}
+                disabled={loading} // Désactivé pendant l'envoi
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                {loading ? <Loader2 className="animate-spin" size={16}/> : 'OK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Composant Toast d'affichage en bas à droite */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center gap-3 z-50 transition-all transform duration-300 ease-out translate-y-0 opacity-100 ${
+          toast.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' :
+          toast.type === 'error' ? 'bg-red-50 text-red-800 border-red-200' :
+          'bg-blue-50 text-blue-800 border-blue-200'
+        }`}>
+          {toast.type === 'success' && <CheckCircle size={18} className="text-green-500" />}
+          {toast.type === 'error' && <X size={18} className="text-red-500" />}
+          {toast.type === 'info' && <Loader2 size={18} className="text-blue-500 animate-spin" />}
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
