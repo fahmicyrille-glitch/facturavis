@@ -17,6 +17,7 @@ export default function PagePatient() {
 
   // États pour la Popup et les étoiles
   const [showModal, setShowModal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); // Nouvel état pour gérer l'attente
   const [hoverRating, setHoverRating] = useState(0);
   const [rating, setRating] = useState(0);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -77,6 +78,11 @@ export default function PagePatient() {
 
   const handleDownloadAndShowModal = async () => {
       if (!facture) return;
+
+      // 1. On affiche la modal et le statut de téléchargement immédiatement
+      setShowModal(true);
+      setIsDownloading(true);
+
       try {
         const { data, error } = await supabase.storage
           .from('factures_pdf')
@@ -84,16 +90,15 @@ export default function PagePatient() {
 
         if (error) throw error;
 
-        // 1. Création du Blob avec un type MIME forcé pour le téléchargement
+        // Création du Blob avec un type MIME forcé pour le téléchargement
         const blob = new Blob([data], { type: 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
 
-        // 2. Création d'un élément <a> invisible
+        // Création d'un élément <a> invisible
         const link = document.createElement('a');
         link.href = url;
 
-        // 3. LE POINT CRUCIAL : l'attribut download
-        // C'est lui qui dit au navigateur : "Ne l'affiche pas, enregistre-le"
+        // L'attribut download
         link.download = `Facture_${facture.patient_nom.replace(/\s+/g, '_')}.pdf`;
 
         // Ajout temporaire au DOM pour que Safari accepte l'événement
@@ -104,11 +109,12 @@ export default function PagePatient() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        // 4. On affiche la modal. L'utilisateur est TOUJOURS sur la même page.
-        setShowModal(true);
-
       } catch (err) {
         alert("Erreur lors du téléchargement.");
+        setShowModal(false); // On ferme en cas d'erreur
+      } finally {
+        // 2. Le téléchargement est terminé, on passe le bandeau au vert
+        setIsDownloading(false);
       }
     };
 
@@ -219,12 +225,18 @@ export default function PagePatient() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300">
 
-            {/* 🟢 BANDEAU VERT */}
-            <div className="bg-green-100 text-green-800 py-4 px-4 flex items-center justify-center font-bold border-b border-green-200">
-              <CheckCircle size={22} className="mr-2 text-green-600" />
-              Votre facture a bien été téléchargée !
+            {/* 🟢 BANDEAU DYNAMIQUE (Attente vs Succès) */}
+            <div className={`py-4 px-4 flex items-center justify-center font-bold border-b transition-colors duration-300 ${
+              isDownloading ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-green-100 text-green-800 border-green-200'
+            }`}>
+              {isDownloading ? (
+                <><Loader2 size={20} className="mr-2 animate-spin text-blue-600" /> Préparation de votre facture...</>
+              ) : (
+                <><CheckCircle size={22} className="mr-2 text-green-600" /> Votre facture est téléchargée !</>
+              )}
             </div>
 
+            {/* Bouton de fermeture (X) */}
             {!isRedirecting && !feedbackSent && (
               <button
                 onClick={() => setShowModal(false)}
@@ -254,26 +266,29 @@ export default function PagePatient() {
                   </button>
                 </div>
               ) : (
-                // ⚪ ÉCRAN DE NOTATION DE BASE (ou formulaire 1-3 étoiles)
+                // ⚪ ÉCRAN DE NOTATION DE BASE
                 <>
-                  <h3 className="text-2xl font-extrabold text-[#3e2f25] mb-3">Un petit service ?</h3>
-                  <p className="text-md font-medium text-[#5d4a3e] mb-8">
-                    Votre avis est précieux.<br/>Comment s'est passée votre séance ?
+                  {/* TEXTE BEAUCOUP PLUS ENGAGEANT ET VISIBLE */}
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-[#3e2f25] mb-3">
+                    Soutenez {therapeute?.nom || 'le cabinet'} !
+                  </h3>
+                  <p className="text-lg font-semibold text-[#3e2f25] mb-8 leading-snug">
+                    Évaluez votre séance pour aider d'autres patients.
                   </p>
 
-                  {/* Les 5 Étoiles */}
-                  <div className="flex justify-center gap-2 mb-4">
+                  {/* Les 5 Étoiles avec contour NOIR ÉPAIS pour une visibilité maximale */}
+                  <div className={`flex justify-center gap-2 mb-4 ${rating === 0 && hoverRating === 0 ? 'animate-pulse' : ''}`}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
                         onClick={() => handleStarClick(star)}
-                        className="focus:outline-none transition-transform hover:scale-110"
+                        className="focus:outline-none transition-transform hover:scale-125"
                       >
                         <Star
-                          size={44}
-                          className={`${(hoverRating || rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} transition-colors duration-200`}
+                          size={46}
+                          className={`${(hoverRating || rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-black fill-none'} transition-all duration-200`}
                         />
                       </button>
                     ))}

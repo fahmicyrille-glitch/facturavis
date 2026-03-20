@@ -468,24 +468,24 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-1">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Civilité</label>
-                    <select className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
+                    <label className="block text-sm font-bold text-black mb-1">Civilité</label>
+                    <select className="w-full border border-gray-400 rounded-md py-2 px-3 text-base text-black font-medium focus:ring-blue-500 focus:border-blue-500 bg-white" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
                       <option value="Mme">Mme</option>
                       <option value="M.">M.</option>
                       <option value="Enfant">Enfant</option>
                     </select>
                   </div>
                   <div className="col-span-1">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Prénom</label>
-                    <input type="text" className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+                    <label className="block text-sm font-bold text-black mb-1">Prénom</label>
+                    <input type="text" className="w-full border border-gray-400 rounded-md py-2 px-3 text-base text-black font-medium focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 bg-white" value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="Ex: Jean" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Nom (ou Nom Prénom) *</label>
-                    <input type="text" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={nom} onChange={(e) => setNom(e.target.value)} />
+                    <label className="block text-sm font-bold text-black mb-1">Nom (ou Nom Prénom) *</label>
+                    <input type="text" required className="w-full border border-gray-400 rounded-md py-2 px-3 text-base text-black font-medium focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 bg-white" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Ex: Dupont" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Email du patient *</label>
-                    <input type="email" required className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
+                    <label className="block text-sm font-bold text-black mb-1">Email du patient *</label>
+                    <input type="email" required className="w-full border border-gray-400 rounded-md py-2 px-3 text-base text-black font-medium focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 bg-white" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} placeholder="patient@email.com" />
                   </div>
                 </div>
 
