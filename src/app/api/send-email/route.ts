@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await resend.emails.send({
       from: `${nomTherapeute} <facture@facturavis.fr>`,
-      reply_to: emailTherapeute || 'hilaryfarid.osteopathe@gmail.com', // On garde reply_to !
+      replyTo: emailTherapeute || 'hilaryfarid.osteopathe@gmail.com',
       to: [email],
       subject: `Votre facture de consultation - ${nomTherapeute}`,
       html: `
