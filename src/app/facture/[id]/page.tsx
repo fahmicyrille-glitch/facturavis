@@ -15,14 +15,12 @@ export default function PagePatient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // États pour la Popup et les étoiles
   const [showModal, setShowModal] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false); // Nouvel état pour gérer l'attente
+  const [isDownloading, setIsDownloading] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
   const [rating, setRating] = useState(0);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // États pour le formulaire privé
   const [feedback, setFeedback] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
 
@@ -40,7 +38,12 @@ export default function PagePatient() {
         if (errFacture) throw new Error("Facture introuvable.");
         setFacture(dataFacture);
 
-        // 📡 LE RADAR EST ICI : On met à jour le statut silencieusement
+        // Si le patient a DÉJÀ noté dans le passé, on initialise son score
+        if (dataFacture.note) {
+          setRating(dataFacture.note);
+          if (dataFacture.commentaire) setFeedback(dataFacture.commentaire);
+        }
+
         if (dataFacture.statut_email !== 'Ouvert') {
           await supabase
             .from('factures')
@@ -79,7 +82,6 @@ export default function PagePatient() {
   const handleDownloadAndShowModal = async () => {
       if (!facture) return;
 
-      // 1. On affiche la modal et le statut de téléchargement immédiatement
       setShowModal(true);
       setIsDownloading(true);
 
@@ -90,63 +92,58 @@ export default function PagePatient() {
 
         if (error) throw error;
 
-        // Création du Blob avec un type MIME forcé pour le téléchargement
         const blob = new Blob([data], { type: 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
-
-        // Création d'un élément <a> invisible
         const link = document.createElement('a');
         link.href = url;
-
-        // L'attribut download
         link.download = `Facture_${facture.patient_nom.replace(/\s+/g, '_')}.pdf`;
-
-        // Ajout temporaire au DOM pour que Safari accepte l'événement
         document.body.appendChild(link);
         link.click();
-
-        // Nettoyage immédiat
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
       } catch (err) {
         alert("Erreur lors du téléchargement.");
-        setShowModal(false); // On ferme en cas d'erreur
+        setShowModal(false);
       } finally {
-        // 2. Le téléchargement est terminé, on passe le bandeau au vert
         setIsDownloading(false);
       }
     };
 
   const handleStarClick = async (selectedStar: number) => {
+      // Si la facture a DÉJÀ été notée dans le passé, on empêche de revoter
+      // (optionnel, mais recommandé pour éviter le spam de la base de données)
+      if (facture.note) return;
+
       setRating(selectedStar);
 
-      // 1. On prépare ce qu'on va sauvegarder
       const donneesASauvegarder: any = { note: selectedStar };
 
-      // 2. LA CORRECTION : Si c'est 4 ou 5 étoiles, on efface le commentaire !
       if (selectedStar >= 4) {
         donneesASauvegarder.commentaire = null;
-        setFeedback(''); // On vide aussi la case de texte à l'écran par sécurité
+        setFeedback('');
       }
 
-      // 3. 💾 SAUVEGARDE EN BASE DE DONNÉES
       await supabase
         .from('factures')
         .update(donneesASauvegarder)
         .eq('id', factureId);
 
-      // 4. LOGIQUE DE REDIRECTION (Uniquement pour 5 étoiles !)
-      if (selectedStar === 5 && cabinet?.lien_avis_google) {
-        setIsRedirecting(true);
-        setTimeout(() => {
-          window.location.href = cabinet.lien_avis_google;
-        }, 800);
+      // CORRECTION : Si 5 étoiles MAIS que le thérapeute n'a pas mis de lien Google
+      if (selectedStar === 5) {
+        if (cabinet?.lien_avis_google) {
+          setIsRedirecting(true);
+          setTimeout(() => {
+            window.location.href = cabinet.lien_avis_google;
+          }, 800);
+        } else {
+          // Pas de lien ? On affiche juste l'écran de remerciement (comme pour 4 étoiles)
+          setRating(4);
+        }
       }
     };
 
   const handleSendFeedback = async () => {
-    // 💾 SAUVEGARDE EN BASE DE DONNÉES (Le commentaire)
     await supabase
       .from('factures')
       .update({ commentaire: feedback })
@@ -173,13 +170,13 @@ export default function PagePatient() {
     </div>
   );
 
+  // Le patient a-t-il déjà voté par le passé ?
+  const hasAlreadyVoted = facture?.note !== null && facture?.note !== undefined;
+
   return (
     <div className="min-h-screen bg-[#f7f4f1] flex items-center justify-center p-4">
 
-      {/* 💳 LA CARTE CENTRÉE */}
       <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 sm:p-10 text-center relative">
-
-        {/* LOGO PLUS GROS OU ÉTOILE VERTE */}
         <div className="flex justify-center mb-6">
           {therapeute?.logo_url ? (
             <img
@@ -194,7 +191,6 @@ export default function PagePatient() {
           )}
         </div>
 
-        {/* TITRE & TEXTE PLUS LISIBLE */}
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3e2f25] mb-4">
           Bonjour {facture.patient_nom} !
         </h1>
@@ -202,7 +198,6 @@ export default function PagePatient() {
           Voici votre facture pour votre séance avec <span className="font-bold text-[#3e2f25]">{therapeute?.nom}</span>.
         </p>
 
-        {/* BOUTON TÉLÉCHARGEMENT */}
         <button
           onClick={handleDownloadAndShowModal}
           className="w-full flex items-center justify-center py-4 px-4 rounded-xl text-white font-bold text-lg bg-[#a9825a] hover:bg-[#8b6a48] transition-all transform hover:-translate-y-1 shadow-md hover:shadow-lg mb-6"
@@ -211,21 +206,21 @@ export default function PagePatient() {
           Télécharger ma facture
         </button>
 
-        {/* PETIT ENCART INFO PLUS LISIBLE */}
-        <div className="bg-[#fdfaf8] border border-[#f0e6de] rounded-xl p-5 flex items-start text-left">
-          <Info className="text-[#a9825a] shrink-0 mt-0.5 mr-3" size={20} />
-          <p className="text-sm text-[#7a6a5f] leading-relaxed">
-            En téléchargeant votre facture, vous serez invité(e) à laisser un avis sur votre séance au cabinet. Merci !
-          </p>
-        </div>
+        {!hasAlreadyVoted && (
+          <div className="bg-[#fdfaf8] border border-[#f0e6de] rounded-xl p-5 flex items-start text-left">
+            <Info className="text-[#a9825a] shrink-0 mt-0.5 mr-3" size={20} />
+            <p className="text-sm text-[#7a6a5f] leading-relaxed">
+              En téléchargeant votre facture, vous serez invité(e) à laisser un avis sur votre séance au cabinet. Merci !
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* 🌟 POPUP (MODAL) DES ÉTOILES */}
+      {/* 🌟 POPUP (MODAL) */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300">
 
-            {/* 🟢 BANDEAU DYNAMIQUE (Attente vs Succès) */}
             <div className={`py-4 px-4 flex items-center justify-center font-bold border-b transition-colors duration-300 ${
               isDownloading ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-green-100 text-green-800 border-green-200'
             }`}>
@@ -236,8 +231,7 @@ export default function PagePatient() {
               )}
             </div>
 
-            {/* Bouton de fermeture (X) */}
-            {!isRedirecting && !feedbackSent && (
+            {!isRedirecting && (!feedbackSent || hasAlreadyVoted) && (
               <button
                 onClick={() => setShowModal(false)}
                 className="absolute top-16 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors z-10"
@@ -248,27 +242,23 @@ export default function PagePatient() {
 
             <div className="p-8 text-center pt-10">
               {isRedirecting ? (
-                // 🟢 ÉCRAN REDIRECTION (5 Étoiles uniquement)
                 <div className="py-8">
                   <div className="text-5xl mb-4">🎉</div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Merci infiniment !</h3>
                   <p className="text-lg text-gray-600 mb-6 font-medium">Redirection vers Google en cours...</p>
                   <Loader2 className="animate-spin mx-auto text-blue-500" size={36} />
                 </div>
-              ) : rating === 4 ? (
-                // 🟡 ÉCRAN 4 ÉTOILES (Juste merci, pas de redirection)
+              ) : (rating >= 4 || hasAlreadyVoted) ? (
                 <div className="py-8 animate-in zoom-in duration-300">
                   <div className="text-5xl mb-4">✨</div>
                   <h3 className="text-2xl font-bold text-[#3e2f25] mb-2">Merci pour votre retour !</h3>
-                  <p className="text-[#7a6a5f] mb-6">Nous sommes ravis que la séance se soit bien passée. Votre note a bien été transmise au cabinet.</p>
+                  <p className="text-[#7a6a5f] mb-6">Votre note a bien été transmise au cabinet. Prenez soin de vous.</p>
                   <button onClick={() => setShowModal(false)} className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg transition-colors">
                     Fermer
                   </button>
                 </div>
               ) : (
-                // ⚪ ÉCRAN DE NOTATION DE BASE
                 <>
-                  {/* TEXTE BEAUCOUP PLUS ENGAGEANT ET VISIBLE */}
                   <h3 className="text-2xl sm:text-3xl font-extrabold text-[#3e2f25] mb-3">
                     Soutenez {therapeute?.nom || 'le cabinet'} !
                   </h3>
@@ -276,7 +266,6 @@ export default function PagePatient() {
                     Évaluez votre séance pour aider d'autres patients.
                   </p>
 
-                  {/* Les 5 Étoiles avec contour NOIR ÉPAIS pour une visibilité maximale */}
                   <div className={`flex justify-center gap-2 mb-4 ${rating === 0 && hoverRating === 0 ? 'animate-pulse' : ''}`}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -294,7 +283,6 @@ export default function PagePatient() {
                     ))}
                   </div>
 
-                  {/* 🟠 FORMULAIRE PRIVÉ (1 à 3 étoiles) */}
                   {rating > 0 && rating <= 3 && !feedbackSent && (
                     <div className="mt-8 text-left animate-in slide-in-from-bottom-2 duration-300">
                       <div className="bg-[#fdfaf8] rounded-xl p-5 border border-[#f0e6de]">
@@ -318,7 +306,6 @@ export default function PagePatient() {
                     </div>
                   )}
 
-                  {/* Message de remerciement privé */}
                   {feedbackSent && (
                     <div className="mt-8 bg-green-50 rounded-xl p-6 border border-green-100 animate-in fade-in">
                        <CheckCircle size={36} className="mx-auto text-green-500 mb-3" />

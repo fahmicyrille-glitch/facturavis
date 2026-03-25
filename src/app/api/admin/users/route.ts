@@ -28,7 +28,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, password, nom, titre, telephone, lien_google, nom_cabinet } = body;
+    const {
+      email, password, nom, titre, telephone, lien_google, nom_cabinet,
+      adresse_cabinet, siret, adeli, site_web, code_ape // 🌟 Ajouté code_ape
+    } = body;
 
     if (!lien_google || lien_google.trim() === '') {
       return NextResponse.json({ error: 'Le lien Google Avis est obligatoire.' }, { status: 400 });
@@ -51,11 +54,16 @@ export async function POST(request: Request) {
         email: email,
         nom: nom,
         titre: titre || null,
-        telephone: telephone || null
+        telephone: telephone || null,
+        adresse_cabinet: adresse_cabinet || null,
+        siret: siret || null,
+        code_ape: code_ape || null, // 🌟 Ajouté code_ape
+        adeli: adeli || null,
+        site_web: site_web || null
       }]);
       if (dbError) throw dbError;
 
-      // 3. Création du Cabinet (avec le nom choisi par l'admin)
+      // 3. Création du Cabinet initial
       const { error: cabError } = await supabaseAdmin.from('cabinets').insert([{
         therapeute_id: userId,
         nom: nom_cabinet || `Cabinet de ${nom}`,
@@ -94,6 +102,7 @@ export async function DELETE(request: Request) {
     // Nettoyage des dépendances
     await supabaseAdmin.from('cabinets').delete().eq('therapeute_id', targetUserId);
     await supabaseAdmin.from('factures').delete().eq('therapeute_id', targetUserId);
+    await supabaseAdmin.from('patients').delete().eq('therapeute_id', targetUserId);
 
     // Suppression Profil
     const { error: dbError } = await supabaseAdmin.from('therapeutes').delete().eq('id', targetUserId);
@@ -122,10 +131,13 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    // 🌟 On récupère id_cabinet pour cibler précisément lequel modifier
-    const { id, email, nom, password, titre, telephone, nom_cabinet, lien_google, id_cabinet } = body;
+    const {
+      id, email, nom, password, titre, telephone,
+      nom_cabinet, lien_google, id_cabinet,
+      adresse_cabinet, siret, adeli, site_web, code_ape // 🌟 Ajouté code_ape
+    } = body;
 
-    // 1. Mise à jour Auth (si besoin)
+    // 1. Mise à jour Auth (si email ou password changent)
     const updateAuthData: any = {};
     if (email) { updateAuthData.email = email; updateAuthData.email_confirm = true; }
     if (password) { updateAuthData.password = password; }
@@ -141,14 +153,18 @@ export async function PUT(request: Request) {
     if (email !== undefined) updateDbData.email = email;
     if (titre !== undefined) updateDbData.titre = titre;
     if (telephone !== undefined) updateDbData.telephone = telephone;
+    if (adresse_cabinet !== undefined) updateDbData.adresse_cabinet = adresse_cabinet;
+    if (siret !== undefined) updateDbData.siret = siret;
+    if (code_ape !== undefined) updateDbData.code_ape = code_ape; // 🌟 Ajouté code_ape
+    if (adeli !== undefined) updateDbData.adeli = adeli;
+    if (site_web !== undefined) updateDbData.site_web = site_web;
 
     if (Object.keys(updateDbData).length > 0) {
       const { error: dbError } = await supabaseAdmin.from('therapeutes').update(updateDbData).eq('id', id);
       if (dbError) throw dbError;
     }
 
-    // 3. 🌟 MISE À JOUR CIBLÉE DU CABINET
-    // Si un ID de cabinet est fourni, on ne modifie que celui-là
+    // 3. Mise à jour Cabinet
     if (id_cabinet && (nom_cabinet !== undefined || lien_google !== undefined)) {
       const updateCabData: any = {};
       if (nom_cabinet) updateCabData.nom = nom_cabinet;
@@ -157,11 +173,10 @@ export async function PUT(request: Request) {
       const { error: cabError } = await supabaseAdmin
         .from('cabinets')
         .update(updateCabData)
-        .eq('id', id_cabinet); // 🎯 Ciblage précis par ID de cabinet
+        .eq('id', id_cabinet);
 
       if (cabError) throw cabError;
     }
-    // Cas de secours : si l'admin modifie depuis le formulaire latéral (sans ID cabinet spécifique)
     else if (!id_cabinet && (nom_cabinet !== undefined || lien_google !== undefined)) {
         const updateCabData: any = {};
         if (nom_cabinet) updateCabData.nom = nom_cabinet;
@@ -170,7 +185,7 @@ export async function PUT(request: Request) {
         const { error: cabError } = await supabaseAdmin
           .from('cabinets')
           .update(updateCabData)
-          .eq('therapeute_id', id); // Cible tous les cabinets (formulaire simple)
+          .eq('therapeute_id', id);
 
         if (cabError) throw cabError;
     }

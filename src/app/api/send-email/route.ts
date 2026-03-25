@@ -14,34 +14,36 @@ export async function POST(request: Request) {
       emailTherapeute,
       telephoneTherapeute,
       titreTherapeute,
-      logoUrlTherapeute // 👈 NOUVEAU : On réceptionne le logo
+      logoUrlTherapeute
     } = await request.json();
 
     const titre = titreTherapeute || "Thérapeute";
     const tel = telephoneTherapeute ? `📞 ${telephoneTherapeute}<br>` : "";
 
-    // 👈 MAGIE : Si un logo_url existe, on affiche l'image. Sinon, on affiche le nom en texte.
     const logoHtml = logoUrlTherapeute
       ? `<img src="${logoUrlTherapeute}" alt="${nomTherapeute}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
-      : `${nomTherapeute}`;
+      : `<div style="text-align: center; color: #a9825a; font-size: 22px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">${nomTherapeute}</div>`;
 
     const { data, error } = await resend.emails.send({
       from: `${nomTherapeute} <facture@facturavis.fr>`,
-      replyTo : emailTherapeute || 'hilaryfarid.osteopathe@gmail.com',
+      reply_to: emailTherapeute || 'hilaryfarid.osteopathe@gmail.com', // On garde reply_to !
       to: [email],
       subject: `Votre facture de consultation - ${nomTherapeute}`,
       html: `
         <!DOCTYPE html>
         <html lang="fr">
         <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f7f4f1; margin: 0; padding: 0; color: #3e2f25; }
             .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 14px; padding: 40px; border-top: 6px solid #a9825a; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-            .logo { text-align: center; margin-bottom: 30px; color: #a9825a; font-size: 22px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+            .logo-container { margin-bottom: 30px; }
             h1 { color: #6b4f3f; font-size: 24px; text-align: center; font-weight: 600; margin-bottom: 25px; }
             p { font-size: 16px; margin-bottom: 18px; line-height: 1.6; }
             .cta-container { text-align: center; margin: 35px 0; }
             .cta-button { background-color: #a9825a; color: #ffffff !important; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block; }
+            .fallback-link { font-size: 12px; color: #999; margin-top: 10px; display: block; word-break: break-all; }
             .info-box { background-color: #fdfaf8; border: 1px solid #f0e6de; border-radius: 12px; padding: 20px; margin-top: 30px; }
             .info-title { color: #6b4f3f; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
             .footer { text-align: center; font-size: 12px; color: #7a6a5f; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
         </head>
         <body>
           <div class="container">
-            <div class="logo">
+            <div class="logo-container">
               ${logoHtml}
             </div>
 
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
 
             <div class="cta-container">
               <a href="${lienFacture}" class="cta-button">Télécharger ma facture</a>
+              <span class="fallback-link">Si le bouton ne fonctionne pas, copiez ce lien : <br> <a href="${lienFacture}" style="color:#a9825a;">${lienFacture}</a></span>
             </div>
 
             <div class="info-box">
