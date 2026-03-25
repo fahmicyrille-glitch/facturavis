@@ -48,19 +48,25 @@ export default function NouvelleFacture() {
   const [selectedCabinetId, setSelectedCabinetId] = useState<string>('');
 
   const [patientNom, setPatientNom] = useState('');
+  const [patientPrenom, setPatientPrenom] = useState(''); // NOUVEAU
+  const [patientCivilite, setPatientCivilite] = useState('Mme'); // NOUVEAU
   const [patientEmail, setPatientEmail] = useState('');
   const [patientAdresse, setPatientAdresse] = useState('');
   const [patientSecu, setPatientSecu] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdownPrenom, setShowDropdownPrenom] = useState(false); // NOUVEAU
 
   const [selectedPrestaId, setSelectedPrestaId] = useState<string>('');
   const [customPrestaNom, setCustomPrestaNom] = useState('');
   const [customPrestaPrix, setCustomPrestaPrix] = useState('');
   const [modeReglement, setModeReglement] = useState('CB');
 
-  const filteredPatients = patientsDb.filter(p =>
-    p.nom_complet.toLowerCase().includes(patientNom.toLowerCase())
-  );
+  const filteredPatients = patientsDb.filter(p => {
+    if (!patientNom && !patientPrenom) return false;
+    const matchNom = patientNom ? p.nom_complet.toLowerCase().includes(patientNom.toLowerCase()) : true;
+    const matchPrenom = patientPrenom ? p.nom_complet.toLowerCase().includes(patientPrenom.toLowerCase()) : true;
+    return matchNom && matchPrenom;
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,7 +114,9 @@ export default function NouvelleFacture() {
     setPatientEmail(patient.email || '');
     setPatientAdresse(patient.adresse || '');
     setPatientSecu(patient.num_secu || '');
+    setPatientPrenom('');
     setShowDropdown(false);
+    setShowDropdownPrenom(false);
   };
 
   const handlePrestaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -129,20 +137,25 @@ export default function NouvelleFacture() {
     setMessage({ text: '', type: '' });
 
     try {
-      // --- NOUVEAU BLOC : Création de fiche patient auto si inexistant ---
+      const prenomFormatte = patientPrenom ? ` ${patientPrenom}` : '';
+      const nomCompletFinal = patientNom.includes(patientPrenom)
+        ? patientNom // Si le nom contient déjà le prénom (via auto-complétion)
+        : `${patientCivilite} ${patientNom.toUpperCase()}${prenomFormatte}`.trim();
+
+      // --- Création de fiche patient auto si inexistant ---
       const existingPatient = patientsDb.find(p =>
         p.email.toLowerCase() === patientEmail.toLowerCase() &&
-        p.nom_complet.toLowerCase() === patientNom.toLowerCase()
+        p.nom_complet.toLowerCase() === nomCompletFinal.toLowerCase()
       );
 
       if (!existingPatient && userId) {
         const { data: newPat, error: patError } = await supabase.from('patients').insert([{
           therapeute_id: userId,
-          nom_complet: patientNom,
+          nom_complet: nomCompletFinal,
           email: patientEmail,
           adresse: patientAdresse,
           num_secu: patientSecu,
-          notes_consultation: "" // Sécurité pour éviter le bug de colonne
+          notes_consultation: ""
         }]).select().single();
 
         if (patError) console.error("Erreur de création de fiche patient :", patError);
@@ -163,7 +176,7 @@ export default function NouvelleFacture() {
 
       // 3. API Génération PDF
       const payloadPdf = {
-        patientNom, patientAdresse, patientSecu, email: patientEmail,
+        patientNom: nomCompletFinal, patientAdresse, patientSecu, email: patientEmail,
         acte: customPrestaNom, prix: montantFinal, modeReglement, numFacture: numFactureSeq,
         nomTherapeute: profile?.nom, titreTherapeute: profile?.titre, telephone: profile?.telephone, emailTherapeute: userEmail,
         adresseCabinet: profile?.adresse_cabinet, siret: profile?.siret, codeApe: profile?.code_ape, adeli: profile?.adeli, siteWeb: profile?.site_web,
@@ -190,7 +203,7 @@ export default function NouvelleFacture() {
       const { data: dbData } = await supabase.from('factures').insert([{
         therapeute_id: userId,
         cabinet_id: selectedCabinetId,
-        patient_nom: patientNom,
+        patient_nom: nomCompletFinal,
         patient_email: patientEmail,
         fichier_path: filePath,
         statut_email: 'Envoyé',
@@ -204,7 +217,7 @@ export default function NouvelleFacture() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: patientEmail, nomPatient: patientNom, lienFacture: `${window.location.origin}/facture/${dbData.id}`,
+          email: patientEmail, nomPatient: nomCompletFinal, lienFacture: `${window.location.origin}/facture/${dbData.id}`,
           nomTherapeute: profile?.nom, titreTherapeute: profile?.titre, telephoneTherapeute: profile?.telephone,
           emailTherapeute: userEmail, logoUrlTherapeute: profile?.logo_url, cabinetNom: currentCabinet?.nom
         }),
@@ -235,107 +248,145 @@ export default function NouvelleFacture() {
 
         {/* Navigation / Header */}
         <div className="flex items-center mb-8">
-          <Link href={backLink} className="mr-4 p-2.5 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-all group">
+          <Link href={backLink} className="mr-4 p-2.5 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition-all group">
             <ArrowLeft size={20} className="text-gray-600 group-hover:-translate-x-1 transition-transform" />
           </Link>
           <div>
             <h1 className="text-2xl font-black text-gray-900 tracking-tight">Nouvelle Facture</h1>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Émission d'un reçu professionnel</p>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-widest mt-1">Émission d'un reçu d'honoraires</p>
           </div>
         </div>
 
         <form onSubmit={handleGenerateInvoice} className="space-y-6">
 
           {/* Section Cabinet */}
-          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8">
-            <h2 className="text-sm font-black text-gray-900 mb-6 flex items-center uppercase tracking-widest">
-              <Building size={18} className="mr-3 text-blue-600" /> Lieu de consultation
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+            <h2 className="text-sm font-bold text-gray-800 mb-5 flex items-center uppercase tracking-wider">
+              <Building size={16} className="mr-2 text-blue-500" /> Lieu de consultation
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {cabinets.map((cab) => (
-                <label key={cab.id} className={`flex items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedCabinetId === cab.id ? 'border-blue-600 bg-blue-50/50 text-blue-700 shadow-md' : 'border-gray-100 hover:border-blue-200 text-gray-500 bg-gray-50/30'}`}>
+                <label key={cab.id} className={`flex items-center p-3.5 rounded-xl border cursor-pointer transition-all ${selectedCabinetId === cab.id ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <input type="radio" className="hidden" name="cabinet" checked={selectedCabinetId === cab.id} onChange={() => setSelectedCabinetId(cab.id)} />
-                  <span className="text-sm font-black uppercase tracking-tight">{cab.nom}</span>
+                  <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${selectedCabinetId === cab.id ? 'border-blue-500' : 'border-gray-300'}`}>
+                      {selectedCabinetId === cab.id && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
+                  </div>
+                  <span className={`text-sm font-bold ${selectedCabinetId === cab.id ? 'text-blue-700' : 'text-gray-700'}`}>{cab.nom}</span>
                 </label>
               ))}
             </div>
           </div>
 
           {/* Section Patient */}
-          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8 relative">
-            <h2 className="text-sm font-black text-gray-900 mb-6 flex items-center uppercase tracking-widest">
-              <User size={18} className="mr-3 text-blue-600" /> Informations Patient
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 relative">
+            <h2 className="text-sm font-bold text-gray-800 mb-5 flex items-center uppercase tracking-wider">
+              <User size={16} className="mr-2 text-blue-500" /> Informations Patient
             </h2>
             <div className="space-y-5">
+
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-4">
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Civilité</label>
+                  <select className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" value={patientCivilite} onChange={(e) => setPatientCivilite(e.target.value)}>
+                    <option value="Mme">Mme</option>
+                    <option value="M.">M.</option>
+                    <option value="Enfant">Enfant</option>
+                  </select>
+                </div>
+
+                <div className="col-span-8 relative">
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Prénom</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
+                    value={patientPrenom}
+                    onChange={(e) => {setPatientPrenom(e.target.value); setShowDropdownPrenom(true);}}
+                    onFocus={() => setShowDropdownPrenom(true)}
+                    onBlur={() => setTimeout(() => setShowDropdownPrenom(false), 200)}
+                    placeholder="Ex: Jean"
+                  />
+                  {showDropdownPrenom && patientPrenom.length > 0 && filteredPatients.length > 0 && (
+                    <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
+                      {filteredPatients.map(p => (
+                        <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 flex justify-between items-center border-b border-gray-50 last:border-none">
+                          <span className="font-bold">{p.nom_complet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
               <div className="relative">
-                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1.5 block">Nom complet *</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Nom (ou Nom Prénom) *</label>
                 <input
                   type="text" required
-                  className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
                   value={patientNom}
                   onChange={(e) => {setPatientNom(e.target.value); setShowDropdown(true);}}
                   onFocus={() => setShowDropdown(true)}
                   onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                  placeholder="Ex: Dupont"
                 />
                 {showDropdown && patientNom.length > 0 && filteredPatients.length > 0 && (
-                  <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-60 overflow-auto py-2 animate-in fade-in zoom-in-95 duration-200">
+                  <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto py-1">
                     {filteredPatients.map(p => (
-                      <li key={p.id} onClick={() => selectPatient(p)} className="px-5 py-3 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-50 last:border-none">
-                        <p className="text-sm font-black text-gray-900">{p.nom_complet}</p>
-                        <p className="text-[10px] text-gray-400 font-bold">{p.email}</p>
+                      <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-50 last:border-none">
+                        <p className="text-sm font-bold text-gray-900">{p.nom_complet}</p>
+                        <p className="text-[10px] text-gray-500">{p.email}</p>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1.5 block">Email de réception *</label>
-                  <input type="email" required className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Email de réception *</label>
+                  <input type="email" required className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} placeholder="patient@email.com" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1.5 block flex items-center"><Shield size={12} className="mr-1.5 text-gray-300" /> N° de Sécurité Sociale</label>
-                  <input type="text" className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none" placeholder="Optionnel" value={patientSecu} onChange={(e) => setPatientSecu(e.target.value)} />
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1 flex items-center"><Shield size={12} className="mr-1.5 text-gray-400" /> N° Sécurité Sociale</label>
+                  <input type="text" className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" placeholder="Optionnel" value={patientSecu} onChange={(e) => setPatientSecu(e.target.value)} />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1.5 block">Adresse Postale</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Adresse Postale</label>
                 <div className="relative">
-                  <MapPin size={16} className="absolute left-4 top-4 text-gray-300" />
-                  <input type="text" className="w-full bg-gray-50 border-none rounded-xl p-4 pl-12 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none" placeholder="Rue, Code Postal, Ville" value={patientAdresse} onChange={(e) => setPatientAdresse(e.target.value)} />
+                  <MapPin size={16} className="absolute left-3 top-3 text-gray-400" />
+                  <input type="text" className="w-full border border-gray-300 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" placeholder="Rue, Code Postal, Ville" value={patientAdresse} onChange={(e) => setPatientAdresse(e.target.value)} />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Section Séance */}
-          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 md:p-8">
-            <h2 className="text-sm font-black text-gray-900 mb-6 flex items-center uppercase tracking-widest">
-              <FileText size={18} className="mr-3 text-blue-600" /> Détails de la séance
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+            <h2 className="text-sm font-bold text-gray-800 mb-5 flex items-center uppercase tracking-wider">
+              <FileText size={16} className="mr-2 text-blue-500" /> Détails de la séance
             </h2>
             <div className="space-y-5">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1.5 block">Acte réalisé</label>
-                <select className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-black focus:ring-2 focus:ring-blue-500/20 outline-none mb-4 appearance-none cursor-pointer" value={selectedPrestaId} onChange={handlePrestaChange}>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Acte réalisé</label>
+                <select className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all mb-3 appearance-none cursor-pointer bg-white" value={selectedPrestaId} onChange={handlePrestaChange}>
                   <option value="">-- Sélectionner un acte --</option>
                   {prestationsDb.map(p => <option key={p.id} value={p.id}>{p.nom} ({p.prix}€)</option>)}
                 </select>
-                <div className="flex gap-4">
-                  <input type="text" required className="flex-[3] bg-gray-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none" value={customPrestaNom} onChange={(e) => setCustomPrestaNom(e.target.value)} placeholder="Intitulé de l'acte" />
+                <div className="flex gap-3">
+                  <input type="text" required className="flex-[3] border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" value={customPrestaNom} onChange={(e) => setCustomPrestaNom(e.target.value)} placeholder="Intitulé de l'acte" />
                   <div className="relative flex-[1] min-w-[120px]">
-                    <Euro size={16} className="absolute right-4 top-4 text-gray-300" />
-                    <input type="number" step="0.01" required className="w-full bg-gray-50 border-none rounded-xl p-4 pr-10 text-sm font-black focus:ring-2 focus:ring-blue-500/20 outline-none" value={customPrestaPrix} onChange={(e) => setCustomPrestaPrix(e.target.value)} placeholder="0.00" />
+                    <Euro size={14} className="absolute left-3 top-3 text-gray-500" />
+                    <input type="number" step="0.01" required className="w-full border border-gray-300 rounded-lg py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" value={customPrestaPrix} onChange={(e) => setCustomPrestaPrix(e.target.value)} placeholder="0.00" />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4">
-                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-3 block">Mode de règlement</label>
+              <div className="pt-2">
+                <label className="block text-xs font-bold text-gray-700 mb-2 ml-1">Mode de règlement</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {['CB', 'Espèces', 'Chèque', 'Virement'].map((mode) => (
-                    <label key={mode} className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all text-xs font-black uppercase ${modeReglement === mode ? 'border-blue-600 bg-blue-600 text-white shadow-lg' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-gray-50/50'}`}>
+                    <label key={mode} className={`flex items-center justify-center p-2.5 rounded-lg border cursor-pointer transition-all text-xs font-bold ${modeReglement === mode ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}>
                       <input type="radio" className="hidden" name="mode_reglement" value={mode} checked={modeReglement === mode} onChange={(e) => setModeReglement(e.target.value)} />
                       {mode}
                     </label>
@@ -347,14 +398,14 @@ export default function NouvelleFacture() {
 
           {/* Feedback Messages */}
           {message.text && (
-            <div className={`p-5 rounded-2xl flex items-center shadow-xl animate-in slide-in-from-bottom-2 duration-300 ${message.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-              {message.type === 'success' ? <CheckCircle size={20} className="mr-3 shrink-0" /> : <X size={20} className="mr-3 shrink-0" />}
-              <span className="font-bold text-sm tracking-tight">{message.text}</span>
+            <div className={`p-4 rounded-xl flex items-center shadow-sm ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              {message.type === 'success' ? <CheckCircle size={18} className="mr-2 shrink-0" /> : <X size={18} className="mr-2 shrink-0" />}
+              <span className="font-semibold text-sm">{message.text}</span>
             </div>
           )}
 
-          <button type="submit" disabled={generating} className="w-full py-5 px-4 rounded-[20px] text-white bg-blue-600 font-black text-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 transition-all shadow-2xl shadow-blue-200 flex items-center justify-center gap-3">
-            {generating ? <Loader2 className="animate-spin" size={24} /> : <><Send size={24} /> Émettre la facture & Avis</>}
+          <button type="submit" disabled={generating || cabinets.length === 0} className="w-full py-4 rounded-xl shadow-sm text-sm font-bold text-white bg-[#7ab4f5] hover:bg-blue-400 disabled:bg-gray-300 transition-all mt-4 flex items-center justify-center gap-2">
+            {generating ? <Loader2 className="animate-spin" size={20} /> : <><Send size={18} /> Émettre la facture & Avis</>}
           </button>
         </form>
       </div>

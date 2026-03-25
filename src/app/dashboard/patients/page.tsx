@@ -6,7 +6,8 @@ import {
   Search, User, FileText, Save, Loader2, ArrowLeft,
   History, Mail, Phone, MapPin, Hash, Trash2,
   Download, CreditCard, UserPlus, Star, Copy, MessageSquare,
-  CheckCircle, AlertCircle, CloudCheck, Info, AlertTriangle, X
+  CheckCircle, AlertCircle, CloudCheck, Info, AlertTriangle, X,
+  ClipboardList, Euro // <-- LES VOICI !
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -78,7 +79,6 @@ export default function PatientsAnnuaire() {
       .eq('id', selectedPatient.id);
 
     if (!error) {
-      // MISE À JOUR CRITIQUE : On met à jour la liste locale pour que le changement persiste au switch
       setPatients(prev => prev.map(p =>
         p.id === selectedPatient.id ? { ...p, notes_consultation: selectedPatient.notes_consultation } : p
       ));
@@ -179,6 +179,15 @@ export default function PatientsAnnuaire() {
 
   const filtered = patients.filter(p => p.nom_complet.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  // Fonction utilitaire pour générer des initiales
+  const getInitials = (name: string) => {
+      const parts = name.split(' ');
+      if (parts.length >= 2 && parts[0] !== "Nouveau") {
+          return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+  };
+
   if (loading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40}/></div>;
 
   return (
@@ -225,104 +234,134 @@ export default function PatientsAnnuaire() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto flex flex-col h-[calc(100vh-60px)] md:h-[calc(100vh-100px)]">
+      {/* MODIFICATION ICI : Élargissement du conteneur (comme le dashboard principal) */}
+      <div className="max-w-[1500px] w-[96%] mx-auto flex flex-col h-[calc(100vh-60px)] md:h-[calc(100vh-100px)]">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition"><ArrowLeft size={20}/></Link>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Dossiers Patients</h1>
+            <Link href="/dashboard" className="p-2.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition group">
+                <ArrowLeft size={20} className="text-gray-600 group-hover:-translate-x-1 transition-transform" />
+            </Link>
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dossiers Patients</h1>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Annuaire et suivi thérapeutique</p>
+            </div>
           </div>
-          <button onClick={handleCreatePatient} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm font-bold">
+          <button onClick={handleCreatePatient} className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm font-bold">
             <UserPlus size={18}/> Nouveau Patient
           </button>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 flex-1 overflow-hidden">
-          {/* LISTE GAUCHE */}
-          <div className="col-span-12 md:col-span-4 flex flex-col gap-4 overflow-hidden">
+        {/* MODIFICATION DE LA GRILLE : Passage à 4 colonnes pour la liste, 8 pour la fiche */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 overflow-hidden">
+
+          {/* LISTE GAUCHE (LG:COL-SPAN-4) */}
+          <div className="lg:col-span-4 flex flex-col gap-4 overflow-hidden">
             <div className="relative group">
-              <Search className="absolute left-3 top-3 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+              <Search className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
               <input
                 type="text" placeholder="Rechercher un nom..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-2xl bg-white outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
+                className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-2xl bg-white shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium placeholder:text-gray-400"
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-y-auto flex-1">
+
+            {/* MODIFICATION DU DESIGN DE LA LISTE */}
+            <div className="bg-transparent overflow-y-auto flex-1 space-y-2 pr-2 custom-scrollbar">
               {filtered.map(p => (
                 <button
                   key={p.id} onClick={() => handleSelectPatient(p)}
-                  className={`w-full text-left p-4 border-b border-gray-50 hover:bg-blue-50 transition-all ${selectedPatient?.id === p.id ? 'bg-blue-50/50 border-l-4 border-l-blue-600' : ''}`}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all ${
+                    selectedPatient?.id === p.id
+                    ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-600/20'
+                    : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
+                  }`}
                 >
-                  <p className="font-bold text-gray-900 truncate">{p.nom_complet}</p>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 truncate"><Mail size={12}/> {p.email}</p>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
+                      selectedPatient?.id === p.id ? 'bg-white text-blue-600' : 'bg-blue-50 text-blue-600'
+                  }`}>
+                      {getInitials(p.nom_complet)}
+                  </div>
+                  <div className="text-left overflow-hidden">
+                    <p className={`font-bold truncate ${selectedPatient?.id === p.id ? 'text-white' : 'text-gray-900'}`}>
+                        {p.nom_complet}
+                    </p>
+                    <p className={`text-[10px] flex items-center gap-1 mt-0.5 truncate ${selectedPatient?.id === p.id ? 'text-blue-100' : 'text-gray-400 font-medium'}`}>
+                        <Mail size={10}/> {p.email}
+                    </p>
+                  </div>
                 </button>
               ))}
+              {filtered.length === 0 && (
+                  <div className="text-center py-10 bg-white rounded-2xl border border-gray-200 border-dashed">
+                      <p className="text-gray-400 text-sm font-medium">Aucun patient trouvé.</p>
+                  </div>
+              )}
             </div>
           </div>
 
-          {/* FICHE DROITE */}
-          <div className="col-span-12 md:col-span-8 overflow-y-auto pb-20 custom-scrollbar">
+          {/* FICHE DROITE (LG:COL-SPAN-8) */}
+          <div className="lg:col-span-8 overflow-y-auto pb-20 custom-scrollbar bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
             {selectedPatient ? (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
 
                 {/* Header Fiche */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
+                <div className="space-y-6">
                   <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div className="space-y-1 flex-1">
+                    <div className="space-y-2 flex-1">
                       <input
-                        className="text-3xl font-extrabold text-gray-900 bg-transparent border-b-2 border-transparent hover:border-blue-100 focus:border-blue-600 outline-none w-full transition-all"
+                        className="text-3xl font-black text-gray-900 bg-transparent border-b-2 border-transparent hover:border-blue-100 focus:border-blue-600 outline-none w-full transition-all tracking-tight"
                         value={selectedPatient.nom_complet}
                         onChange={(e) => setSelectedPatient({...selectedPatient, nom_complet: e.target.value})}
                       />
-                      <div className="flex items-center gap-2">
-                         <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Fiche Patient</span>
-                         <span className="text-[10px] text-gray-300 font-mono">#{selectedPatient.id.split('-')[0]}</span>
+                      <div className="flex items-center gap-2 ml-1">
+                         <span className="bg-blue-50 text-blue-600 border border-blue-100 text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest">Dossier Actif</span>
+                         <span className="text-[10px] text-gray-400 font-mono font-medium">ID: {selectedPatient.id.split('-')[0]}</span>
                       </div>
                     </div>
                     <div className="flex gap-2 h-fit">
-                      <button onClick={() => setIsDeleteModalOpen(true)} className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="Supprimer"><Trash2 size={22}/></button>
+                      <button onClick={() => setIsDeleteModalOpen(true)} className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition border border-transparent hover:border-red-100" title="Supprimer ce dossier"><Trash2 size={20}/></button>
                       <button
                         onClick={() => router.push(`/dashboard/facture/nouvelle?email=${selectedPatient.email}`)}
-                        className="bg-green-600 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-green-700 shadow-lg shadow-green-100 text-sm font-bold transition-all"
+                        className="bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-100 text-sm font-bold transition-all"
                       >
                         <CreditCard size={18}/> Facturer
                       </button>
-                      <button onClick={handleManualUpdate} disabled={saving} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-black disabled:opacity-50 shadow-lg text-sm font-bold transition-all">
+                      <button onClick={handleManualUpdate} disabled={saving} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-black disabled:opacity-50 shadow-md text-sm font-bold transition-all">
                         {saving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16}/>} Enregistrer
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 pt-6 border-t border-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-6 border-t border-gray-100">
                     <div className="space-y-4">
                       <div className="group">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1 block">Email</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group-focus-within:bg-white border border-transparent group-focus-within:border-blue-200 transition-all">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">Email du patient</label>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-focus-within:bg-white border border-gray-100 group-focus-within:border-blue-300 group-focus-within:ring-2 group-focus-within:ring-blue-500/10 transition-all">
                           <Mail size={16} className="text-gray-400"/>
-                          <input className="flex-1 bg-transparent outline-none text-sm font-medium" value={selectedPatient.email} onChange={(e) => setSelectedPatient({...selectedPatient, email: e.target.value})} />
+                          <input className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" value={selectedPatient.email} onChange={(e) => setSelectedPatient({...selectedPatient, email: e.target.value})} />
                         </div>
                       </div>
                       <div className="group">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1 block">Téléphone</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group-focus-within:bg-white border border-transparent group-focus-within:border-blue-200 transition-all">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">Téléphone</label>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-focus-within:bg-white border border-gray-100 group-focus-within:border-blue-300 group-focus-within:ring-2 group-focus-within:ring-blue-500/10 transition-all">
                           <Phone size={16} className="text-gray-400"/>
-                          <input className="flex-1 bg-transparent outline-none text-sm font-medium" placeholder="Ex: 06 00 00 00 00" value={selectedPatient.telephone || ''} onChange={(e) => setSelectedPatient({...selectedPatient, telephone: e.target.value})} />
+                          <input className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" placeholder="Ex: 06 00 00 00 00" value={selectedPatient.telephone || ''} onChange={(e) => setSelectedPatient({...selectedPatient, telephone: e.target.value})} />
                         </div>
                       </div>
                     </div>
                     <div className="space-y-4">
                       <div className="group">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1 block">Adresse</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group-focus-within:bg-white border border-transparent group-focus-within:border-blue-200 transition-all">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">Adresse Postale</label>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-focus-within:bg-white border border-gray-100 group-focus-within:border-blue-300 group-focus-within:ring-2 group-focus-within:ring-blue-500/10 transition-all">
                           <MapPin size={16} className="text-gray-400"/>
-                          <input className="flex-1 bg-transparent outline-none text-sm font-medium" placeholder="Adresse complète" value={selectedPatient.adresse || ''} onChange={(e) => setSelectedPatient({...selectedPatient, adresse: e.target.value})} />
+                          <input className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" placeholder="Adresse complète" value={selectedPatient.adresse || ''} onChange={(e) => setSelectedPatient({...selectedPatient, adresse: e.target.value})} />
                         </div>
                       </div>
                       <div className="group">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1 block">N° Sécurité Sociale</label>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group-focus-within:bg-white border border-transparent group-focus-within:border-blue-200 transition-all">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">N° Sécurité Sociale</label>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-focus-within:bg-white border border-gray-100 group-focus-within:border-blue-300 group-focus-within:ring-2 group-focus-within:ring-blue-500/10 transition-all">
                           <Hash size={16} className="text-gray-400"/>
-                          <input className="flex-1 bg-transparent outline-none text-sm font-medium" placeholder="15 chiffres" value={selectedPatient.num_secu || ''} onChange={(e) => setSelectedPatient({...selectedPatient, num_secu: e.target.value})} />
+                          <input className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" placeholder="15 chiffres" value={selectedPatient.num_secu || ''} onChange={(e) => setSelectedPatient({...selectedPatient, num_secu: e.target.value})} />
                         </div>
                       </div>
                     </div>
@@ -330,46 +369,59 @@ export default function PatientsAnnuaire() {
                 </div>
 
                 {/* Notes Médicales - AUTO-SAVE AREA */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm relative overflow-hidden">
+                <div className="bg-[#fcfaf8] p-6 rounded-2xl border border-[#f0e6de] relative">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900 flex items-center gap-2"><FileText size={18} className="text-blue-600"/> Observations Thérapeutiques</h3>
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2"><ClipboardList size={18} className="text-[#a9825a]"/> Observations Thérapeutiques</h3>
                     <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-opacity duration-300">
                       {saving ? (
-                        <span className="text-blue-500 flex items-center gap-1"><Loader2 size={10} className="animate-spin"/> Sauvegarde...</span>
+                        <span className="text-blue-500 flex items-center gap-1"><Loader2 size={12} className="animate-spin"/> Sauvegarde...</span>
                       ) : (
-                        <span className="text-green-500 flex items-center gap-1 opacity-60"><CloudCheck size={12}/> Enregistré</span>
+                        <span className="text-green-600 flex items-center gap-1 opacity-80"><CloudCheck size={14}/> Enregistré</span>
                       )}
                     </div>
                   </div>
                   <textarea
-                    rows={10} className="w-full p-5 bg-blue-50/30 border border-blue-100/50 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/5 text-gray-700 leading-relaxed transition-all placeholder:text-gray-300"
-                    placeholder="Écrivez ici le suivi médical du patient..."
+                    rows={12} className="w-full p-5 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#a9825a]/30 focus:border-[#a9825a] text-gray-800 font-medium leading-relaxed transition-all placeholder:text-gray-300 shadow-sm"
+                    placeholder="Écrivez ici le suivi médical du patient. La sauvegarde est automatique à chaque frappe..."
                     value={selectedPatient.notes_consultation || ''}
                     onChange={(e) => setSelectedPatient({...selectedPatient, notes_consultation: e.target.value})}
                   />
-                  <p className="text-[10px] text-gray-400 mt-3 italic flex items-center gap-1">
-                    <Info size={12}/> Vos notes s'enregistrent automatiquement.
-                  </p>
                 </div>
 
                 {/* Historique Séances */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm pb-20">
-                  <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2"><History size={18} className="text-indigo-600"/> Historique des séances</h3>
-                  <div className="space-y-4">
+                <div className="pt-4">
+                  <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2"><History size={18} className="text-gray-400"/> Historique des factures et règlements</h3>
+                  <div className="space-y-3">
                     {historiqueFactures.map(f => (
-                      <div key={f.id} className={`p-5 rounded-2xl border transition-all ${f.statut === 'Annulée' ? 'bg-red-50/20 border-red-50 opacity-60' : 'bg-gray-50 border-transparent hover:border-gray-200 group'}`}>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="text-sm font-bold text-gray-900">{new Date(f.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                              <span className={`text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase tracking-widest ${f.statut === 'Annulée' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
-                                {f.statut === 'Annulée' ? 'Annulée' : 'Payée'}
-                              </span>
+                      <div key={f.id} className={`p-4 rounded-2xl border transition-all ${f.statut === 'Annulée' ? 'bg-red-50/30 border-red-100 opacity-60' : 'bg-white border-gray-100 hover:border-blue-200 shadow-sm group'}`}>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-6">
+                            <div>
+                                <span className="text-sm font-black text-gray-900 block mb-1">{new Date(f.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase tracking-widest ${f.statut === 'Annulée' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
+                                  {f.statut === 'Annulée' ? 'Annulée' : 'Payée'}
+                                </span>
                             </div>
+
+                            <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
+
                             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
-                              <span className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-lg border border-gray-100 shadow-sm text-gray-900 font-bold"><CreditCard size={12}/> {f.montant} €</span>
-                              <span className="px-2 py-1 bg-gray-200/50 rounded-lg">{f.mode_reglement || 'Autre'}</span>
-                              <span className={`px-2 py-1 rounded-lg ${f.statut_email === 'Ouvert' ? 'bg-green-50 text-green-700' : 'bg-gray-100'}`}>Email {f.statut_email || 'Envoyé'}</span>
+                              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 text-gray-900 font-bold"><Euro size={12}/> {f.montant}</span>
+                              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 text-gray-600"><CreditCard size={12}/> {f.mode_reglement || 'Autre'}</span>
+
+                              {/* Avis Container */}
+                              {f.note || f.commentaire ? (
+                                  <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-lg border border-yellow-100">
+                                      <div className="flex text-yellow-400">
+                                        {[1,2,3,4,5].map(star => (
+                                          <Star key={star} size={12} className={star <= (f.note || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
+                                        ))}
+                                      </div>
+                                      {f.commentaire && <span className="text-[10px] text-gray-600 italic truncate max-w-[120px] ml-1">"{f.commentaire}"</span>}
+                                  </div>
+                              ) : (
+                                  <span className="text-[10px] px-2 py-1 uppercase tracking-widest font-bold text-gray-300 italic">Sans avis</span>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -378,40 +430,29 @@ export default function PatientsAnnuaire() {
                                 navigator.clipboard.writeText(`${window.location.origin}/facture/${f.id}`);
                                 showToast("Lien copié !");
                               }}
-                              className="p-2.5 bg-white border border-gray-200 text-blue-600 rounded-xl hover:shadow-lg transition-all" title="Copier le lien">
+                              className="p-2 bg-gray-50 border border-gray-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-all" title="Copier le lien de la facture">
                               <Copy size={16}/>
                             </button>
-                            <button onClick={() => handleDownloadPdf(f.fichier_path, selectedPatient.nom_complet)} className="p-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:shadow-lg transition-all" title="Télécharger">
+                            <button onClick={() => handleDownloadPdf(f.fichier_path, selectedPatient.nom_complet)} className="p-2 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-100 transition-all" title="Télécharger le PDF">
                               <Download size={16}/>
                             </button>
                           </div>
                         </div>
-
-                        {(f.note || f.commentaire) && (
-                          <div className="mt-4 pt-4 border-t border-gray-200/50">
-                            <div className="flex items-center gap-1 mb-2">
-                              {[1,2,3,4,5].map(star => (
-                                <Star key={star} size={14} className={star <= (f.note || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-100"} />
-                              ))}
-                            </div>
-                            {f.commentaire && (
-                              <p className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-gray-100 flex items-start gap-2 shadow-sm">
-                                <MessageSquare size={14} className="mt-0.5 shrink-0 text-gray-300"/> "{f.commentaire}"
-                              </p>
-                            )}
-                          </div>
-                        )}
                       </div>
                     ))}
-                    {historiqueFactures.length === 0 && <p className="text-center text-gray-400 text-sm py-12 italic bg-gray-50 rounded-3xl border border-dashed border-gray-200">Aucune séance enregistrée.</p>}
+                    {historiqueFactures.length === 0 && (
+                        <div className="text-center py-10 bg-gray-50 rounded-2xl border border-gray-200 border-dashed">
+                            <p className="text-gray-400 text-sm font-medium italic">Aucune facture enregistrée pour ce patient.</p>
+                        </div>
+                    )}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-gray-400 bg-white rounded-[40px] border-2 border-dashed border-gray-200 mx-4">
-                <div className="p-8 bg-blue-50 rounded-full mb-6 animate-pulse"><User size={64} className="opacity-20 text-blue-600"/></div>
-                <p className="font-extrabold text-xl text-gray-800 tracking-tight">Ouvrez un dossier patient</p>
-                <p className="text-sm opacity-60 mt-2 max-w-[250px] text-center">Sélectionnez un patient à gauche pour consulter ses notes et facturer.</p>
+              <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                <div className="p-8 bg-gray-50 border border-gray-100 rounded-full mb-6 shadow-sm"><FileText size={48} className="text-gray-300"/></div>
+                <p className="font-bold text-xl text-gray-800 tracking-tight">Aucun dossier sélectionné</p>
+                <p className="text-sm opacity-60 mt-2 text-center">Cliquez sur un patient à gauche pour afficher ses notes et son historique.</p>
               </div>
             )}
           </div>
