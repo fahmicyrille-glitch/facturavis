@@ -138,11 +138,12 @@ function NouvelleFactureContent() {
 
     try {
       const prenomFormatte = patientPrenom ? ` ${patientPrenom}` : '';
-      const nomCompletFinal = patientNom.includes(patientPrenom)
+      // On construit le nom complet pour la comparaison et l'insertion
+      const nomCompletFinal = patientNom.includes(patientPrenom) && patientPrenom !== ''
         ? patientNom
         : `${patientCivilite} ${patientNom.toUpperCase()}${prenomFormatte}`.trim();
 
-      // --- Création de fiche patient auto si inexistant ---
+      // --- LOGIQUE CORRIGÉE : Vérification Email ET Nom ---
       const existingPatient = patientsDb.find(p =>
         p.email.toLowerCase() === patientEmail.toLowerCase() &&
         p.nom_complet.toLowerCase() === nomCompletFinal.toLowerCase()
@@ -413,7 +414,6 @@ function NouvelleFactureContent() {
   );
 }
 
-// Emballage de la page avec <Suspense>
 export default function NouvelleFacture() {
   return (
     <Suspense fallback={
