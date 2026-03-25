@@ -147,7 +147,7 @@ export async function POST(request: Request) {
 
     if (adresseCabinet) {
       const parts = adresseCabinet.split(',');
-      parts.forEach(p => {
+      parts.forEach((p: string) => {
         page.drawText(p.trim().toUpperCase(), { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
         stampY -= 16;
       });
