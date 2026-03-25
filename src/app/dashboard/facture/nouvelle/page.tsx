@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -28,7 +28,7 @@ interface Cabinet {
   nom: string;
 }
 
-export default function NouvelleFacture() {
+function NouvelleFactureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get('email');
@@ -48,13 +48,13 @@ export default function NouvelleFacture() {
   const [selectedCabinetId, setSelectedCabinetId] = useState<string>('');
 
   const [patientNom, setPatientNom] = useState('');
-  const [patientPrenom, setPatientPrenom] = useState(''); // NOUVEAU
-  const [patientCivilite, setPatientCivilite] = useState('Mme'); // NOUVEAU
+  const [patientPrenom, setPatientPrenom] = useState('');
+  const [patientCivilite, setPatientCivilite] = useState('Mme');
   const [patientEmail, setPatientEmail] = useState('');
   const [patientAdresse, setPatientAdresse] = useState('');
   const [patientSecu, setPatientSecu] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showDropdownPrenom, setShowDropdownPrenom] = useState(false); // NOUVEAU
+  const [showDropdownPrenom, setShowDropdownPrenom] = useState(false);
 
   const [selectedPrestaId, setSelectedPrestaId] = useState<string>('');
   const [customPrestaNom, setCustomPrestaNom] = useState('');
@@ -139,7 +139,7 @@ export default function NouvelleFacture() {
     try {
       const prenomFormatte = patientPrenom ? ` ${patientPrenom}` : '';
       const nomCompletFinal = patientNom.includes(patientPrenom)
-        ? patientNom // Si le nom contient déjà le prénom (via auto-complétion)
+        ? patientNom
         : `${patientCivilite} ${patientNom.toUpperCase()}${prenomFormatte}`.trim();
 
       // --- Création de fiche patient auto si inexistant ---
@@ -410,5 +410,18 @@ export default function NouvelleFacture() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Emballage de la page avec <Suspense>
+export default function NouvelleFacture() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-blue-600" size={40} />
+      </div>
+    }>
+      <NouvelleFactureContent />
+    </Suspense>
   );
 }
