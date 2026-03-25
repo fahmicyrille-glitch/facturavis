@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     const titreHeader = `${titreTherapeute || ''}`.toUpperCase();
     const titreWidth = fontRegular.widthOfTextAtSize(titreHeader, 12);
-    page.drawText(titreHeader, { x: (width - titreWidth) / 2, y: height - 85, size: 12, font: fontRegular, color: colorBlack, letterSpacing: 2 });
+    page.drawText(titreHeader, { x: (width - titreWidth) / 2, y: height - 85, size: 12, font: fontRegular, color: colorBlack });
 
     // ==========================================
     // 2. COORDONNÉES DU PRATICIEN (DYNAMIQUE)
