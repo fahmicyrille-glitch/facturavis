@@ -160,7 +160,7 @@ export default function LandingPage() {
              <div className="bg-white p-6 md:p-8 rounded-3xl border border-[#f0e6de] shadow-sm relative z-10 hover:shadow-md transition-shadow">
                <div className="w-12 h-12 bg-[#3e2f25] text-white font-black text-xl flex items-center justify-center rounded-2xl mx-auto mb-5 shadow-lg shadow-[#3e2f25]/20">1</div>
                <h3 className="font-black text-lg md:text-xl mb-2">Vous facturez</h3>
-               <p className="text-sm md:text-base text-[#7a6a5f]">Générez une facture ostéopathe ou kiné conforme en 10s depuis votre téléphone ou PC.</p>
+               <p className="text-sm md:text-base text-[#7a6a5f]">Générez une facture conforme en 10s depuis votre téléphone ou PC, propre à votre activité.</p>
              </div>
 
              <div className="bg-white p-6 md:p-8 rounded-3xl border border-[#f0e6de] shadow-sm relative z-10 hover:shadow-md transition-shadow">
