@@ -1,7 +1,23 @@
+'use client'; // Important car on utilise useEffect
+
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { CheckCircle, ArrowLeft, Calendar, Sparkles } from 'lucide-react';
 
 export default function MerciPage() {
+
+  useEffect(() => {
+    // On s'assure que la fonction gtag existe (chargée via le layout)
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+      console.log('Déclenchement de la conversion Google Ads !');
+      (window as any).gtag('event', 'conversion', {
+        'send_to': 'AW-18043378456/ip0TCJrQkpAcEJi24JtD',
+        'value': 1.0,
+        'currency': 'EUR'
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#fcfaf8] text-[#3e2f25] font-sans flex items-center justify-center p-4 selection:bg-[#a9825a] selection:text-white">
       <div className="max-w-xl w-full bg-white rounded-[32px] p-8 md:p-12 shadow-2xl border border-[#f0e6de] text-center relative overflow-hidden">
