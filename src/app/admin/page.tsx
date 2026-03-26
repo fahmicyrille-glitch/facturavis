@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   ShieldAlert, Users, FileText, Star, Send, Loader2, Activity,
   ArrowLeft, CheckCircle, Edit, X, ThumbsUp, MailOpen, Target,
-  Settings, Building, ShieldCheck, Globe, Hash
+  Settings, Building, ShieldCheck, Globe, Hash, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -20,7 +20,7 @@ interface Therapeute {
   logo_url: string;
   adresse_cabinet: string;
   siret: string;
-  code_ape: string; // Ajouté
+  code_ape: string;
   adeli: string;
   site_web: string;
   created_at: string;
@@ -52,7 +52,7 @@ export default function SuperAdmin() {
   // Champs Légaux & Facturation
   const [formAdresseCabinet, setFormAdresseCabinet] = useState('');
   const [formSiret, setFormSiret] = useState('');
-  const [formCodeApe, setFormCodeApe] = useState(''); // Ajouté
+  const [formCodeApe, setFormCodeApe] = useState('');
   const [formAdeli, setFormAdeli] = useState('');
   const [formSiteWeb, setFormSiteWeb] = useState('');
 
@@ -213,16 +213,23 @@ export default function SuperAdmin() {
               <ShieldAlert className="text-purple-400" size={32} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Centre de Contrôle (God Mode)</h1>
-              <p className="text-gray-400 text-sm font-medium">Gestion Admin BoostAvis</p>
+              <h1 className="text-2xl font-bold tracking-tight">Centre de Contrôle</h1>
+              <p className="text-gray-400 text-sm font-medium">Gestion Admin FacturAvis</p>
             </div>
           </div>
+
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <Link href="/admin/prospects" className="flex-1 sm:flex-none flex items-center justify-center text-sm font-bold text-blue-900 bg-blue-400 hover:bg-blue-300 px-4 py-2 rounded-lg transition shadow-sm">
-              <Users size={16} className="mr-2" /> Prospects
+            {/* 🔥 LE BOUTON PROSPECTS BIEN VISIBLE ICI 🔥 */}
+            <Link
+              href="/admin/prospects"
+              className="flex-1 sm:flex-none flex items-center justify-center text-sm font-black text-white bg-gradient-to-r from-[#d4b494] to-[#a9825a] hover:from-[#c2a385] hover:to-[#8b6a48] px-5 py-2.5 rounded-xl transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#a9825a]/30 group"
+            >
+              <Sparkles size={16} className="mr-2 group-hover:animate-pulse" />
+              Voir les Prospects
             </Link>
-            <Link href="/dashboard" className="flex-1 sm:flex-none flex items-center justify-center text-sm font-medium text-gray-300 hover:text-white bg-gray-800 px-4 py-2 rounded-lg transition">
-              <ArrowLeft size={16} className="mr-2" /> Dashboard
+
+            <Link href="/dashboard" className="flex-1 sm:flex-none flex items-center justify-center text-sm font-medium text-gray-300 hover:text-white bg-gray-800 px-4 py-2.5 rounded-xl transition">
+              <ArrowLeft size={16} className="mr-2" /> Quitter
             </Link>
           </div>
         </div>

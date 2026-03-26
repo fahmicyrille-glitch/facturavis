@@ -5,19 +5,20 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    const { nom, prenom, email, telephone } = await request.json();
+    // 💡 AJOUT DE 'profession' ICI POUR LE RÉCUPÉRER DU FORMULAIRE
+    const { nom, prenom, email, telephone, profession } = await request.json();
 
     const { data, error } = await resend.emails.send({
-      // 💡 ON UTILISE EXACTEMENT LE MÊME EXPÉDITEUR QUE LE CODE QUI MARCHE
       from: 'FacturAvis <facture@facturavis.fr>',
       to: ['fahmicyrille@gmail.com'],
-      subject: `🚀 Nouveau Prospect Fondateur : ${prenom} ${nom}`,
+      subject: `🚀 Nouveau Prospect (${profession}) : ${prenom} ${nom}`,
       html: `
         <div style="font-family: sans-serif; color: #3e2f25; padding: 20px; border: 1px solid #f0e6de; border-radius: 15px; background-color: #fcfaf8;">
           <h2 style="color: #a9825a;">Bingo ! Un nouveau praticien</h2>
           <p>Un prospect vient de réserver sa place depuis la page Fondateur :</p>
           <hr style="border: none; border-top: 1px solid #f0e6de; margin: 20px 0;">
           <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 10px;"><strong>💼 Profession :</strong> <span style="color: #a9825a; font-weight: bold;">${profession}</span></li>
             <li style="margin-bottom: 10px;"><strong>👤 Prénom :</strong> ${prenom}</li>
             <li style="margin-bottom: 10px;"><strong>👤 Nom :</strong> ${nom}</li>
             <li style="margin-bottom: 10px;"><strong>📧 Email :</strong> ${email}</li>

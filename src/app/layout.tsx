@@ -13,25 +13,35 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// --- SEO & METADATA BOOSTÉES ---
+// --- SEO & METADATA ULTRA-VENDEUSES (MULTI-PRATICIENS) ---
 export const metadata: Metadata = {
-  title: "FacturAvis | Le Logiciel de Facturation et Avis Google pour Thérapeutes",
-  description: "Gérez vos dossiers patients, générez vos factures en 10s et récoltez automatiquement des avis Google 5 étoiles. L'outil tout-en-un des praticiens libéraux.",
-  keywords: "logiciel thérapeute, facturation ostéopathe, gestion cabinet médical, avis Google cabinet",
+  title: "FacturAvis | Le Logiciel N°1 des Praticiens (Ostéopathes, Psy, Chiros...)",
+  description: "Ostéopathes, Psychologues, Chiropracteurs, Diététiciens, Kinésiologues... Libérez-vous de l'administratif ! Dossiers sécurisés, factures en 10s et avis Google automatisés. Testez l'offre Membre Fondateur sans CB.",
+  keywords: "logiciel ostéopathe, logiciel psychologue, facturation chiropracteur, gestion cabinet diététicien, kinésiologue, psychothérapeute, logiciel thérapeute, avis Google praticien santé, facturation mutuelle, FacturAvis",
   icons: {
     icon: "/logo/logo.png",
     shortcut: "/logo/logo.png",
     apple: "/logo/logo.png",
   },
   openGraph: {
-    title: 'FacturAvis | Boostez votre cabinet libéral',
-    description: "Dossiers, factures et avis automatisés. Simplifiez votre quotidien.",
+    title: 'FacturAvis | Simplifiez votre cabinet & Boostez vos rendez-vous',
+    description: "L'outil tout-en-un adapté à toutes les spécialités de la santé et du bien-être. Facturez en un clic et devenez n°1 sur Google Maps. Découvrez notre accès Membre Fondateur !",
     url: 'https://facturavis.fr',
     siteName: 'FacturAvis',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
+    images: [{
+      url: '/og-image.jpg', // Pense bien à avoir cette image dans ton dossier "public"
+      width: 1200,
+      height: 630,
+      alt: "FacturAvis - Le logiciel de gestion des praticiens libéraux"
+    }],
     locale: 'fr_FR',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FacturAvis | Le Logiciel des Thérapeutes Modernes',
+    description: "Ostéopathes, Psys, Chiros, Diététiciens... Passez au niveau supérieur. Factures, dossiers et avis Google automatisés. Rejoignez les Membres Fondateurs.",
+  }
 };
 
 export default function RootLayout({
@@ -42,8 +52,11 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
-        {/* Ton ID de mesure Google Analytics récupéré sur ta capture */}
-        <GoogleAnalytics GA_MEASUREMENT_ID="G-G8524720E3" />
+        {/* Balises Analytics & Ads pour tracker les inscriptions Fondateur */}
+        <GoogleAnalytics
+          GA_MEASUREMENT_ID="G-G8524720E3"
+          ADS_ID="AW-18043378456"
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}

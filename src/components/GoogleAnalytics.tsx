@@ -2,27 +2,38 @@
 
 import Script from 'next/script';
 
-export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_ID: string }) {
+export default function GoogleAnalytics({
+  GA_MEASUREMENT_ID,
+  ADS_ID
+}: {
+  GA_MEASUREMENT_ID: string;
+  ADS_ID: string;
+}) {
   return (
     <>
-      {/* Chargement de la bibliothèque Google Analytics */}
+      {/* Chargement de la bibliothèque gtag.js une seule fois */}
       <Script
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
       />
 
-      {/* Configuration de ton ID spécifique */}
+      {/* Configuration simultanée de Analytics et Ads */}
       <Script
-        id="google-analytics"
+        id="google-tags-init"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+
+            // Initialisation Google Analytics
             gtag('config', '${GA_MEASUREMENT_ID}', {
               page_path: window.location.pathname,
             });
+
+            // Initialisation Google Ads (L'ID de ta dernière capture)
+            gtag('config', '${ADS_ID}');
           `,
         }}
       />

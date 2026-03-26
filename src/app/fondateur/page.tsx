@@ -3,20 +3,23 @@
 import { useState } from 'react';
 import {
   CheckCircle, ArrowRight, Loader2, ShieldCheck,
-  Cloud, Lock, Sparkles, Check, User, Mail, Phone
+  Cloud, Lock, Sparkles, Check, User, Mail, Phone, Stethoscope, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { trackConversion } from '@/lib/gtag'; // <-- IMPORT DE LA BALISE GA4
 
 export default function FondateurPage() {
+  const router = useRouter();
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
   const [telephone, setTelephone] = useState('');
+  const [profession, setProfession] = useState(''); // Ajout du champ profession
 
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const spotsLeft = 12;
   const totalSpots = 50;
@@ -24,28 +27,56 @@ export default function FondateurPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // --- 1. VÉRIFICATION STRICTE DES CHAMPS ---
+    if (!prenom.trim() || !nom.trim()) {
+      setErrorMsg("Veuillez renseigner votre prénom et nom.");
+      return;
+    }
+    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
+      setErrorMsg("Veuillez renseigner une adresse email valide.");
+      return;
+    }
+    if (!telephone.trim() || telephone.length < 10) {
+      setErrorMsg("Veuillez renseigner un numéro de téléphone valide.");
+      return;
+    }
+    if (!profession) {
+      setErrorMsg("Veuillez sélectionner votre profession.");
+      return;
+    }
+
     setLoading(true);
+    setErrorMsg('');
 
     try {
+      // 1. Enregistrement en base de données
       const { error: dbError } = await supabase
         .from('prospects')
-        .insert([{ nom, prenom, email, telephone }]);
+        .insert([{ nom, prenom, email, telephone, profession }]); // Ajout de profession
 
       if (dbError) throw dbError;
 
-      await fetch('/api/notify-admin', {
+      // 2. Envoi de l'email à fahmicyrille@gmail.com
+      const emailResponse = await fetch('/api/notify-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom, prenom, email, telephone }),
+        body: JSON.stringify({ nom, prenom, email, telephone, profession }), // Ajout de profession
       });
 
-      // 🔥 BALISE DE CONVERSION GA4 DÉCLENCHÉE ICI
+      if (!emailResponse.ok) {
+        console.error("L'email de notification a échoué.");
+      }
+
+      // 3. Déclenchement de la conversion pour Google Ads/Analytics
       trackConversion('/fondateur');
 
-      setSuccess(true);
+      // 4. Redirection vers la page merci pour Google Ads
+      router.push('/merci');
+
     } catch (error) {
       console.error(error);
-      alert("Une erreur est survenue. Nous avons pourtant bien besoin de vous !");
+      setErrorMsg("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -161,73 +192,82 @@ export default function FondateurPage() {
                       </p>
                   </div>
 
-                  {!success && (
-                    <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex -space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600">JP</div>
-                        <div className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600">M</div>
-                        <div className="w-8 h-8 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-bold text-orange-600">S</div>
-                      </div>
-                      <p className="text-xs text-gray-600 font-medium">Rejoignez les <span className="font-bold text-[#3e2f25]">38 fondateurs</span> déjà inscrits.</p>
+                  <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex -space-x-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600">JP</div>
+                      <div className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600">M</div>
+                      <div className="w-8 h-8 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-bold text-orange-600">S</div>
+                    </div>
+                    <p className="text-xs text-gray-600 font-medium">Rejoignez les <span className="font-bold text-[#3e2f25]">38 fondateurs</span> déjà inscrits.</p>
+                  </div>
+
+                  {errorMsg && (
+                    <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-2xl flex items-start gap-3 border border-red-100 text-left">
+                      <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                      <p className="text-sm font-bold">{errorMsg}</p>
                     </div>
                   )}
 
-                  {success ? (
-                      <div className="bg-green-50 border border-green-100 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 text-center animate-in zoom-in duration-500 shadow-inner">
-                          <div className="bg-green-500 text-white w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-lg shadow-green-200">
-                              <CheckCircle size={28} />
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5 relative text-left">
+                              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Prénom</label>
+                              <div className="relative">
+                                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input type="text" required value={prenom} onChange={(e) => {setPrenom(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="Marc" />
+                              </div>
                           </div>
-                          <h3 className="text-xl md:text-2xl font-black text-green-900 mb-2">Place réservée !</h3>
-                          <p className="text-green-800 font-bold text-xs md:text-sm leading-relaxed">
-                              Félicitations {prenom}. Un expert de notre équipe vous appellera dans les 24h pour activer votre compte.
-                          </p>
+                          <div className="space-y-1.5 relative text-left">
+                              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Nom</label>
+                              <div className="relative">
+                                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input type="text" required value={nom} onChange={(e) => {setNom(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="Vandamme" />
+                              </div>
+                          </div>
                       </div>
-                  ) : (
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="space-y-1.5 relative">
-                                  <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Prénom</label>
-                                  <div className="relative">
-                                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input type="text" required value={prenom} onChange={(e) => setPrenom(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="Marc" />
-                                  </div>
-                              </div>
-                              <div className="space-y-1.5 relative">
-                                  <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Nom</label>
-                                  <div className="relative">
-                                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input type="text" required value={nom} onChange={(e) => setNom(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="Vandamme" />
-                                  </div>
-                              </div>
+
+                      <div className="space-y-1.5 text-left">
+                          <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Email Professionnel</label>
+                          <div className="relative">
+                            <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input type="email" required value={email} onChange={(e) => {setEmail(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="contact@cabinet.fr" />
                           </div>
+                      </div>
 
-                          <div className="space-y-1.5">
-                              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Email Professionnel</label>
-                              <div className="relative">
-                                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="contact@cabinet.fr" />
-                              </div>
+                      <div className="space-y-1.5 text-left">
+                          <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Téléphone Mobile</label>
+                          <div className="relative">
+                            <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input type="tel" required value={telephone} onChange={(e) => {setTelephone(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="06 00 00 00 00" />
                           </div>
+                      </div>
 
-                          <div className="space-y-1.5">
-                              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Téléphone Mobile</label>
-                              <div className="relative">
-                                <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input type="tel" required value={telephone} onChange={(e) => setTelephone(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="06 00 00 00 00" />
-                              </div>
+                      <div className="space-y-1.5 text-left">
+                          <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Profession</label>
+                          <div className="relative">
+                            <Stethoscope size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <select required value={profession} onChange={(e) => {setProfession(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-10 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm appearance-none">
+                              <option value="" disabled>Sélectionnez votre métier</option>
+                              <option value="Ostéopathe">Ostéopathe</option>
+                              <option value="Psychologue">Psychologue</option>
+                              <option value="Chiropracteur">Chiropracteur</option>
+                              <option value="Diététicien">Diététicien(ne)</option>
+                              <option value="Kinésiologue">Kinésiologue</option>
+                              <option value="Psychothérapeute">Psychothérapeute</option>
+                              <option value="Autre">Autre praticien de santé</option>
+                            </select>
                           </div>
+                      </div>
 
-                          <button type="submit" disabled={loading} className="w-full mt-6 bg-gradient-to-r from-[#3e2f25] to-[#2a1f18] hover:from-black hover:to-[#3e2f25] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-xl transition-all flex items-center justify-center shadow-[0_10px_20px_-10px_rgba(62,47,37,0.5)] hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden">
-                              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                      <button type="submit" disabled={loading} className="w-full mt-6 bg-gradient-to-r from-[#3e2f25] to-[#2a1f18] hover:from-black hover:to-[#3e2f25] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-xl transition-all flex items-center justify-center shadow-[0_10px_20px_-10px_rgba(62,47,37,0.5)] hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden">
+                          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                          {loading ? <Loader2 size={24} className="animate-spin relative z-10" /> : <><span className="relative z-10">Réserver mon accès</span> <ArrowRight size={20} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" /></>}
+                      </button>
 
-                              {loading ? <Loader2 size={24} className="animate-spin relative z-10" /> : <><span className="relative z-10">Réserver mon accès</span> <ArrowRight size={20} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" /></>}
-                          </button>
-
-                          <p className="text-[9px] md:text-[10px] text-center text-[#7a6a5f] font-bold uppercase tracking-widest pt-2">
-                              14 jours d'essai gratuit • Sans engagement
-                          </p>
-                      </form>
-                  )}
+                      <p className="text-[9px] md:text-[10px] text-center text-[#7a6a5f] font-bold uppercase tracking-widest pt-2">
+                          14 jours d'essai gratuit • Sans engagement
+                      </p>
+                  </form>
               </div>
             </div>
         </div>
