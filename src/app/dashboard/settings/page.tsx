@@ -87,11 +87,13 @@ function SettingsContent() {
       const uid = (isAdmin && forcedId) ? forcedId : session.user.id;
       setUserId(uid);
 
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('therapeutes')
         .select('*')
         .eq('id', uid)
         .single();
+
+      if (profileError) console.error("Erreur chargement profil:", profileError);
 
       if (profileData) {
         setNom(profileData.nom || '');
@@ -106,18 +108,22 @@ function SettingsContent() {
         setSignatureUrl(profileData.signature_url || '');
       }
 
-      const { data: cabinetsData } = await supabase
+      const { data: cabinetsData, error: cabError } = await supabase
         .from('cabinets')
         .select('*')
         .eq('therapeute_id', uid)
         .order('created_at', { ascending: true });
+
+      if (cabError) console.error("Erreur chargement cabinets:", cabError);
       if (cabinetsData) setCabinets(cabinetsData);
 
-      const { data: prestationsData } = await supabase
+      const { data: prestationsData, error: prestError } = await supabase
         .from('prestations')
         .select('*')
         .eq('user_id', uid)
         .order('created_at', { ascending: true });
+
+      if (prestError) console.error("Erreur chargement prestations:", prestError);
       if (prestationsData) setPrestations(prestationsData);
 
       setLoading(false);
@@ -131,25 +137,33 @@ function SettingsContent() {
     if (!userId) return;
     setSaving(true);
 
+    const cleanSiret = siret.replace(/\s/g, ''); // Enlève les espaces tapés par erreur
+    const cleanAdeli = adeli.replace(/\s/g, '');
+
     const { error } = await supabase
       .from('therapeutes')
       .update({
-        nom,
-        titre,
-        telephone,
+        nom: nom.trim(),
+        titre: titre.trim(),
+        telephone: telephone.trim(),
         logo_url: logoUrl,
-        adresse_cabinet: adresseCabinet,
-        siret,
-        code_ape: codeApe,
-        adeli,
-        site_web: siteWeb,
+        adresse_cabinet: adresseCabinet.trim(),
+        siret: cleanSiret,
+        code_ape: codeApe.trim().toUpperCase(),
+        adeli: cleanAdeli,
+        site_web: siteWeb.trim(),
         signature_url: signatureUrl
       })
       .eq('id', userId);
 
     setSaving(false);
     if (!error) {
-      setMessage({ text: 'Profil et informations de facturation mis à jour !', type: 'success' });
+      // Met à jour les états avec les valeurs nettoyées
+      setSiret(cleanSiret);
+      setAdeli(cleanAdeli);
+      setCodeApe(codeApe.trim().toUpperCase());
+
+      setMessage({ text: 'Profil et informations mis à jour !', type: 'success' });
       setTimeout(() => setMessage({ text: '', type: '' }), 4000);
     } else {
       setMessage({ text: "Erreur lors de la sauvegarde : " + error.message, type: 'error' });
@@ -168,16 +182,17 @@ function SettingsContent() {
 
       const { error: uploadError } = await supabase.storage
         .from('logos')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { upsert: true, cacheControl: 'public, max-age=31536000' });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(fileName);
-      setLogoUrl(publicUrl);
-      await supabase.from('therapeutes').update({ logo_url: publicUrl }).eq('id', userId);
+      const { data } = supabase.storage.from('logos').getPublicUrl(fileName);
+      setLogoUrl(data.publicUrl);
+
+      await supabase.from('therapeutes').update({ logo_url: data.publicUrl }).eq('id', userId);
 
     } catch (error: any) {
-      alert("Erreur lors de l'envoi : " + error.message);
+      alert("Erreur lors de l'envoi : " + (error.message || "Fichier invalide"));
     } finally {
       setUploadingLogo(false);
     }
@@ -201,17 +216,18 @@ function SettingsContent() {
       const fileName = `sig-${userId}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('logos')
-        .upload(fileName, file, { upsert: true });
+        .from('logos') // Stocké dans le même bucket
+        .upload(fileName, file, { upsert: true, cacheControl: 'public, max-age=31536000' });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(fileName);
-      setSignatureUrl(publicUrl);
-      await supabase.from('therapeutes').update({ signature_url: publicUrl }).eq('id', userId);
+      const { data } = supabase.storage.from('logos').getPublicUrl(fileName);
+      setSignatureUrl(data.publicUrl);
+
+      await supabase.from('therapeutes').update({ signature_url: data.publicUrl }).eq('id', userId);
 
     } catch (error: any) {
-      alert("Erreur lors de l'envoi de la signature : " + error.message);
+      alert("Erreur lors de l'envoi de la signature : " + (error.message || "Fichier invalide"));
     } finally {
       setUploadingSig(false);
     }
@@ -227,26 +243,40 @@ function SettingsContent() {
   // Prestations - Ajout, Modif, Suppr
   const handleAddPrestation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPrestaNom || !newPrestaPrix || !userId) return;
+    if (!newPrestaNom.trim() || !newPrestaPrix || !userId) return;
+
     setAddingPresta(true);
-    const prixParsed = parseFloat(newPrestaPrix.replace(',', '.'));
-    const { data, error } = await supabase.from('prestations').insert([{ user_id: userId, nom: newPrestaNom, prix: prixParsed }]).select().single();
+    const prixParsed = parseFloat(newPrestaPrix.replace(',', '.')) || 0;
+
+    const { data, error } = await supabase.from('prestations')
+      .insert([{ user_id: userId, nom: newPrestaNom.trim(), prix: prixParsed }])
+      .select().single();
+
     if (!error && data) {
       setPrestations([...prestations, data]);
       setNewPrestaNom('');
       setNewPrestaPrix('');
+    } else if (error) {
+      alert("Erreur lors de l'ajout : " + error.message);
     }
     setAddingPresta(false);
   };
 
   const handleUpdatePrestation = async (id: string) => {
-    if (!editPrestaNom || !editPrestaPrix) return;
+    if (!editPrestaNom.trim() || !editPrestaPrix) return;
+
     setUpdatingPresta(true);
-    const prixParsed = parseFloat(editPrestaPrix.replace(',', '.'));
-    const { error } = await supabase.from('prestations').update({ nom: editPrestaNom, prix: prixParsed }).eq('id', id);
+    const prixParsed = parseFloat(editPrestaPrix.replace(',', '.')) || 0;
+
+    const { error } = await supabase.from('prestations')
+      .update({ nom: editPrestaNom.trim(), prix: prixParsed })
+      .eq('id', id);
+
     if (!error) {
-      setPrestations(prestations.map(p => p.id === id ? { ...p, nom: editPrestaNom, prix: prixParsed } : p));
+      setPrestations(prestations.map(p => p.id === id ? { ...p, nom: editPrestaNom.trim(), prix: prixParsed } : p));
       setEditingPrestaId(null);
+    } else {
+      alert("Erreur lors de la modification : " + error.message);
     }
     setUpdatingPresta(false);
   };
@@ -254,20 +284,30 @@ function SettingsContent() {
   const handleDeletePrestation = async (id: string) => {
     setDeletingPrestaId(id);
     const { error } = await supabase.from('prestations').delete().eq('id', id);
-    if (!error) setPrestations(prestations.filter(p => p.id !== id));
+    if (!error) {
+        setPrestations(prestations.filter(p => p.id !== id));
+    } else {
+        alert("Impossible de supprimer cette prestation.");
+    }
     setDeletingPrestaId(null);
   };
 
   // Cabinets - Ajout, Modif, Suppr
   const handleAddCabinet = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCabinetNom || !newCabinetLink || !userId) return;
+    if (!newCabinetNom.trim() || !newCabinetLink.trim() || !userId) return;
+
     setAddingCabinet(true);
-    const { data, error } = await supabase.from('cabinets').insert([{ therapeute_id: userId, nom: newCabinetNom, lien_avis_google: newCabinetLink }]).select().single();
+    const { data, error } = await supabase.from('cabinets')
+      .insert([{ therapeute_id: userId, nom: newCabinetNom.trim(), lien_avis_google: newCabinetLink.trim() }])
+      .select().single();
+
     if (!error && data) {
       setCabinets([...cabinets, data]);
       setNewCabinetNom('');
       setNewCabinetLink('');
+    } else if (error) {
+        alert("Erreur lors de l'ajout : " + error.message);
     }
     setAddingCabinet(false);
   };
@@ -277,19 +317,24 @@ function SettingsContent() {
     const { data: { session } } = await supabase.auth.getSession();
     try {
       const isAdmin = session?.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+      const cleanNom = editNom.trim();
+      const cleanLink = editLink.trim();
+
       if (isAdmin && forcedId) {
         const res = await fetch('/api/admin/users', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ id: userId, id_cabinet: id_du_cabinet, nom_cabinet: editNom, lien_google: editLink })
+          body: JSON.stringify({ id: userId, id_cabinet: id_du_cabinet, nom_cabinet: cleanNom, lien_google: cleanLink })
         });
         if (!res.ok) throw new Error(await res.text());
       } else {
-        const { error } = await supabase.from('cabinets').update({ nom: editNom, lien_avis_google: editLink }).eq('id', id_du_cabinet);
+        const { error } = await supabase.from('cabinets').update({ nom: cleanNom, lien_avis_google: cleanLink }).eq('id', id_du_cabinet);
         if (error) throw error;
       }
-      setCabinets(cabinets.map(c => c.id === id_du_cabinet ? { ...c, nom: editNom, lien_avis_google: editLink } : c));
+
+      setCabinets(cabinets.map(c => c.id === id_du_cabinet ? { ...c, nom: cleanNom, lien_avis_google: cleanLink } : c));
       setEditingCabinetId(null);
+
     } catch (error: any) {
       alert("Erreur : " + (error.message || "Accès refusé"));
     } finally {
@@ -301,7 +346,11 @@ function SettingsContent() {
     if (!window.confirm("Supprimer ce lieu de consultation ?")) return;
     setDeletingId(id);
     const { error } = await supabase.from('cabinets').delete().eq('id', id);
-    if (!error) setCabinets(cabinets.filter(c => c.id !== id));
+    if (!error) {
+        setCabinets(cabinets.filter(c => c.id !== id));
+    } else {
+        alert("Impossible de supprimer ce lieu.");
+    }
     setDeletingId(null);
   };
 
@@ -309,7 +358,7 @@ function SettingsContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6 pb-20">
         <div className="flex items-center mb-4">
           <Link href="/dashboard" className="mr-4 p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition"><ArrowLeft size={20} className="text-gray-600" /></Link>
           <h1 className="text-2xl font-bold text-gray-900">Paramètres {forcedId && <span className="text-sm font-normal text-orange-500">(Mode Admin)</span>}</h1>
@@ -391,12 +440,12 @@ function SettingsContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                   Numéro SIRET * <ShieldCheck size={14} className="ml-2 text-green-500" />
                 </label>
-                <input type="text" required maxLength={14} minLength={14} placeholder="14 chiffres" className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={siret} onChange={(e) => setSiret(e.target.value)} />
+                <input type="text" required maxLength={18} placeholder="14 chiffres" className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={siret} onChange={(e) => setSiret(e.target.value)} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Code APE</label>
-                <input type="text" placeholder="Ex: 8690E" className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={codeApe} onChange={(e) => setCodeApe(e.target.value)} />
+                <input type="text" placeholder="Ex: 8690E" className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20 uppercase" value={codeApe} onChange={(e) => setCodeApe(e.target.value)} />
               </div>
 
               <div>

@@ -24,7 +24,6 @@ interface Therapeute {
   logo_url: string;
 }
 
-// NOUVEAU : Interface pour charger les patients
 interface Patient {
   id: string;
   nom_complet: string;
@@ -43,7 +42,7 @@ interface Facture {
   statut_email: string;
   montant: number;
   mode_reglement: string | null;
-  statut: string | null; // NOUVEAU : Statut de la facture (Valide ou Annulée)
+  statut: string | null;
 }
 
 interface ToastMessage {
@@ -66,10 +65,9 @@ export default function Dashboard() {
   const [cabinets, setCabinets] = useState<Cabinet[]>([]);
   const [selectedCabinetId, setSelectedCabinetId] = useState<string>('');
 
-  // NOUVEAU : État pour stocker la liste des patients et gérer l'affichage
   const [patientsDb, setPatientsDb] = useState<Patient[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showDropdownPrenom, setShowDropdownPrenom] = useState(false); // Ajout état dropdown Prénom
+  const [showDropdownPrenom, setShowDropdownPrenom] = useState(false);
 
   const [facturesHistorique, setFacturesHistorique] = useState<Facture[]>([]);
 
@@ -89,7 +87,6 @@ export default function Dashboard() {
   const [factureToEdit, setFactureToEdit] = useState<Facture | null>(null);
   const [emailToEdit, setEmailToEdit] = useState('');
 
-  // NOUVEAU : États pour la modale d'annulation
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [factureToCancel, setFactureToCancel] = useState<Facture | null>(null);
 
@@ -135,23 +132,32 @@ export default function Dashboard() {
   };
 
   const fetchHistorique = async (uid: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('factures')
       .select('*')
       .eq('therapeute_id', uid)
       .order('created_at', { ascending: false });
 
-    if (data) setFacturesHistorique(data);
+    if (error) {
+      console.error("Erreur Historique:", error);
+      showToast("Erreur lors du chargement de l'historique", "error");
+    } else if (data) {
+      setFacturesHistorique(data);
+    }
   };
 
-  // NOUVEAU : Fonction pour charger les patients
   const fetchPatients = async (uid: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('patients')
       .select('id, nom_complet, email')
       .eq('therapeute_id', uid)
       .order('nom_complet', { ascending: true });
-    if (data) setPatientsDb(data);
+
+    if (error) {
+      console.error("Erreur Patients:", error);
+    } else if (data) {
+      setPatientsDb(data);
+    }
   };
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -160,7 +166,6 @@ export default function Dashboard() {
     let channel: any;
 
     const initDashboard = async () => {
-    // 1. On récupère la session UNE SEULE FOIS
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
@@ -168,16 +173,13 @@ export default function Dashboard() {
         return;
       }
 
-      // 2. On définit l'ID utilisateur
       const uid = session.user.id;
       setUserId(uid);
 
-      // 3. On vérifie si l'utilisateur est admin
       if (session.user.email === 'fahmicyrille@gmail.com') {
         setIsAdmin(true);
       }
 
-      // 4. On récupère le reste des données
       const { data: dataTherapeute } = await supabase.from('therapeutes').select('nom, titre, telephone, email, logo_url').eq('id', uid).single();
       if (dataTherapeute) setTherapeuteInfo(dataTherapeute);
 
@@ -188,23 +190,22 @@ export default function Dashboard() {
       }
 
       await fetchHistorique(uid);
-      await fetchPatients(uid); // NOUVEAU : On charge aussi les patients
+      await fetchPatients(uid);
       setFetchingData(false);
 
-      // CORRECTION DU REALTIME : On écoute TOUS les événements sur 'factures'
-      // et on force le rafraîchissement.
+      // AMÉLIORATION : On n'écoute que les factures de CE thérapeute pour la performance
       channel = supabase
         .channel('schema-db-changes')
         .on(
           'postgres_changes',
           {
-            event: '*', // Écoute les INSERT, UPDATE et DELETE
+            event: '*',
             schema: 'public',
-            table: 'factures'
+            table: 'factures',
+            filter: `therapeute_id=eq.${uid}` // <-- Optimisation majeure
           },
           (payload) => {
             console.log("Changement détecté dans Supabase :", payload);
-            // On refetch tout pour être sûr d'avoir la dernière version (y compris les notes)
             fetchHistorique(uid);
           }
         )
@@ -223,13 +224,12 @@ export default function Dashboard() {
     router.push('/');
   };
 
-  // NOUVEAU : Fonction quand on clique sur un patient dans la liste
   const selectPatient = (p: Patient) => {
     setNom(p.nom_complet);
     setPatientEmail(p.email);
     setPrenom('');
     setShowDropdown(false);
-    setShowDropdownPrenom(false); // Cache aussi le menu du prénom
+    setShowDropdownPrenom(false);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -240,29 +240,30 @@ export default function Dashboard() {
     setSuccessLink(null);
 
     try {
-      const prenomFormatte = prenom ? ` ${prenom}` : '';
-      const nomComplet = `${civilite} ${nom.toUpperCase()}${prenomFormatte}`.trim();
+      // Nettoyage des données
+      const cleanEmail = patientEmail.trim().toLowerCase();
+      const prenomFormatte = prenom ? ` ${prenom.trim()}` : '';
+      const nomComplet = `${civilite} ${nom.trim().toUpperCase()}${prenomFormatte}`.trim();
 
-      // --- NOUVEAU BLOC : Création de fiche patient auto si inexistant ---
-      // MODIFICATION ICI : On vérifie que l'email ET le nom complet correspondent
       const existingPatient = patientsDb.find(p =>
-        p.email.toLowerCase() === patientEmail.toLowerCase() &&
+        p.email.toLowerCase() === cleanEmail &&
         p.nom_complet.toLowerCase() === nomComplet.toLowerCase()
       );
 
       if (!existingPatient) {
-        // CORRECTION : Sécurisation de l'insert en cas d'erreur
         const { data: newPat, error: patError } = await supabase.from('patients').insert([{
           therapeute_id: userId,
           nom_complet: nomComplet,
-          email: patientEmail,
-          notes_consultation: "" // Ajout pour éviter le bug de colonne manquante
+          email: cleanEmail,
+          notes_consultation: ""
         }]).select().single();
 
-        if (patError) console.error("Erreur de création de fiche patient :", patError);
-        if (newPat) setPatientsDb([...patientsDb, newPat]);
+        if (patError) {
+          console.error("Erreur de création de fiche patient :", patError);
+        } else if (newPat) {
+          setPatientsDb([...patientsDb, newPat]);
+        }
       }
-      // -------------------------------------------------------------------
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -278,13 +279,13 @@ export default function Dashboard() {
         .insert([{
           therapeute_id: userId,
           cabinet_id: selectedCabinetId,
-          patient_email: patientEmail,
+          patient_email: cleanEmail,
           patient_nom: nomComplet,
           fichier_path: filePath,
           statut_email: 'Envoyé',
           montant: parseFloat(montant) || 0,
           mode_reglement: modeReglement,
-          statut: 'Valide' // On précise Valide à l'upload
+          statut: 'Valide'
         }])
         .select('*')
         .single();
@@ -304,7 +305,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: patientEmail,
+          email: cleanEmail,
           nomPatient: nomComplet,
           lienFacture: lien,
           nomTherapeute: therapeuteInfo.nom,
@@ -342,7 +343,9 @@ export default function Dashboard() {
   };
 
   const handleConfirmEditEmail = async () => {
-    if (!factureToEdit || !emailToEdit || emailToEdit === factureToEdit.patient_email) {
+    const cleanNewEmail = emailToEdit.trim().toLowerCase();
+
+    if (!factureToEdit || !cleanNewEmail || cleanNewEmail === factureToEdit.patient_email.toLowerCase()) {
       setIsEditEmailModalOpen(false);
       return;
     }
@@ -352,12 +355,12 @@ export default function Dashboard() {
     try {
       const { error: updateError } = await supabase
         .from('factures')
-        .update({ patient_email: emailToEdit, statut_email: 'Renvoyé' })
+        .update({ patient_email: cleanNewEmail, statut_email: 'Renvoyé' })
         .eq('id', factureToEdit.id);
 
       if (updateError) throw updateError;
 
-      setFacturesHistorique(prev => prev.map(f => f.id === factureToEdit.id ? { ...f, patient_email: emailToEdit, statut_email: 'Renvoyé' } : f));
+      setFacturesHistorique(prev => prev.map(f => f.id === factureToEdit.id ? { ...f, patient_email: cleanNewEmail, statut_email: 'Renvoyé' } : f));
 
       const lien = `${window.location.origin}/facture/${factureToEdit.id}`;
       const currentCabinet = cabinets.find(c => c.id === factureToEdit.cabinet_id);
@@ -366,7 +369,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: emailToEdit,
+          email: cleanNewEmail,
           nomPatient: factureToEdit.patient_nom,
           lienFacture: lien,
           nomTherapeute: therapeuteInfo?.nom,
@@ -389,7 +392,6 @@ export default function Dashboard() {
     }
   };
 
-  // NOUVEAU : Gérer l'annulation
   const handleCancelClick = (facture: Facture) => {
     setFactureToCancel(facture);
     setIsCancelModalOpen(true);
@@ -448,7 +450,6 @@ export default function Dashboard() {
     return matchRecherche && matchDebut && matchFin;
   });
 
-  // NOUVEAU : Filtrage pour le menu déroulant d'auto-complétion (Nom et Prénom)
   const filteredPatients = patientsDb.filter(p => {
     if (!nom && !prenom) return false;
     const matchNom = nom ? p.nom_complet.toLowerCase().includes(nom.toLowerCase()) : true;
@@ -480,7 +481,6 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  // NOUVEAU : On isole les factures valides pour le calcul des statistiques de CA
   const facturesValides = facturesFiltrees.filter(f => f.statut !== 'Annulée');
 
   const totalFactures = facturesValides.length;
@@ -506,7 +506,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 relative">
-      {/* MODIFICATION ICI : Élargissement du conteneur max-w-[1500px] w-[95%] */}
       <div className="max-w-[1500px] w-[96%] mx-auto space-y-6">
 
         {/* EN-TÊTE DU DASHBOARD */}
@@ -518,13 +517,11 @@ export default function Dashboard() {
              </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            {/* NOUVEAU : Bouton Admin conditionnel */}
             {isAdmin && (
               <Link href="/admin" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-white bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg shadow-sm transition-colors">
                 <Settings size={16} className="mr-2" /> Admin
               </Link>
             )}
-            {/* NOUVEAU BOUTON : Fiches Patients */}
             <Link href="/dashboard/patients" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
               <Users size={16} className="mr-2" /> Fiches Patients
             </Link>
@@ -583,7 +580,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* MODIFICATION DE LA GRILLE : LG:COL-SPAN-5 (gauche) et LG:COL-SPAN-7 (droite) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
           {/* COLONNE GAUCHE (FORMULAIRES) : LG:COL-SPAN-5 */}
@@ -658,7 +654,6 @@ export default function Dashboard() {
                       <select className="w-full border border-gray-400 rounded-md py-2.5 px-2 text-sm bg-white focus:outline-none focus:border-blue-500" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
                         <option value="Mme">Mme</option>
                         <option value="M.">M.</option>
-                        <option value="Enfant">Enf.</option>
                       </select>
                     </div>
                     <div className="relative col-span-8">
@@ -818,7 +813,6 @@ export default function Dashboard() {
               </div>
 
               <div className="overflow-x-auto flex-1 w-full">
-                {/* MODIFICATION ICI : On force un min-width pour que le tableau ne s'écrase jamais */}
                 <table className="w-full text-left text-sm min-w-[650px]">
                   <thead className="bg-white border-b border-gray-100 text-gray-500 uppercase text-xs">
                     <tr>

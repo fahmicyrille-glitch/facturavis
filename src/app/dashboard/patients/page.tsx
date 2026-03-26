@@ -7,7 +7,7 @@ import {
   History, Mail, Phone, MapPin, Hash, Trash2,
   Download, CreditCard, UserPlus, Star, Copy, MessageSquare,
   CheckCircle, AlertCircle, CloudCheck, Info, AlertTriangle, X,
-  ClipboardList, Euro // <-- LES VOICI !
+  ClipboardList, Euro
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -45,9 +45,7 @@ export default function PatientsAnnuaire() {
   const [userId, setUserId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
-  // États pour la modale de suppression
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -65,20 +63,25 @@ export default function PatientsAnnuaire() {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
         autoSaveNotes();
-      }, 2000); // Sauvegarde après 2 sec d'inactivité
+      }, 2000);
     }
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, [selectedPatient?.notes_consultation]);
 
   const autoSaveNotes = async () => {
-    if (!selectedPatient) return;
+    // MODIFICATION : On ne sauvegarde pas automatiquement un brouillon
+    if (!selectedPatient || selectedPatient.id === 'temp-new-patient') return;
+
     setSaving(true);
     const { error } = await supabase
       .from('patients')
       .update({ notes_consultation: selectedPatient.notes_consultation })
       .eq('id', selectedPatient.id);
 
-    if (!error) {
+    if (error) {
+      console.error("Erreur Auto-save :", error);
+      showToast("Erreur de synchronisation", "error");
+    } else {
       setPatients(prev => prev.map(p =>
         p.id === selectedPatient.id ? { ...p, notes_consultation: selectedPatient.notes_consultation } : p
       ));
@@ -90,102 +93,254 @@ export default function PatientsAnnuaire() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     setUserId(session.user.id);
-    const { data } = await supabase.from('patients').select('*').eq('therapeute_id', session.user.id).order('nom_complet');
-    if (data) setPatients(data);
+    const { data, error } = await supabase.from('patients').select('*').eq('therapeute_id', session.user.id).order('nom_complet');
+
+    if (error) {
+      console.error(error);
+      showToast("Erreur lors du chargement des patients", "error");
+    } else if (data) {
+      setPatients(data);
+    }
     setLoading(false);
   };
 
   const fetchHistorique = async (pEmail: string) => {
-    const { data } = await supabase
+    if (!userId || !pEmail) return;
+
+    const { data, error } = await supabase
       .from('factures')
       .select('id, created_at, montant, statut, fichier_path, note, commentaire, mode_reglement, statut_email')
       .eq('patient_email', pEmail)
+      .eq('therapeute_id', userId)
       .order('created_at', { ascending: false });
-    if (data) setHistoriqueFactures(data);
-    else setHistoriqueFactures([]);
+
+    if (error) {
+      console.error(error);
+      showToast("Erreur lors du chargement de l'historique", "error");
+    } else if (data) {
+      setHistoriqueFactures(data);
+    } else {
+      setHistoriqueFactures([]);
+    }
   };
 
   const handleSelectPatient = async (p: Patient) => {
-    // Si une sauvegarde est en attente, on l'exécute tout de suite avant de changer
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
       await autoSaveNotes();
     }
+
+    // MODIFICATION : Si on quitte un brouillon sans l'avoir enregistré, on le supprime de l'affichage local
+    if (selectedPatient?.id === 'temp-new-patient' && p.id !== 'temp-new-patient') {
+      setPatients(prev => prev.filter(pat => pat.id !== 'temp-new-patient'));
+    }
+
     setSelectedPatient(p);
-    fetchHistorique(p.email);
+    if (p.id !== 'temp-new-patient') {
+      fetchHistorique(p.email);
+    } else {
+      setHistoriqueFactures([]);
+    }
   };
 
+  const handleGoBack = async () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      await autoSaveNotes();
+    }
+    router.push('/dashboard');
+  };
+
+  // --- FONCTIONS CIVILIÉ ---
+  const extractCivility = (nomComplet: string) => {
+    if (nomComplet?.startsWith('Mme ')) return 'Mme';
+    if (nomComplet?.startsWith('M. ')) return 'M.';
+    if (nomComplet?.startsWith('Enfant ')) return 'Enfant';
+    return 'Mme'; // Par défaut
+  };
+
+  const extractName = (nomComplet: string) => {
+    if (nomComplet?.startsWith('Mme ')) return nomComplet.substring(4);
+    if (nomComplet?.startsWith('M. ')) return nomComplet.substring(3);
+    if (nomComplet?.startsWith('Enfant ')) return nomComplet.substring(7);
+    return nomComplet || '';
+  };
+
+  const handleCivilityChange = (newCivility: string) => {
+    if (!selectedPatient) return;
+    const currentName = extractName(selectedPatient.nom_complet);
+    setSelectedPatient({ ...selectedPatient, nom_complet: `${newCivility} ${currentName}` });
+  };
+
+  const handleNameChange = (newName: string) => {
+    if (!selectedPatient) return;
+    const currentCivility = extractCivility(selectedPatient.nom_complet);
+    setSelectedPatient({ ...selectedPatient, nom_complet: `${currentCivility} ${newName}` });
+  };
+
+  // --- SAUVEGARDE (CRÉATION OU MISE À JOUR) ---
   const handleManualUpdate = async () => {
     if (!selectedPatient) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('patients')
-      .update({
-        nom_complet: selectedPatient.nom_complet,
-        email: selectedPatient.email,
-        adresse: selectedPatient.adresse,
-        num_secu: selectedPatient.num_secu,
-        telephone: selectedPatient.telephone,
-        notes_consultation: selectedPatient.notes_consultation
-      })
-      .eq('id', selectedPatient.id);
 
-    if (!error) {
-        fetchPatients();
-        showToast("Modifications enregistrées");
+    const cleanedEmail = selectedPatient.email.trim().toLowerCase();
+    const cleanedPhone = selectedPatient.telephone?.trim();
+    const cleanedNom = selectedPatient.nom_complet.trim();
+    const justName = extractName(cleanedNom);
+
+    // Validation de base
+    if (!justName || !cleanedEmail) {
+      showToast("Le nom et l'email sont obligatoires.", "error");
+      setSaving(false);
+      return;
     }
+
+    // Vérification anti-doublon
+    const isDuplicate = patients.some(p =>
+      p.id !== selectedPatient.id &&
+      p.email.toLowerCase() === cleanedEmail &&
+      p.nom_complet.toLowerCase() === cleanedNom.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      showToast("Ce patient existe déjà (Même nom et même email).", "error");
+      setSaving(false);
+      return;
+    }
+
+    // Si c'est un brouillon, on FAIT UN INSERT
+    if (selectedPatient.id === 'temp-new-patient') {
+      const { data, error } = await supabase
+        .from('patients')
+        .insert([{
+          therapeute_id: userId,
+          nom_complet: cleanedNom,
+          email: cleanedEmail,
+          adresse: selectedPatient.adresse,
+          num_secu: selectedPatient.num_secu,
+          telephone: cleanedPhone,
+          notes_consultation: selectedPatient.notes_consultation
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Insert error:", error);
+        showToast("Erreur lors de la création", "error");
+      } else if (data) {
+        // On remplace le brouillon local par le vrai patient de la base de données
+        setPatients(prev => [data, ...prev.filter(p => p.id !== 'temp-new-patient')]);
+        setSelectedPatient(data);
+        showToast("Nouveau dossier créé avec succès !");
+      }
+    }
+    // Sinon, c'est une MISE À JOUR classique
+    else {
+      const { error } = await supabase
+        .from('patients')
+        .update({
+          nom_complet: cleanedNom,
+          email: cleanedEmail,
+          adresse: selectedPatient.adresse,
+          num_secu: selectedPatient.num_secu,
+          telephone: cleanedPhone,
+          notes_consultation: selectedPatient.notes_consultation
+        })
+        .eq('id', selectedPatient.id);
+
+      if (error) {
+          console.error("Update error:", error);
+          showToast("Erreur lors de l'enregistrement", "error");
+      } else {
+          setSelectedPatient({ ...selectedPatient, email: cleanedEmail, telephone: cleanedPhone, nom_complet: cleanedNom });
+          fetchPatients();
+          showToast("Modifications enregistrées");
+      }
+    }
+
     setSaving(false);
   };
 
-  const handleCreatePatient = async () => {
-    if (!userId) return;
-    const newPatient = {
-      therapeute_id: userId,
-      nom_complet: "Nouveau Patient",
-      email: `patient_${Date.now()}@email.com`,
+  // --- CRÉATION DU BROUILLON ---
+  const handleCreatePatient = () => {
+    // Si on est déjà sur un brouillon, on ne fait rien
+    if (selectedPatient?.id === 'temp-new-patient') return;
+
+    const draftPatient = {
+      id: 'temp-new-patient', // ID fictif
+      nom_complet: "Mme ", // Civilité prête, nom vide
+      email: "",
+      telephone: "",
+      adresse: "",
+      num_secu: "",
       notes_consultation: ""
     };
-    const { data } = await supabase.from('patients').insert([newPatient]).select().single();
-    if (data) {
-      setPatients([data, ...patients]);
-      setSelectedPatient(data);
-      setHistoriqueFactures([]);
-      showToast("Nouveau dossier créé");
-    }
+
+    // On l'ajoute en haut de la liste visuelle et on le sélectionne
+    setPatients([draftPatient, ...patients.filter(p => p.id !== 'temp-new-patient')]);
+    setSelectedPatient(draftPatient);
+    setHistoriqueFactures([]);
   };
 
+  // --- SUPPRESSION ---
   const confirmDeletePatient = async () => {
     if (!selectedPatient) return;
-    const { error } = await supabase.from('patients').delete().eq('id', selectedPatient.id);
-    if (!error) {
-      setPatients(patients.filter(p => p.id !== selectedPatient.id));
+
+    // Si c'est un brouillon, on le retire juste de l'écran, on n'appelle pas Supabase
+    if (selectedPatient.id === 'temp-new-patient') {
+      setPatients(patients.filter(p => p.id !== 'temp-new-patient'));
       setSelectedPatient(null);
-      setHistoriqueFactures([]);
       setIsDeleteModalOpen(false);
-      showToast("Dossier supprimé", "error");
+      return;
     }
+
+    // Si c'est un vrai patient, on supprime de Supabase
+    const { error } = await supabase.from('patients').delete().eq('id', selectedPatient.id);
+
+    if (error) {
+      console.error("Delete error:", error);
+      showToast("Impossible de supprimer le dossier", "error");
+      return;
+    }
+
+    setPatients(patients.filter(p => p.id !== selectedPatient.id));
+    setSelectedPatient(null);
+    setHistoriqueFactures([]);
+    setIsDeleteModalOpen(false);
+    showToast("Dossier supprimé");
   };
 
   const handleDownloadPdf = async (path: string, nom: string) => {
-    const { data } = await supabase.storage.from('factures_pdf').download(path);
-    if (data) {
-      const url = URL.createObjectURL(data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Facture_${nom.replace(/\s+/g, '_')}.pdf`;
-      link.click();
+    try {
+      const { data, error } = await supabase.storage.from('factures_pdf').download(path);
+      if (error) throw error;
+
+      if (data) {
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Facture_${nom.replace(/\s+/g, '_')}.pdf`;
+        link.click();
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur lors du téléchargement", "error");
     }
   };
 
   const filtered = patients.filter(p => p.nom_complet.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  // Fonction utilitaire pour générer des initiales
   const getInitials = (name: string) => {
       const parts = name.split(' ');
-      if (parts.length >= 2 && parts[0] !== "Nouveau") {
-          return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      // Ignorer "M.", "Mme", "Enfant" pour les initiales
+      const startIndex = (parts[0] === 'M.' || parts[0] === 'Mme' || parts[0] === 'Enfant') ? 1 : 0;
+
+      if (parts.length > startIndex + 1) {
+          return `${parts[startIndex][0]}${parts[startIndex + 1][0]}`.toUpperCase();
+      } else if (parts.length > startIndex && parts[startIndex].length > 0) {
+          return parts[startIndex].substring(0, 2).toUpperCase();
       }
-      return name.substring(0, 2).toUpperCase();
+      return "?";
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40}/></div>;
@@ -212,7 +367,10 @@ export default function PatientsAnnuaire() {
               <div className="space-y-2">
                 <h3 className="text-xl font-extrabold text-gray-900">Supprimer le dossier ?</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Cette action est irréversible. Toutes les notes de <b>{selectedPatient?.nom_complet}</b> seront définitivement perdues.
+                  {selectedPatient?.id === 'temp-new-patient'
+                    ? "Voulez-vous annuler la création de ce patient ?"
+                    : `Cette action est irréversible. Toutes les notes de ${selectedPatient?.nom_complet} seront définitivement perdues.`
+                  }
                 </p>
               </div>
             </div>
@@ -234,13 +392,12 @@ export default function PatientsAnnuaire() {
         </div>
       )}
 
-      {/* MODIFICATION ICI : Élargissement du conteneur (comme le dashboard principal) */}
       <div className="max-w-[1500px] w-[96%] mx-auto flex flex-col h-[calc(100vh-60px)] md:h-[calc(100vh-100px)]">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="p-2.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition group">
+            <button onClick={handleGoBack} className="p-2.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition group">
                 <ArrowLeft size={20} className="text-gray-600 group-hover:-translate-x-1 transition-transform" />
-            </Link>
+            </button>
             <div>
                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dossiers Patients</h1>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Annuaire et suivi thérapeutique</p>
@@ -251,10 +408,9 @@ export default function PatientsAnnuaire() {
           </button>
         </div>
 
-        {/* MODIFICATION DE LA GRILLE : Passage à 4 colonnes pour la liste, 8 pour la fiche */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 overflow-hidden">
 
-          {/* LISTE GAUCHE (LG:COL-SPAN-4) */}
+          {/* LISTE GAUCHE */}
           <div className="lg:col-span-4 flex flex-col gap-4 overflow-hidden">
             <div className="relative group">
               <Search className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
@@ -265,7 +421,6 @@ export default function PatientsAnnuaire() {
               />
             </div>
 
-            {/* MODIFICATION DU DESIGN DE LA LISTE */}
             <div className="bg-transparent overflow-y-auto flex-1 space-y-2 pr-2 custom-scrollbar">
               {filtered.map(p => (
                 <button
@@ -274,7 +429,7 @@ export default function PatientsAnnuaire() {
                     selectedPatient?.id === p.id
                     ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-600/20'
                     : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
-                  }`}
+                  } ${p.id === 'temp-new-patient' ? 'animate-pulse bg-blue-50 border-blue-300' : ''}`}
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
                       selectedPatient?.id === p.id ? 'bg-white text-blue-600' : 'bg-blue-50 text-blue-600'
@@ -283,10 +438,10 @@ export default function PatientsAnnuaire() {
                   </div>
                   <div className="text-left overflow-hidden">
                     <p className={`font-bold truncate ${selectedPatient?.id === p.id ? 'text-white' : 'text-gray-900'}`}>
-                        {p.nom_complet}
+                        {p.id === 'temp-new-patient' && !extractName(p.nom_complet) ? 'Nouveau Patient...' : p.nom_complet}
                     </p>
                     <p className={`text-[10px] flex items-center gap-1 mt-0.5 truncate ${selectedPatient?.id === p.id ? 'text-blue-100' : 'text-gray-400 font-medium'}`}>
-                        <Mail size={10}/> {p.email}
+                        {p.email ? <><Mail size={10}/> {p.email}</> : <span className="italic">En cours de création</span>}
                     </p>
                   </div>
                 </button>
@@ -299,35 +454,59 @@ export default function PatientsAnnuaire() {
             </div>
           </div>
 
-          {/* FICHE DROITE (LG:COL-SPAN-8) */}
+          {/* FICHE DROITE */}
           <div className="lg:col-span-8 overflow-y-auto pb-20 custom-scrollbar bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
             {selectedPatient ? (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
 
-                {/* Header Fiche */}
                 <div className="space-y-6">
                   <div className="flex flex-col md:flex-row justify-between gap-4">
                     <div className="space-y-2 flex-1">
-                      <input
-                        className="text-3xl font-black text-gray-900 bg-transparent border-b-2 border-transparent hover:border-blue-100 focus:border-blue-600 outline-none w-full transition-all tracking-tight"
-                        value={selectedPatient.nom_complet}
-                        onChange={(e) => setSelectedPatient({...selectedPatient, nom_complet: e.target.value})}
-                      />
+
+                      <div className="flex items-baseline gap-2 w-full">
+                        <select
+                          className="text-2xl md:text-3xl font-black text-gray-500 bg-transparent border-b-2 border-transparent hover:border-blue-100 focus:border-blue-600 outline-none transition-all cursor-pointer"
+                          value={extractCivility(selectedPatient.nom_complet)}
+                          onChange={(e) => handleCivilityChange(e.target.value)}
+                        >
+                          <option value="Mme">Mme</option>
+                          <option value="M.">M.</option>
+                          <option value="Enfant">Enfant</option>
+                        </select>
+                        <input
+                          className="text-2xl md:text-3xl font-black text-gray-900 bg-transparent border-b-2 border-transparent hover:border-blue-100 focus:border-blue-600 outline-none w-full transition-all tracking-tight"
+                          value={extractName(selectedPatient.nom_complet)}
+                          onChange={(e) => handleNameChange(e.target.value)}
+                          placeholder="Nom et Prénom"
+                          autoFocus={selectedPatient.id === 'temp-new-patient'}
+                        />
+                      </div>
+
                       <div className="flex items-center gap-2 ml-1">
-                         <span className="bg-blue-50 text-blue-600 border border-blue-100 text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest">Dossier Actif</span>
-                         <span className="text-[10px] text-gray-400 font-mono font-medium">ID: {selectedPatient.id.split('-')[0]}</span>
+                         <span className={`${selectedPatient.id === 'temp-new-patient' ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-blue-50 text-blue-600 border-blue-100'} border text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest`}>
+                           {selectedPatient.id === 'temp-new-patient' ? 'Brouillon' : 'Dossier Actif'}
+                         </span>
+                         {selectedPatient.id !== 'temp-new-patient' && (
+                           <span className="text-[10px] text-gray-400 font-mono font-medium">ID: {selectedPatient.id.split('-')[0]}</span>
+                         )}
                       </div>
                     </div>
                     <div className="flex gap-2 h-fit">
                       <button onClick={() => setIsDeleteModalOpen(true)} className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition border border-transparent hover:border-red-100" title="Supprimer ce dossier"><Trash2 size={20}/></button>
+
+                      {/* On désactive le bouton facturer si le patient n'est pas encore enregistré en base */}
                       <button
-                        onClick={() => router.push(`/dashboard/facture/nouvelle?email=${selectedPatient.email}`)}
-                        className="bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-100 text-sm font-bold transition-all"
+                        onClick={() => router.push(`/dashboard/facture/nouvelle?id=${selectedPatient.id}`)}
+                        disabled={selectedPatient.id === 'temp-new-patient'}
+                        className="bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-100 text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={selectedPatient.id === 'temp-new-patient' ? "Enregistrez le patient d'abord" : "Facturer ce patient"}
                       >
                         <CreditCard size={18}/> Facturer
                       </button>
+
                       <button onClick={handleManualUpdate} disabled={saving} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-black disabled:opacity-50 shadow-md text-sm font-bold transition-all">
-                        {saving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16}/>} Enregistrer
+                        {saving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16}/>}
+                        {selectedPatient.id === 'temp-new-patient' ? 'Créer le patient' : 'Enregistrer'}
                       </button>
                     </div>
                   </div>
@@ -335,10 +514,10 @@ export default function PatientsAnnuaire() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-6 border-t border-gray-100">
                     <div className="space-y-4">
                       <div className="group">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">Email du patient</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">Email du patient *</label>
                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-focus-within:bg-white border border-gray-100 group-focus-within:border-blue-300 group-focus-within:ring-2 group-focus-within:ring-blue-500/10 transition-all">
                           <Mail size={16} className="text-gray-400"/>
-                          <input className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" value={selectedPatient.email} onChange={(e) => setSelectedPatient({...selectedPatient, email: e.target.value})} />
+                          <input type="email" required className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" placeholder="Obligatoire pour l'envoi" value={selectedPatient.email} onChange={(e) => setSelectedPatient({...selectedPatient, email: e.target.value})} />
                         </div>
                       </div>
                       <div className="group">
@@ -368,7 +547,6 @@ export default function PatientsAnnuaire() {
                   </div>
                 </div>
 
-                {/* Notes Médicales - AUTO-SAVE AREA */}
                 <div className="bg-[#fcfaf8] p-6 rounded-2xl border border-[#f0e6de] relative">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-gray-900 flex items-center gap-2"><ClipboardList size={18} className="text-[#a9825a]"/> Observations Thérapeutiques</h3>
@@ -376,7 +554,7 @@ export default function PatientsAnnuaire() {
                       {saving ? (
                         <span className="text-blue-500 flex items-center gap-1"><Loader2 size={12} className="animate-spin"/> Sauvegarde...</span>
                       ) : (
-                        <span className="text-green-600 flex items-center gap-1 opacity-80"><CloudCheck size={14}/> Enregistré</span>
+                        <span className="text-green-600 flex items-center gap-1 opacity-80"><CloudCheck size={14}/> {selectedPatient.id === 'temp-new-patient' ? 'Non enregistré' : 'Enregistré'}</span>
                       )}
                     </div>
                   </div>
@@ -388,7 +566,6 @@ export default function PatientsAnnuaire() {
                   />
                 </div>
 
-                {/* Historique Séances */}
                 <div className="pt-4">
                   <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2"><History size={18} className="text-gray-400"/> Historique des factures et règlements</h3>
                   <div className="space-y-3">
@@ -409,7 +586,6 @@ export default function PatientsAnnuaire() {
                               <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 text-gray-900 font-bold"><Euro size={12}/> {f.montant}</span>
                               <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 text-gray-600"><CreditCard size={12}/> {f.mode_reglement || 'Autre'}</span>
 
-                              {/* Avis Container */}
                               {f.note || f.commentaire ? (
                                   <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-lg border border-yellow-100">
                                       <div className="flex text-yellow-400">
