@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { trackConversion } from '@/lib/gtag'; // <-- IMPORT DE LA BALISE GA4
 
 export default function FondateurPage() {
   const [nom, setNom] = useState('');
@@ -17,7 +18,6 @@ export default function FondateurPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Simulation d'urgence (Places restantes)
   const spotsLeft = 12;
   const totalSpots = 50;
   const progressPercentage = (spotsLeft / totalSpots) * 100;
@@ -39,6 +39,9 @@ export default function FondateurPage() {
         body: JSON.stringify({ nom, prenom, email, telephone }),
       });
 
+      // 🔥 BALISE DE CONVERSION GA4 DÉCLENCHÉE ICI
+      trackConversion('/fondateur');
+
       setSuccess(true);
     } catch (error) {
       console.error(error);
@@ -58,14 +61,13 @@ export default function FondateurPage() {
           <span className="text-xl font-black tracking-tighter text-[#3e2f25]">FacturAvis</span>
         </Link>
         <Link href="/" className="text-xs md:text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] transition-all flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-[#f0e6de] shadow-sm">
-           Retour <ArrowRight size={14} className="rotate-180" />
+            Retour <ArrowRight size={14} className="rotate-180" />
         </Link>
       </header>
 
       {/* --- HERO & URGENCY --- */}
       <main className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-16 text-center relative z-10">
 
-        {/* Badge animé */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#fdf2e9] border border-[#f0e6de] text-[#a9825a] text-[10px] md:text-xs font-black uppercase tracking-widest mb-6 md:mb-8 shadow-sm animate-in slide-in-from-top-4 duration-700">
           <Sparkles size={14} className="fill-[#a9825a] animate-pulse" /> Pack Ambassadeur 2026
         </div>
@@ -78,7 +80,6 @@ export default function FondateurPage() {
           Oubliez les logiciels usines à gaz. Nous construisons l'outil le plus simple au monde pour gérer vos <span className="text-[#3e2f25] font-bold border-b-2 border-[#d4b494]/30 pb-0.5">dossiers patients</span>, vos <span className="text-[#3e2f25] font-bold border-b-2 border-[#d4b494]/30 pb-0.5">factures</span> et exploser vos <span className="text-[#3e2f25] font-bold border-b-2 border-[#d4b494]/30 pb-0.5">avis Google</span>.
         </p>
 
-        {/* BARRE D'URGENCE VISUELLE */}
         <div className="max-w-md mx-auto mb-12 md:mb-20 space-y-3 px-4 animate-in zoom-in-95 duration-700 delay-300">
             <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest text-[#a9825a]">
                 <span className="flex items-center gap-1.5"><Lock size={12}/> Places Fondateur restantes</span>
@@ -232,7 +233,7 @@ export default function FondateurPage() {
         </div>
       </main>
 
-      {/* --- TRUST BADGES CORRIGÉS --- */}
+      {/* --- TRUST BADGES --- */}
       <section className="mt-20 md:mt-32 max-w-4xl mx-auto px-4 border-t border-[#f0e6de] pt-8 md:pt-12 flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 md:gap-12 opacity-60">
           <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f]"><Lock size={16} /> Sécurité AES-256</div>
           <div className="hidden sm:block w-1 h-1 rounded-full bg-[#d4b494]"></div>
