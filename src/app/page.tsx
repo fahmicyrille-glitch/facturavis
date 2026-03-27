@@ -1,19 +1,61 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Metadata } from 'next';
 import {
   CheckCircle2, Star, ShieldCheck, ArrowRight, FileCheck,
   TrendingUp, Clock, Cloud, Lock, Search, Euro, Mail, FilePlus,
-  Users, ClipboardList, Zap, ShieldAlert, Building2
+  Users, ClipboardList, Zap, ShieldAlert, Building2, MessageSquare,
+  Send, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
 // NOTE : Les Metadata (title, description...) doivent idéalement être placées dans le layout.tsx
 // car Next.js ne permet pas d'exporter des `metadata` depuis un composant marqué `'use client'`.
-// Comme on a déjà optimisé ton layout.tsx, tu peux retirer ce bloc si Next.js affiche un avertissement.
 
 export default function LandingPage() {
+  // --- ÉTATS DU FORMULAIRE DE CONTACT ---
+  const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Fonction de gestion de l'envoi
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage(null); // Réinitialiser le message d'erreur
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+
+      if (response.ok) {
+        setIsSent(true);
+        setContactForm({ name: '', email: '', phone: '', message: '' }); // Vider le formulaire
+        setTimeout(() => setIsSent(false), 5000); // Cacher le message de succès après 5s
+      } else {
+        // Tentative de récupération du message d'erreur de l'API
+        let errorMsg = "Oups, une erreur est survenue lors de l'envoi.";
+        try {
+            const data = await response.json();
+            if(data.error) errorMsg = data.error;
+        } catch(e) {
+             // Si on ne peut pas parser le JSON, on garde le message par défaut
+        }
+        setErrorMessage(errorMsg);
+      }
+    } catch (error) {
+      console.error("Erreur réseau:", error);
+      setErrorMessage("Impossible de joindre le serveur. Vérifiez votre connexion internet.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // --- DONNÉES STRUCTURÉES (JSON-LD) ---
   const jsonLd = {
     "@context": "https://schema.org",
@@ -43,7 +85,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#fcfaf8] text-[#3e2f25] font-sans selection:bg-[#a9825a] selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#fcfaf8] text-[#3e2f25] font-sans selection:bg-[#a9825a] selection:text-white overflow-x-hidden scroll-smooth">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* --- NAVBAR --- */}
@@ -57,6 +99,8 @@ export default function LandingPage() {
             <a href="#fonctionnalites" className="hover:text-[#a9825a] transition">Fonctionnalités</a>
             <a href="#dossiers" className="hover:text-[#a9825a] transition">Dossiers Patients</a>
             <a href="#avis" className="hover:text-[#a9825a] transition">Avis Google</a>
+            {/* NOUVEAU : Lien vers la section contact */}
+            <a href="#contact" className="hover:text-[#a9825a] transition">Nous contacter</a>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Link href="/login" className="hidden sm:block text-xs md:text-sm font-bold text-[#7a6a5f] hover:text-[#3e2f25] px-3 py-2 transition">
@@ -293,6 +337,111 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* --- CUSTOM / SUR-MESURE SECTION (MODIFIÉE AVEC LE FORMULAIRE) --- */}
+      {/* NOUVEAU : ID 'contact' ajouté et padding-top ajusté pour le scroll */}
+      <section id="contact" className="py-12 md:py-16 bg-[#fdf2e9]/30 border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-24">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-[#fdf2e9] text-[#a9825a] rounded-full mb-6 shadow-sm border border-[#f0e6de]">
+            <MessageSquare size={24} className="md:w-8 md:h-8" />
+          </div>
+          <h2 className="text-2xl md:text-4xl font-black text-[#3e2f25] mb-4">
+            Un besoin spécifique pour votre cabinet ?
+          </h2>
+          <p className="text-[#7a6a5f] text-base md:text-lg font-medium mb-8 max-w-2xl mx-auto">
+            Nous développons FacturAvis pour qu'il s'adapte à <span className="font-bold text-[#3e2f25]">votre</span> réalité terrain. Si vous avez une demande particulière, notre équipe est à votre écoute.
+          </p>
+
+          {/* FORMULAIRE DE CONTACT */}
+          <form onSubmit={handleContactSubmit} className="max-w-md mx-auto bg-white p-6 md:p-8 rounded-[24px] border border-[#f0e6de] shadow-sm text-left space-y-5">
+            <div>
+              <label htmlFor="name" className="block text-sm font-bold text-[#3e2f25] mb-1.5">Nom complet</label>
+              <input
+                id="name"
+                required
+                type="text"
+                placeholder="Dr. Dupont"
+                value={contactForm.name}
+                onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-[#f0e6de] focus:outline-none focus:border-[#a9825a] focus:ring-1 focus:ring-[#a9825a] bg-white text-[#3e2f25] placeholder-gray-400 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-bold text-[#3e2f25] mb-1.5">Email professionnel</label>
+              <input
+                id="email"
+                required
+                type="email"
+                placeholder="cabinet@email.com"
+                value={contactForm.email}
+                onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-[#f0e6de] focus:outline-none focus:border-[#a9825a] focus:ring-1 focus:ring-[#a9825a] bg-white text-[#3e2f25] placeholder-gray-400 transition-colors"
+              />
+            </div>
+
+            {/* NOUVEAU CHAMP : TÉLÉPHONE */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-bold text-[#3e2f25] mb-1.5">Téléphone (optionnel)</label>
+              <input
+                id="phone"
+                type="tel"
+                placeholder="06 12 34 56 78"
+                value={contactForm.phone}
+                onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-[#f0e6de] focus:outline-none focus:border-[#a9825a] focus:ring-1 focus:ring-[#a9825a] bg-white text-[#3e2f25] placeholder-gray-400 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-sm font-bold text-[#3e2f25] mb-1.5">Votre besoin</label>
+              <textarea
+                id="message"
+                required
+                rows={4}
+                placeholder="Décrivez votre besoin spécifique (export, fonctionnalité...)"
+                value={contactForm.message}
+                onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-[#f0e6de] focus:outline-none focus:border-[#a9825a] focus:ring-1 focus:ring-[#a9825a] bg-white text-[#3e2f25] placeholder-gray-400 resize-none transition-colors"
+              />
+            </div>
+
+             {/* NOUVEAU : Message d'erreur stylisé */}
+             {errorMessage && (
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
+                <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                <p className="text-sm font-medium">{errorMessage}</p>
+              </div>
+            )}
+
+            {/* Message de succès */}
+            {isSent && (
+              <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl">
+                <CheckCircle2 size={20} className="shrink-0 mt-0.5" />
+                <p className="text-sm font-medium">Message envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 bg-[#3e2f25] text-white font-black px-6 py-4 rounded-xl hover:bg-black transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
+            >
+              {isSubmitting ? (
+                <>
+                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                   <span>Envoi en cours...</span>
+                </>
+              ) : (
+                <>
+                  <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  Envoyer ma demande
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </section>
+
       {/* --- FAQ SECTION --- */}
       <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6">
         <div className="max-w-3xl mx-auto">
@@ -337,8 +486,11 @@ export default function LandingPage() {
         </footer>
       </section>
 
-      {/* CSS POUR L'ANIMATION DU BANDEAU DÉFILANT */}
+      {/* CSS POUR L'ANIMATION DU BANDEAU DÉFILANT ET SCROLL SMOOTH */}
       <style jsx global>{`
+        html {
+          scroll-behavior: smooth;
+        }
         @keyframes marquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
