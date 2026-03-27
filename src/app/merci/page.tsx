@@ -7,14 +7,22 @@ import { CheckCircle, ArrowLeft, Calendar, Sparkles } from 'lucide-react';
 export default function MerciPage() {
 
   useEffect(() => {
-    // On s'assure que la fonction gtag existe (chargée via le layout)
-    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
-      console.log('Déclenchement de la conversion Google Ads !');
-      (window as any).gtag('event', 'conversion', {
+    if (typeof window !== 'undefined') {
+      console.log('Déclenchement de la conversion Google Ads en préparation...');
+
+      // 1. On s'assure que le dataLayer existe, même si le script global n'a pas fini de charger
+      window.dataLayer = window.dataLayer || [];
+
+      // 2. On définit la fonction gtag localement si elle n'existe pas encore pour pousser dans la file d'attente
+      function gtag(){dataLayer.push(arguments);}
+
+      // 3. On envoie l'événement !
+      gtag('event', 'conversion', {
         'send_to': 'AW-18043378456/ip0TCJrQkpAcEJi24JtD',
         'value': 1.0,
         'currency': 'EUR'
       });
+      console.log('Conversion poussée dans le dataLayer !');
     }
   }, []);
 
