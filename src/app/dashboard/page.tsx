@@ -651,7 +651,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-12 gap-3">
                     <div className="col-span-4">
                       <label className="block text-xs font-bold text-gray-900 mb-1.5">Civilité</label>
-                      <select className="w-full border border-gray-400 rounded-md py-2.5 px-2 text-sm bg-white focus:outline-none focus:border-blue-500" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
+                      <select className="w-full border border-black text-black rounded-md py-2.5 px-2 text-sm bg-white focus:outline-none focus:border-blue-500" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
                         <option value="Mme">Mme</option>
                         <option value="M.">M.</option>
                       </select>
@@ -660,7 +660,7 @@ export default function Dashboard() {
                       <label className="block text-xs font-bold text-gray-900 mb-1.5">Prénom</label>
                       <input
                         type="text"
-                        className="w-full border border-gray-400 rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                        className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
                         value={prenom}
                         onChange={(e) => {setPrenom(e.target.value); setShowDropdownPrenom(true);}}
                         onFocus={() => setShowDropdownPrenom(true)}
@@ -670,7 +670,7 @@ export default function Dashboard() {
                       {showDropdownPrenom && prenom.length > 0 && filteredPatients.length > 0 && (
                         <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
                           {filteredPatients.map(p => (
-                            <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 flex justify-between items-center border-b border-gray-50 last:border-none">
+                            <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-black flex justify-between items-center border-b border-gray-50 last:border-none">
                               <span className="font-bold">{p.nom_complet}</span>
                             </li>
                           ))}
@@ -683,7 +683,7 @@ export default function Dashboard() {
                     <label className="block text-xs font-bold text-gray-900 mb-1.5">Nom (ou Nom Prénom) *</label>
                     <input
                       type="text" required
-                      className="w-full border border-gray-400 rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                      className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
                       value={nom}
                       onChange={(e) => {setNom(e.target.value); setShowDropdown(true);}}
                       onFocus={() => setShowDropdown(true)}
@@ -693,9 +693,9 @@ export default function Dashboard() {
                     {showDropdown && nom.length > 0 && filteredPatients.length > 0 && (
                       <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
                         {filteredPatients.map(p => (
-                          <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 flex flex-col border-b border-gray-50 last:border-none">
+                          <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-black flex flex-col border-b border-gray-50 last:border-none">
                             <span className="font-bold">{p.nom_complet}</span>
-                            <span className="text-[10px] text-gray-400">{p.email}</span>
+                            <span className="text-[10px] text-gray-600">{p.email}</span>
                           </li>
                         ))}
                       </ul>
@@ -706,7 +706,7 @@ export default function Dashboard() {
                     <label className="block text-xs font-bold text-gray-900 mb-1.5">Email du patient *</label>
                     <input
                       type="email" required
-                      className="w-full border border-gray-400 rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                      className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
                       value={patientEmail}
                       onChange={(e) => setPatientEmail(e.target.value)}
                       placeholder="patient@email.com"
@@ -719,12 +719,12 @@ export default function Dashboard() {
                       <div className="absolute inset-y-0 left-0 pl-3 pt-6 flex items-center pointer-events-none">
                         <Euro size={14} className="text-gray-500" />
                       </div>
-                      <input type="number" step="0.01" min="0" required className="w-full border border-gray-400 rounded-md py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-400" value={montant} onChange={(e) => setMontant(e.target.value)} placeholder="0.00" />
+                      <input type="number" step="0.01" min="0" required className="w-full border border-black text-black rounded-md py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500" value={montant} onChange={(e) => setMontant(e.target.value)} placeholder="0.00" />
                     </div>
 
                     <div className="relative">
                       <label className="block text-xs font-bold text-gray-900 mb-1.5">Règlement *</label>
-                      <select className="w-full border border-gray-400 rounded-md py-2.5 px-3 text-sm bg-white focus:outline-none focus:border-blue-500" value={modeReglement} onChange={(e) => setModeReglement(e.target.value)}>
+                      <select className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm bg-white focus:outline-none focus:border-blue-500" value={modeReglement} onChange={(e) => setModeReglement(e.target.value)}>
                         <option value="CB">CB</option>
                         <option value="Espèces">Espèces</option>
                         <option value="Chèque">Chèque</option>
