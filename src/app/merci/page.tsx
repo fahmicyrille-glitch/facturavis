@@ -1,4 +1,4 @@
-'use client'; // Important car on utilise useEffect
+'use client';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -8,26 +8,24 @@ export default function MerciPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('Déclenchement de la conversion Google Ads en préparation...');
-
-      // Astuce pour éviter l'erreur TypeScript sur window.dataLayer
       const w = window as any;
 
-      // 1. On s'assure que le dataLayer existe, même si le script global n'a pas fini de charger
+      // 1. Initialisation de la file d'attente Google
       w.dataLayer = w.dataLayer || [];
 
-      // 2. On définit la fonction gtag localement si elle n'existe pas encore pour pousser dans la file d'attente
-      function gtag(...args: any[]) {
-        w.dataLayer.push(args);
-      }
+      // 2. Création de la fonction gtag sécurisée pour React
+      const gtag = function() {
+        w.dataLayer.push(arguments);
+      };
 
-      // 3. On envoie l'événement !
+      // 3. Déclenchement de VOTRE conversion exacte issue de l'e-mail
       gtag('event', 'conversion', {
-        'send_to': 'AW-18043378456/ip0TCJrQkpAcEJi24JtD',
-        'value': 1.0,
+        'send_to': 'AW-18043378456/ipOTCJrQkpAcEJi24JtD',
+        'value': 1.0, // Optionnel : valeur de votre lead
         'currency': 'EUR'
       });
-      console.log('Conversion poussée dans le dataLayer !');
+
+      console.log('Conversion Google Ads (ipOTCJ...) envoyée !');
     }
   }, []);
 
