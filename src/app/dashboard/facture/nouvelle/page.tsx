@@ -326,7 +326,7 @@ function NouvelleFactureContent() {
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-4">
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Civilité</label>
-                  <select className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" value={patientCivilite} onChange={(e) => setPatientCivilite(e.target.value)}>
+                  <select className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" value={patientCivilite} onChange={(e) => setPatientCivilite(e.target.value)}>
                     <option value="Mme">Mme</option>
                     <option value="M.">M.</option>
                   </select>
@@ -336,7 +336,7 @@ function NouvelleFactureContent() {
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Prénom</label>
                   <input
                     type="text"
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
+                    className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500"
                     value={patientPrenom}
                     onChange={(e) => {setPatientPrenom(e.target.value); setShowDropdownPrenom(true);}}
                     onFocus={() => setShowDropdownPrenom(true)}
@@ -346,7 +346,7 @@ function NouvelleFactureContent() {
                   {showDropdownPrenom && patientPrenom.length > 0 && filteredPatients.length > 0 && (
                     <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
                       {filteredPatients.map(p => (
-                        <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 flex justify-between items-center border-b border-gray-50 last:border-none">
+                        <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-black flex justify-between items-center border-b border-gray-50 last:border-none">
                           <span className="font-bold">{p.nom_complet}</span>
                         </li>
                       ))}
@@ -359,7 +359,7 @@ function NouvelleFactureContent() {
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Nom (ou Nom Prénom) *</label>
                 <input
                   type="text" required
-                  className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400"
+                  className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500"
                   value={patientNom}
                   onChange={(e) => {setPatientNom(e.target.value); setShowDropdown(true);}}
                   onFocus={() => setShowDropdown(true)}
@@ -370,8 +370,8 @@ function NouvelleFactureContent() {
                   <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto py-1">
                     {filteredPatients.map(p => (
                       <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-50 last:border-none">
-                        <p className="text-sm font-bold text-gray-900">{p.nom_complet}</p>
-                        <p className="text-[10px] text-gray-500">{p.email}</p>
+                        <p className="text-sm font-bold text-black">{p.nom_complet}</p>
+                        <p className="text-[10px] text-gray-600">{p.email}</p>
                       </li>
                     ))}
                   </ul>
@@ -381,11 +381,11 @@ function NouvelleFactureContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Email de réception *</label>
-                  <input type="email" required className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} placeholder="patient@email.com" />
+                  <input type="email" required className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} placeholder="patient@email.com" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1 flex items-center"><Shield size={12} className="mr-1.5 text-gray-400" /> N° Sécurité Sociale</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" placeholder="Optionnel" value={patientSecu} onChange={(e) => setPatientSecu(e.target.value)} />
+                  <input type="text" className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" placeholder="Optionnel" value={patientSecu} onChange={(e) => setPatientSecu(e.target.value)} />
                 </div>
               </div>
 
@@ -393,7 +393,7 @@ function NouvelleFactureContent() {
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Adresse Postale</label>
                 <div className="relative">
                   <MapPin size={16} className="absolute left-3 top-3 text-gray-400" />
-                  <input type="text" className="w-full border border-gray-300 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" placeholder="Rue, Code Postal, Ville" value={patientAdresse} onChange={(e) => setPatientAdresse(e.target.value)} />
+                  <input type="text" className="w-full border border-black text-black rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" placeholder="Rue, Code Postal, Ville" value={patientAdresse} onChange={(e) => setPatientAdresse(e.target.value)} />
                 </div>
               </div>
             </div>
@@ -406,15 +406,15 @@ function NouvelleFactureContent() {
             <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Acte réalisé *</label>
-                <select className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all mb-3 appearance-none cursor-pointer bg-white" value={selectedPrestaId} onChange={handlePrestaChange}>
+                <select className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all mb-3 appearance-none cursor-pointer bg-white" value={selectedPrestaId} onChange={handlePrestaChange}>
                   <option value="">-- Sélectionner un acte --</option>
                   {prestationsDb.map(p => <option key={p.id} value={p.id}>{p.nom} ({p.prix}€)</option>)}
                 </select>
                 <div className="flex gap-3">
-                  <input type="text" required className="flex-[3] border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" value={customPrestaNom} onChange={(e) => setCustomPrestaNom(e.target.value)} placeholder="Intitulé de l'acte" />
+                  <input type="text" required className="flex-[3] border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" value={customPrestaNom} onChange={(e) => setCustomPrestaNom(e.target.value)} placeholder="Intitulé de l'acte" />
                   <div className="relative flex-[1] min-w-[120px]">
                     <Euro size={14} className="absolute left-3 top-3 text-gray-500" />
-                    <input type="number" step="0.01" required className="w-full border border-gray-300 rounded-lg py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400" value={customPrestaPrix} onChange={(e) => setCustomPrestaPrix(e.target.value)} placeholder="0.00" />
+                    <input type="number" step="0.01" required className="w-full border border-black text-black rounded-lg py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" value={customPrestaPrix} onChange={(e) => setCustomPrestaPrix(e.target.value)} placeholder="0.00" />
                   </div>
                 </div>
               </div>
