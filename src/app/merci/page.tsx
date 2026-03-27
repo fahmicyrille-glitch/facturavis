@@ -10,11 +10,16 @@ export default function MerciPage() {
     if (typeof window !== 'undefined') {
       console.log('Déclenchement de la conversion Google Ads en préparation...');
 
+      // Astuce pour éviter l'erreur TypeScript sur window.dataLayer
+      const w = window as any;
+
       // 1. On s'assure que le dataLayer existe, même si le script global n'a pas fini de charger
-      window.dataLayer = window.dataLayer || [];
+      w.dataLayer = w.dataLayer || [];
 
       // 2. On définit la fonction gtag localement si elle n'existe pas encore pour pousser dans la file d'attente
-      function gtag(){dataLayer.push(arguments);}
+      function gtag(...args: any[]) {
+        w.dataLayer.push(args);
+      }
 
       // 3. On envoie l'événement !
       gtag('event', 'conversion', {
