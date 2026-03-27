@@ -8,20 +8,23 @@ export default function MerciPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // On utilise "any" pour que TypeScript nous laisse tranquille
       const w = window as any;
 
       // 1. Initialisation de la file d'attente Google
       w.dataLayer = w.dataLayer || [];
 
-      // 2. Création de la fonction gtag sécurisée pour React
-      const gtag = function() {
-        w.dataLayer.push(arguments);
-      };
+      // 2. Création de la fonction gtag directement sur "window"
+      if (typeof w.gtag !== 'function') {
+        w.gtag = function() {
+          w.dataLayer.push(arguments);
+        };
+      }
 
-      // 3. Déclenchement de VOTRE conversion exacte issue de l'e-mail
-      gtag('event', 'conversion', {
+      // 3. Déclenchement de VOTRE conversion via l'objet window
+      w.gtag('event', 'conversion', {
         'send_to': 'AW-18043378456/ipOTCJrQkpAcEJi24JtD',
-        'value': 1.0, // Optionnel : valeur de votre lead
+        'value': 1.0,
         'currency': 'EUR'
       });
 
