@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   CheckCircle, ArrowRight, Loader2, ShieldCheck,
-  Cloud, Lock, Sparkles, Check, User, Mail, Phone, Stethoscope, AlertCircle
+  Cloud, Lock, Sparkles, Check, User, Mail, Phone, Stethoscope, AlertCircle, Star, Quote
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -125,11 +125,10 @@ export default function FondateurPage() {
       {/* --- HERO & URGENCY --- */}
       <main className={`max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 text-center relative z-10 transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#fdf2e9] border border-[#f0e6de] text-[#a9825a] text-[10px] md:text-xs font-black uppercase tracking-widest mb-6 md:mb-8 shadow-sm animate-float">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#fdf2e9] border border-[#d4b494]/30 text-[#a9825a] text-[10px] md:text-xs font-black uppercase tracking-widest mb-6 md:mb-8 shadow-sm animate-float">
           <Sparkles size={14} className="fill-[#a9825a] animate-pulse" /> Pack Ambassadeur 2026
         </div>
 
-        {/* Le H1 est optimisé pour les moteurs de recherche tout en restant accrocheur */}
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter text-[#3e2f25] mb-6 md:mb-8 leading-[1.1]">
           Le logiciel de votre cabinet.<br className="hidden md:block"/>
           <span className="relative inline-block mt-1">
@@ -162,7 +161,7 @@ export default function FondateurPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start text-left">
 
-            {/* COLONNE GAUCHE : ARGUMENTS */}
+            {/* COLONNE GAUCHE : ARGUMENTS & SOCIAL PROOF */}
             <div className="space-y-6 md:space-y-8 max-w-md mx-auto lg:mx-0 order-2 lg:order-1 pt-4 lg:pt-8 px-4 sm:px-0">
                 <h3 className="font-black text-2xl text-[#3e2f25] border-b border-[#f0e6de] pb-4">Fonctionnalités incluses :</h3>
 
@@ -172,7 +171,7 @@ export default function FondateurPage() {
                   { icon: ShieldCheck, title: "Logiciel de Facturation 2026", desc: "Factures PDF certifiées Factur-X en 1 clic, export comptable et archivage Cloud conforme RGPD." }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-4 md:gap-5 group cursor-default" style={{ animationDelay: `${(i + 1) * 200}ms` }}>
-                      <div className="mt-1 bg-white border border-[#f0e6de] text-[#a9825a] rounded-2xl p-2.5 md:p-3 shrink-0 shadow-sm group-hover:bg-[#fdf2e9] group-hover:border-[#a9825a]/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                      <div className="mt-1 bg-gradient-to-br from-[#fdf2e9] to-white border border-[#d4b494]/40 text-[#a9825a] rounded-2xl p-2.5 md:p-3 shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                           <item.icon size={20} strokeWidth={2.5} />
                       </div>
                       <div>
@@ -181,11 +180,21 @@ export default function FondateurPage() {
                       </div>
                   </div>
                 ))}
+
+                {/* Ajout d'une mini-preuve sociale pour rassurer */}
+                <div className="mt-8 p-5 bg-white rounded-2xl border border-[#f0e6de] shadow-sm relative">
+                  <Quote size={24} className="absolute -top-3 -left-3 text-[#d4b494] fill-current opacity-50" />
+                  <div className="flex gap-1 mb-2 text-yellow-400">
+                    <Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" />
+                  </div>
+                  <p className="text-sm text-[#7a6a5f] italic font-medium mb-3">"Enfin un outil pensé pour les thérapeutes et pas pour les comptables. La demande d'avis automatique m'a ramené 7 nouveaux patients ce mois-ci."</p>
+                  <p className="text-xs font-black text-[#3e2f25]">— Thomas R., Ostéopathe</p>
+                </div>
             </div>
 
             {/* COLONNE DROITE : LE PRIX & FORMULAIRE */}
             <div className="relative w-full order-1 lg:order-2 z-20">
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#d4b494] via-transparent to-[#a9825a] rounded-[3rem] md:rounded-[4rem] blur-xl opacity-30 animate-pulse -z-10"></div>
+              <div className="absolute -inset-2 bg-gradient-to-r from-[#d4b494] via-transparent to-[#a9825a] rounded-[3rem] md:rounded-[4rem] blur-xl opacity-40 animate-pulse -z-10"></div>
 
               <div className="bg-white border border-[#f0e6de] rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
 
@@ -230,15 +239,15 @@ export default function FondateurPage() {
                           <div className="space-y-1.5 relative text-left group">
                               <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Prénom</label>
                               <div className="relative">
-                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors" />
-                                <input type="text" required value={prenom} onChange={(e) => {setPrenom(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="Marc" />
+                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
+                                <input type="text" required value={prenom} onChange={(e) => {setPrenom(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 focus:-translate-y-0.5 outline-none transition-all duration-300 shadow-sm hover:shadow-md" placeholder="Marc" />
                               </div>
                           </div>
                           <div className="space-y-1.5 relative text-left group">
                               <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Nom</label>
                               <div className="relative">
-                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors" />
-                                <input type="text" required value={nom} onChange={(e) => {setNom(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="Vandamme" />
+                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
+                                <input type="text" required value={nom} onChange={(e) => {setNom(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 focus:-translate-y-0.5 outline-none transition-all duration-300 shadow-sm hover:shadow-md" placeholder="Vandamme" />
                               </div>
                           </div>
                       </div>
@@ -246,24 +255,24 @@ export default function FondateurPage() {
                       <div className="space-y-1.5 text-left group">
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Email Professionnel</label>
                           <div className="relative">
-                            <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors" />
-                            <input type="email" required value={email} onChange={(e) => {setEmail(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="contact@cabinet.fr" />
+                            <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
+                            <input type="email" required value={email} onChange={(e) => {setEmail(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 focus:-translate-y-0.5 outline-none transition-all duration-300 shadow-sm hover:shadow-md" placeholder="contact@cabinet.fr" />
                           </div>
                       </div>
 
                       <div className="space-y-1.5 text-left group">
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Téléphone Mobile</label>
                           <div className="relative">
-                            <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors" />
-                            <input type="tel" required value={telephone} onChange={(e) => {setTelephone(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm" placeholder="06 00 00 00 00" />
+                            <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
+                            <input type="tel" required value={telephone} onChange={(e) => {setTelephone(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 focus:-translate-y-0.5 outline-none transition-all duration-300 shadow-sm hover:shadow-md" placeholder="06 00 00 00 00" />
                           </div>
                       </div>
 
                       <div className="space-y-1.5 text-left group">
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Profession</label>
                           <div className="relative">
-                            <Stethoscope size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors" />
-                            <select required value={profession} onChange={(e) => {setProfession(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 outline-none transition-all shadow-sm appearance-none">
+                            <Stethoscope size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
+                            <select required value={profession} onChange={(e) => {setProfession(e.target.value); setErrorMsg('');}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-4 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 focus:-translate-y-0.5 outline-none transition-all duration-300 shadow-sm hover:shadow-md appearance-none">
                               <option value="" disabled>Sélectionnez votre métier</option>
                               <option value="Ostéopathe">Ostéopathe</option>
                               <option value="Psychologue">Psychologue</option>
@@ -276,13 +285,15 @@ export default function FondateurPage() {
                           </div>
                       </div>
 
-                      <button type="submit" disabled={loading} className="w-full mt-8 bg-gradient-to-r from-[#3e2f25] to-[#2a1f18] hover:from-black hover:to-[#3e2f25] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-2xl transition-all flex items-center justify-center shadow-[0_10px_20px_-10px_rgba(62,47,37,0.5)] hover:shadow-2xl hover:-translate-y-1 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden">
+                      <button type="submit" disabled={loading} className="w-full mt-8 bg-gradient-to-r from-[#3e2f25] to-[#2a1f18] hover:from-black hover:to-[#1a120d] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-2xl transition-all flex items-center justify-center shadow-[0_10px_20px_-10px_rgba(62,47,37,0.5)] hover:shadow-[0_15px_30px_-10px_rgba(169,130,90,0.6)] hover:-translate-y-1 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden ring-4 ring-transparent hover:ring-[#a9825a]/20">
                           <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                          {loading ? <Loader2 size={24} className="animate-spin relative z-10" /> : <><span className="relative z-10">Réserver mon accès</span> <ArrowRight size={20} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" /></>}
+                          {loading ? <Loader2 size={24} className="animate-spin relative z-10" /> : <><span className="relative z-10">Verrouiller mon tarif à vie</span> <ArrowRight size={20} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" /></>}
                       </button>
 
-                      <p className="text-[10px] text-center text-[#7a6a5f] font-bold uppercase tracking-widest pt-3 flex items-center justify-center gap-1.5">
-                          <ShieldCheck size={14} className="text-green-500"/> 14 jours d'essai gratuit • Sans engagement
+                      <p className="text-[10px] text-center text-[#7a6a5f] font-bold uppercase tracking-widest pt-3 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3">
+                          <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-green-500"/> 14 jours d'essai gratuit</span>
+                          <span className="hidden sm:inline-block w-1 h-1 bg-[#d4b494] rounded-full"></span>
+                          <span className="flex items-center gap-1.5">Sans carte bancaire</span>
                       </p>
                   </form>
               </div>
@@ -291,12 +302,12 @@ export default function FondateurPage() {
       </main>
 
       {/* --- TRUST BADGES --- */}
-      <section className="mt-20 md:mt-32 max-w-4xl mx-auto px-4 border-t border-[#f0e6de] pt-8 md:pt-12 flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 md:gap-12 opacity-70">
-          <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f]"><Lock size={16} className="text-[#a9825a]" /> Sécurité AES-256</div>
-          <div className="hidden sm:block w-1 h-1 rounded-full bg-[#d4b494]"></div>
-          <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f]"><ShieldCheck size={16} className="text-[#a9825a]" /> Conformité RGPD & Factur-X</div>
-          <div className="hidden sm:block w-1 h-1 rounded-full bg-[#d4b494]"></div>
-          <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f]"><Cloud size={16} className="text-[#a9825a]" /> Hébergement Français</div>
+      <section className="mt-20 md:mt-32 max-w-4xl mx-auto px-4 border-t border-[#f0e6de] pt-8 md:pt-12 flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 md:gap-12 opacity-80">
+          <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f] hover:text-[#3e2f25] transition-colors"><Lock size={16} className="text-[#a9825a]" /> Sécurité AES-256</div>
+          <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-[#d4b494]"></div>
+          <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f] hover:text-[#3e2f25] transition-colors"><ShieldCheck size={16} className="text-[#a9825a]" /> Conformité RGPD & Factur-X</div>
+          <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-[#d4b494]"></div>
+          <div className="flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest text-[#7a6a5f] hover:text-[#3e2f25] transition-colors"><Cloud size={16} className="text-[#a9825a]" /> Hébergement Français</div>
       </section>
 
       {/* CSS POUR ANIMATIONS */}

@@ -5,7 +5,7 @@ import {
   CheckCircle2, Star, ShieldCheck, ArrowRight, FileCheck,
   Clock, Cloud, Lock, Euro, Mail, FilePlus,
   Users, ClipboardList, Zap, Building2, MessageSquare,
-  Send, AlertCircle, FileBadge, Sparkles, ShieldAlert
+  Send, AlertCircle, FileBadge, Sparkles, ShieldAlert, UploadCloud
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -134,7 +134,7 @@ export default function LandingPage() {
             <span className="text-[#3e2f25] font-bold">Ostéopathes, Psychologues, Chiropracteurs, Diététiciens...</span> L'outil tout-en-un pour gérer votre cabinet. Dossiers sécurisés, factures conformes Factur-X 2026 et récolte automatisée d'avis Google.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 relative z-20">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 relative z-20 mb-16 md:mb-24">
             <Link href="/fondateur" className="w-full sm:w-auto relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-[#d4b494] to-[#a9825a] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
               <button className="relative w-full sm:w-auto flex items-center justify-center bg-[#3e2f25] text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl font-black text-base md:text-lg hover:scale-[1.02] transition transform">
@@ -144,8 +144,19 @@ export default function LandingPage() {
             </Link>
           </div>
 
+          {/* --- DASHBOARD IMAGE (NOUVEAU) --- */}
+          <div className="relative max-w-5xl mx-auto px-4 group">
+            <div className="absolute -inset-1 bg-gradient-to-b from-[#d4b494]/30 to-transparent rounded-2xl md:rounded-[2rem] blur-xl -z-10 opacity-70 group-hover:opacity-100 transition duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 h-full w-full pointer-events-none"></div>
+            <img
+              src="/Saas_Show.png"
+              alt="Aperçu de l'interface FacturAvis - Dossiers Patients"
+              className="relative w-full rounded-xl md:rounded-[2rem] shadow-2xl border border-[#f0e6de] transform transition-transform duration-500 hover:scale-[1.01]"
+            />
+          </div>
+
           {/* --- BANDEAU DÉFILANT --- */}
-          <div className="mt-20 overflow-hidden relative group">
+          <div className="mt-12 md:mt-20 overflow-hidden relative group">
             <div className="flex gap-6 md:gap-8 animate-marquee whitespace-nowrap">
               {[...praticiens, ...praticiens].map((p, i) => (
                 <span key={i} className="text-[#d4b494] font-black uppercase tracking-widest text-[10px] md:text-xs border border-[#f0e6de] px-5 py-2.5 rounded-full bg-white shadow-sm cursor-default hover:border-[#a9825a] transition-colors">
@@ -153,8 +164,8 @@ export default function LandingPage() {
                 </span>
               ))}
             </div>
-            <div className="absolute inset-y-0 left-0 w-16 md:w-32 bg-gradient-to-r from-[#fcfaf8] to-transparent pointer-events-none"></div>
-            <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-[#fcfaf8] to-transparent pointer-events-none"></div>
+            <div className="absolute inset-y-0 left-0 w-16 md:w-32 bg-gradient-to-r from-[#fcfaf8] to-transparent pointer-events-none z-20"></div>
+            <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-[#fcfaf8] to-transparent pointer-events-none z-20"></div>
           </div>
         </div>
       </section>
@@ -185,6 +196,76 @@ export default function LandingPage() {
                <h3 className="font-black text-lg md:text-xl mb-2">Vous rayonnez</h3>
                <p className="text-sm md:text-base text-[#7a6a5f]">FacturAvis l'invite automatiquement à laisser 5 étoiles sur la page Google de votre cabinet.</p>
              </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- SECTION : LES 2 METHODES DE FACTURATION --- */}
+      <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
+              Deux méthodes simples. <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">Un seul objectif : vos avis.</span>
+            </h2>
+            <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
+              Que vous ayez déjà votre propre système ou que vous partiez de zéro, FacturAvis s'adapte à votre façon de travailler.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+            {/* METHODE 1 : UPLOAD */}
+            <div className="bg-[#fcfaf8] p-8 md:p-10 rounded-[32px] border border-[#f0e6de] hover:border-[#a9825a]/50 hover:shadow-xl transition-all group relative overflow-hidden flex flex-col h-full">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4b494]/10 rounded-full blur-3xl -z-10 group-hover:bg-[#d4b494]/20 transition-all"></div>
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-[#f0e6de] flex items-center justify-center mb-6 text-[#a9825a] group-hover:scale-110 transition-transform">
+                <UploadCloud size={32} />
+              </div>
+              <div className="inline-block self-start bg-[#3e2f25] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">Méthode 1</div>
+              <h3 className="text-2xl md:text-3xl font-black text-[#3e2f25] mb-4">L'Import Express</h3>
+              <p className="text-[#7a6a5f] leading-relaxed font-medium mb-8 flex-grow">
+                Vous utilisez déjà un autre logiciel pour éditer vos factures ? Parfait. Déposez simplement votre PDF existant sur notre plateforme.
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-green-100 p-1 rounded-full"><CheckCircle2 size={16} className="text-green-600 shrink-0" /></div>
+                  <span className="text-[#3e2f25] font-bold text-sm">Le thérapeute dépose son PDF en 1 clic</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-green-100 p-1 rounded-full"><CheckCircle2 size={16} className="text-green-600 shrink-0" /></div>
+                  <span className="text-[#3e2f25] font-bold text-sm">Le patient reçoit un email avec un lien sécurisé</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-yellow-100 p-1 rounded-full"><Star size={16} className="text-yellow-600 shrink-0 fill-current" /></div>
+                  <span className="text-[#3e2f25] font-bold text-sm">Le téléchargement déclenche une demande d'avis Google</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* METHODE 2 : FORMULAIRE */}
+            <div className="bg-[#fdf2e9]/30 p-8 md:p-10 rounded-[32px] border border-[#f0e6de] hover:border-[#a9825a]/50 hover:shadow-xl transition-all group relative overflow-hidden flex flex-col h-full">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-[#a9825a]/10 rounded-full blur-3xl -z-10 group-hover:bg-[#a9825a]/20 transition-all"></div>
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-[#f0e6de] flex items-center justify-center mb-6 text-[#a9825a] group-hover:scale-110 transition-transform">
+                <FilePlus size={32} />
+              </div>
+              <div className="inline-block self-start bg-[#a9825a] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">Méthode 2</div>
+              <h3 className="text-2xl md:text-3xl font-black text-[#3e2f25] mb-4">Le Générateur Intégré</h3>
+              <p className="text-[#7a6a5f] leading-relaxed font-medium mb-8 flex-grow">
+                Vous n'avez pas de solution de facturation ? Remplissez notre formulaire ultra-rapide et laissez la magie opérer.
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-green-100 p-1 rounded-full"><CheckCircle2 size={16} className="text-green-600 shrink-0" /></div>
+                  <span className="text-[#3e2f25] font-bold text-sm">Formulaire thérapeute simple et intuitif</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-green-100 p-1 rounded-full"><CheckCircle2 size={16} className="text-green-600 shrink-0" /></div>
+                  <span className="text-[#3e2f25] font-bold text-sm">Création automatique d'une facture aux normes</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-yellow-100 p-1 rounded-full"><Star size={16} className="text-yellow-600 shrink-0 fill-current" /></div>
+                  <span className="text-[#3e2f25] font-bold text-sm">Envoi par lien avec récolte d'avis intégrée</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -397,7 +478,7 @@ export default function LandingPage() {
             </div>
             <div className="p-6 md:p-8 bg-white rounded-2xl md:rounded-[24px] border border-[#f0e6de] hover:shadow-md transition-shadow">
               <h3 className="font-black text-base md:text-lg mb-2 text-[#3e2f25]">Puis-je facturer si j'ai déjà un PDF ?</h3>
-              <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">Oui ! Si vous générez vos factures avec un autre logiciel, uploadez simplement le PDF sur FacturAvis. Nous nous chargeons de l'envoi au patient et de la récolte d'avis Maps.</p>
+              <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">Oui ! Et c'est justement la force de l'outil. Si vous générez vos factures avec un autre logiciel, uploadez simplement le PDF sur FacturAvis. Nous nous chargeons de l'envoi au patient et de la récolte d'avis Maps.</p>
             </div>
           </div>
         </div>
