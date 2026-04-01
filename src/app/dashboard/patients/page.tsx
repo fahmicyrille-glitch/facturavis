@@ -330,7 +330,19 @@ export default function PatientsAnnuaire() {
     }
   };
 
-  const filtered = patients.filter(p => p.nom_complet.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = patients
+    .filter(p => p.nom_complet.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      // Si c'est le "nouveau patient" en cours de création, on le garde toujours tout en haut
+      if (a.id === 'temp-new-patient') return -1;
+      if (b.id === 'temp-new-patient') return 1;
+
+      // On extrait le vrai nom sans la civilité, on le passe en minuscules pour comparer
+      const nameA = extractName(a.nom_complet).trim().toLowerCase();
+      const nameB = extractName(b.nom_complet).trim().toLowerCase();
+
+      return nameA.localeCompare(nameB, 'fr'); // Le 'fr' gère bien les accents (é, è, etc.)
+    });
 
   const getInitials = (name: string) => {
       const parts = name.split(' ');
