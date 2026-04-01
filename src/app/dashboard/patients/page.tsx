@@ -104,13 +104,14 @@ export default function PatientsAnnuaire() {
     setLoading(false);
   };
 
-  const fetchHistorique = async (pEmail: string) => {
-    if (!userId || !pEmail) return;
+  const fetchHistorique = async (pEmail: string, pNom: string) => { // <-- Ajout du nom en paramètre
+    if (!userId || !pEmail || !pNom) return;
 
     const { data, error } = await supabase
       .from('factures')
       .select('id, created_at, montant, statut, fichier_path, note, commentaire, mode_reglement, statut_email')
       .eq('patient_email', pEmail)
+      .eq('patient_nom', pNom) // <-- NOUVEAU : Filtre strict par le nom exact du patient
       .eq('therapeute_id', userId)
       .order('created_at', { ascending: false });
 
@@ -130,14 +131,15 @@ export default function PatientsAnnuaire() {
       await autoSaveNotes();
     }
 
-    // MODIFICATION : Si on quitte un brouillon sans l'avoir enregistré, on le supprime de l'affichage local
     if (selectedPatient?.id === 'temp-new-patient' && p.id !== 'temp-new-patient') {
       setPatients(prev => prev.filter(pat => pat.id !== 'temp-new-patient'));
     }
 
     setSelectedPatient(p);
+
+    // NOUVEAU : On passe l'email ET le nom complet
     if (p.id !== 'temp-new-patient') {
-      fetchHistorique(p.email);
+      fetchHistorique(p.email, p.nom_complet);
     } else {
       setHistoriqueFactures([]);
     }
