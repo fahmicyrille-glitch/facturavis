@@ -123,6 +123,15 @@ export default function SuperAdmin() {
       return;
     }
 
+    // --- NOUVEAU : VALIDATION DU SIRET POUR FACTUR-X ---
+    const cleanSiret = formSiret.replace(/\s/g, '');
+    const siretRegex = /^[0-9]{14}$/;
+    if (!siretRegex.test(cleanSiret)) {
+      toast.error("Le numéro SIRET doit contenir exactement 14 chiffres.");
+      return;
+    }
+    // ---------------------------------------------------
+
     setIsSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -135,10 +144,10 @@ export default function SuperAdmin() {
         titre: formTitre,
         telephone: formTelephone,
         adresse_cabinet: formAdresseCabinet,
-        siret: formSiret,
-        code_ape: formCodeApe,
-        adeli: formAdeli,
-        site_web: formSiteWeb,
+        siret: cleanSiret, // <-- On utilise la version nettoyée
+        code_ape: formCodeApe.trim().toUpperCase(),
+        adeli: formAdeli.trim(),
+        ite_web: formSiteWeb.trim(),
         nom_cabinet: editingId ? undefined : formNomCabinet,
         lien_google: editingId ? undefined : formLienGoogle
       };

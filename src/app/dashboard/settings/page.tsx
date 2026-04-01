@@ -135,10 +135,21 @@ function SettingsContent() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
-    setSaving(true);
 
-    const cleanSiret = siret.replace(/\s/g, ''); // Enlève les espaces tapés par erreur
+    // Nettoyage préliminaire
+    const cleanSiret = siret.replace(/\s/g, '');
     const cleanAdeli = adeli.replace(/\s/g, '');
+
+    // VALIDATION STRICTE DU SIRET POUR LA NORME FACTUR-X
+    const siretRegex = /^[0-9]{14}$/;
+    if (!siretRegex.test(cleanSiret)) {
+      setMessage({ text: "Le numéro SIRET doit contenir exactement 14 chiffres sans lettres.", type: 'error' });
+      // On retire le message d'erreur après 4 secondes pour nettoyer l'UI
+      setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+      return;
+    }
+
+    setSaving(true);
 
     const { error } = await supabase
       .from('therapeutes')
@@ -148,7 +159,7 @@ function SettingsContent() {
         telephone: telephone.trim(),
         logo_url: logoUrl,
         adresse_cabinet: adresseCabinet.trim(),
-        siret: cleanSiret,
+        siret: cleanSiret, // Sauvegarde de la version nettoyée
         code_ape: codeApe.trim().toUpperCase(),
         adeli: cleanAdeli,
         site_web: siteWeb.trim(),
@@ -157,8 +168,8 @@ function SettingsContent() {
       .eq('id', userId);
 
     setSaving(false);
+
     if (!error) {
-      // Met à jour les états avec les valeurs nettoyées
       setSiret(cleanSiret);
       setAdeli(cleanAdeli);
       setCodeApe(codeApe.trim().toUpperCase());
