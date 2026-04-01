@@ -13,26 +13,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// --- SEO & METADATA ULTRA-VENDEUSES (MULTI-PRATICIENS) ---
+// --- SEO & METADATA ULTRA-VENDEUSES (MULTI-PRATICIENS + FACTUR-X) ---
 export const metadata: Metadata = {
-  title: "FacturAvis | Le Logiciel N°1 des Praticiens (Ostéopathes, Psy, Chiros...)",
-  description: "Ostéopathes, Psychologues, Chiropracteurs, Diététiciens, Kinésiologues... Libérez-vous de l'administratif ! Dossiers sécurisés, factures en 10s et avis Google automatisés. Testez l'offre Membre Fondateur sans CB.",
-  keywords: "logiciel ostéopathe, logiciel psychologue, facturation chiropracteur, gestion cabinet diététicien, kinésiologue, psychothérapeute, logiciel thérapeute, avis Google praticien santé, facturation mutuelle, FacturAvis",
+  metadataBase: new URL('https://facturavis.fr'),
+  title: "FacturAvis | Logiciel Factur-X 2026 & Avis Google pour Praticiens",
+  description: "Praticiens libéraux (Ostéopathes, Psys, Chiros...) : Passez à la facturation électronique Factur-X 2026 en 1 clic. Automatisez vos avis Google et vos dossiers patients. Testez gratuitement.",
+  keywords: "logiciel ostéopathe, factur-x santé, facture électronique 2026, logiciel psychologue, facturation chiropracteur, gestion cabinet libéral, avis Google praticien santé, facturation mutuelle, FacturAvis",
   icons: {
     icon: "/logo/logo.png",
     shortcut: "/logo/logo.png",
     apple: "/logo/logo.png",
   },
   openGraph: {
-    title: 'FacturAvis | Simplifiez votre cabinet & Boostez vos rendez-vous',
-    description: "L'outil tout-en-un adapté à toutes les spécialités de la santé et du bien-être. Facturez en un clic et devenez n°1 sur Google Maps. Découvrez notre accès Membre Fondateur !",
+    title: 'FacturAvis | Factur-X 2026 & Boostez vos rendez-vous',
+    description: "L'outil tout-en-un adapté aux praticiens de santé. Facturez aux normes 2026 (Factur-X) en un clic et devenez n°1 sur Google Maps.",
     url: 'https://facturavis.fr',
     siteName: 'FacturAvis',
     images: [{
       url: '/og-image.jpg', // Pense bien à avoir cette image dans ton dossier "public"
       width: 1200,
       height: 630,
-      alt: "FacturAvis - Le logiciel de gestion des praticiens libéraux"
+      alt: "FacturAvis - Le logiciel Factur-X des praticiens libéraux"
     }],
     locale: 'fr_FR',
     type: 'website',
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'FacturAvis | Le Logiciel des Thérapeutes Modernes',
-    description: "Ostéopathes, Psys, Chiros, Diététiciens... Passez au niveau supérieur. Factures, dossiers et avis Google automatisés. Rejoignez les Membres Fondateurs.",
+    description: "Passez aux normes Factur-X 2026. Factures, dossiers et avis Google automatisés pour Ostéos, Psys, Chiros... Rejoignez les Membres Fondateurs.",
   }
 };
 
@@ -50,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" className="scroll-smooth">
       <head>
         {/* Balises Analytics & Ads pour tracker les inscriptions Fondateur */}
         <GoogleAnalytics
