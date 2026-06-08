@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin, escapeHtml } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
-import { escapeHtml } from '@/lib/supabase-admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,7 +16,7 @@ export async function GET(request: Request) {
     ilYa5Jours.setDate(ilYa5Jours.getDate() - 5);
     const dateLimiteISO = ilYa5Jours.toISOString();
 
-    const { data: facturesARelancer, error } = await supabase
+    const { data: facturesARelancer, error } = await supabaseAdmin
       .from('factures')
       .select('*')
       .eq('statut_email', 'Envoyé')
@@ -33,7 +32,7 @@ export async function GET(request: Request) {
 
     for (const facture of facturesARelancer) {
 
-      const { data: therapeute } = await supabase
+      const { data: therapeute } = await supabaseAdmin
         .from('therapeutes')
         .select('*')
         .eq('id', facture.therapeute_id)
@@ -41,7 +40,7 @@ export async function GET(request: Request) {
 
       if (!therapeute) continue;
 
-      const { data: cabinet } = await supabase
+      const { data: cabinet } = await supabaseAdmin
         .from('cabinets')
         .select('nom')
         .eq('id', facture.cabinet_id)
@@ -129,7 +128,7 @@ export async function GET(request: Request) {
         `
       });
 
-      await supabase
+      await supabaseAdmin
         .from('factures')
         .update({ statut_email: 'Relancé' })
         .eq('id', facture.id);

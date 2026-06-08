@@ -149,6 +149,15 @@ export default function PagePatient() {
       .update({ commentaire: feedback })
       .eq('id', factureId);
 
+    // Alerte email au praticien pour les avis négatifs
+    if (rating > 0 && rating <= 3) {
+      fetch('/api/notify-bad-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ factureId, note: rating, commentaire: feedback }),
+      }).catch(() => {});
+    }
+
     setFeedbackSent(true);
     setTimeout(() => {
       setShowModal(false);
