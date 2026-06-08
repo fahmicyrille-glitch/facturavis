@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { isAllowedStorageUrl } from '@/lib/supabase-admin';
 
-// ==========================================
-// FONCTION : GÉNÉRATEUR XML FACTUR-X (PROFIL MINIMUM)
-// ==========================================
 function generateFacturXXML(data: any) {
-  const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, ''); // Format YYYYMMDD
+  const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
   const prixFormatte = Number(data.prix).toFixed(2);
 
-  // Ceci est une version simplifiée du profil MINIMUM de la norme EN 16931 (Factur-X)
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100" xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100" xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
   <rsm:ExchangedDocumentContext>
@@ -72,18 +69,15 @@ export async function POST(request: Request) {
     const colorBlack = rgb(0, 0, 0);
     const colorGray = rgb(0.4, 0.4, 0.4);
 
-    // ==========================================
-    // 1. EN-TÊTE (Bandeau Beige + LOGO)
-    // ==========================================
+    // 1. EN-TÊTE
     page.drawRectangle({ x: 0, y: height - 120, width: width, height: 120, color: colorBeige });
 
-    if (logoUrl) {
+    if (logoUrl && isAllowedStorageUrl(logoUrl)) {
       try {
         const logoRes = await fetch(logoUrl);
         const logoBytes = await logoRes.arrayBuffer();
         const isPng = logoUrl.toLowerCase().includes('.png');
         const logoImg = isPng ? await pdfDoc.embedPng(logoBytes) : await pdfDoc.embedJpg(logoBytes);
-
         page.drawImage(logoImg, { x: 40, y: height - 100, width: 80, height: 80 });
       } catch (e) { console.error("Erreur logo PDF:", e); }
     }
@@ -96,9 +90,7 @@ export async function POST(request: Request) {
     const titreWidth = fontRegular.widthOfTextAtSize(titreHeader, 12);
     page.drawText(titreHeader, { x: (width - titreWidth) / 2, y: height - 85, size: 12, font: fontRegular, color: colorBlack });
 
-    // ==========================================
     // 2. COORDONNÉES DU PRATICIEN
-    // ==========================================
     let practitionerY = height - 180;
     const drawLine = (label: string, value: string) => {
       if (value && value.trim() !== "") {
@@ -112,9 +104,7 @@ export async function POST(request: Request) {
     drawLine("ADELI", adeli);
     drawLine("APE", codeApe);
 
-    // ==========================================
     // 3. INFOS PATIENT & NUMÉRO FACTURE
-    // ==========================================
     let patientY = height - 200;
     const rightX = width - 240;
 
@@ -134,9 +124,7 @@ export async function POST(request: Request) {
     page.drawText(`Le : ${new Date().toLocaleDateString('fr-FR')}`, { x: rightX, y: patientY - 10, size: 10, font: fontBold, color: colorBlack });
     page.drawText(`Facture n° : ${numFacture}`, { x: rightX, y: patientY - 25, size: 9, font: fontRegular, color: colorGray });
 
-    // ==========================================
     // 4. TABLEAU DES PRESTATIONS
-    // ==========================================
     const tableY = height - 380;
     page.drawRectangle({ x: 50, y: tableY, width: width - 100, height: 35, borderColor: colorBlack, borderWidth: 1 });
     page.drawText("PRESTATION", { x: 70, y: tableY + 12, size: 10, font: fontBold });
@@ -149,9 +137,7 @@ export async function POST(request: Request) {
     page.drawText(prixStr, { x: width - 200, y: tableY - 30, size: 10, font: fontRegular });
     page.drawText(prixStr, { x: width - 110, y: tableY - 30, size: 10, font: fontRegular });
 
-    // ==========================================
-    // 5. BAS DE PAGE (Mentions & Tampon Auto)
-    // ==========================================
+    // 5. BAS DE PAGE
     page.drawText("Fait pour servir et valoir ce que de droit.", { x: 50, y: 180, size: 10, font: fontRegular, color: colorGray });
     page.drawRectangle({ x: 50, y: 110, width: 140, height: 40, borderColor: colorBlack, borderWidth: 2 });
     page.drawText("FACTURE\nACQUITTÉE", { x: 72, y: 135, size: 11, font: fontBold, lineHeight: 14 });
@@ -183,28 +169,19 @@ export async function POST(request: Request) {
       stampY -= 10;
     }
 
-    if (signatureUrl) {
+    if (signatureUrl && isAllowedStorageUrl(signatureUrl)) {
       try {
         const sigRes = await fetch(signatureUrl);
         const sigBytes = await sigRes.arrayBuffer();
         const isPng = signatureUrl.toLowerCase().includes('.png');
         const sigImg = isPng ? await pdfDoc.embedPng(sigBytes) : await pdfDoc.embedJpg(sigBytes);
-
         page.drawImage(sigImg, { x: stampX, y: stampY - 60, width: 130, height: 65 });
       } catch (e) { console.error("Erreur signature image PDF:", e); }
     }
 
-    // ==========================================
-    // 6. INJECTION FACTUR-X (XML EMBEDDING)
-    // ==========================================
-    // On génère la string XML avec les données du body
+    // 6. INJECTION FACTUR-X
     const xmlString = generateFacturXXML(body);
-
-    // On l'encode en bytes
     const xmlBytes = new TextEncoder().encode(xmlString);
-
-    // On l'attache au document PDF.
-    // Le nom DOIT être "factur-x.xml" pour respecter la norme.
     await pdfDoc.attach(xmlBytes, 'factur-x.xml', {
       mimeType: 'text/xml',
       description: 'Factur-X/ZUGFeRD Invoice XML',
@@ -212,7 +189,6 @@ export async function POST(request: Request) {
       modificationDate: new Date(),
     });
 
-    // Sauvegarde en Base64
     const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
     return NextResponse.json({ success: true, pdfDataUri: pdfBase64 });
 

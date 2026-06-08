@@ -297,7 +297,7 @@ export default function PatientsAnnuaire() {
     }
 
     // Si c'est un vrai patient, on supprime de Supabase
-    const { error } = await supabase.from('patients').delete().eq('id', selectedPatient.id);
+    const { error } = await supabase.from('patients').delete().eq('id', selectedPatient.id).eq('therapeute_id', userId!);
 
     if (error) {
       console.error("Delete error:", error);

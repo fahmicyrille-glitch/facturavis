@@ -1,19 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-/**
- * Vérifie si l'utilisateur est l'admin configuré
- */
-const checkIsAdmin = (userEmail?: string) => {
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-  if (!userEmail || !adminEmail) return false;
-  return userEmail.toLowerCase().trim() === adminEmail.toLowerCase().trim();
-};
+import { supabaseAdmin, checkIsAdmin } from '@/lib/supabase-admin';
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +16,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       email, password, nom, titre, telephone, lien_google, nom_cabinet,
-      adresse_cabinet, siret, adeli, site_web, code_ape // 🌟 Ajouté code_ape
+      adresse_cabinet, siret, adeli, site_web, code_ape
     } = body;
 
     if (!lien_google || lien_google.trim() === '') {
@@ -57,7 +43,7 @@ export async function POST(request: Request) {
         telephone: telephone || null,
         adresse_cabinet: adresse_cabinet || null,
         siret: siret || null,
-        code_ape: code_ape || null, // 🌟 Ajouté code_ape
+        code_ape: code_ape || null,
         adeli: adeli || null,
         site_web: site_web || null
       }]);
@@ -134,7 +120,7 @@ export async function PUT(request: Request) {
     const {
       id, email, nom, password, titre, telephone,
       nom_cabinet, lien_google, id_cabinet,
-      adresse_cabinet, siret, adeli, site_web, code_ape // 🌟 Ajouté code_ape
+      adresse_cabinet, siret, adeli, site_web, code_ape
     } = body;
 
     // 1. Mise à jour Auth (si email ou password changent)
@@ -155,7 +141,7 @@ export async function PUT(request: Request) {
     if (telephone !== undefined) updateDbData.telephone = telephone;
     if (adresse_cabinet !== undefined) updateDbData.adresse_cabinet = adresse_cabinet;
     if (siret !== undefined) updateDbData.siret = siret;
-    if (code_ape !== undefined) updateDbData.code_ape = code_ape; // 🌟 Ajouté code_ape
+    if (code_ape !== undefined) updateDbData.code_ape = code_ape;
     if (adeli !== undefined) updateDbData.adeli = adeli;
     if (site_web !== undefined) updateDbData.site_web = site_web;
 

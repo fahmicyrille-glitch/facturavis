@@ -9,7 +9,7 @@ import {
   Settings, Building, ShieldCheck, Globe, Hash, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface Therapeute {
   id: string;
@@ -144,10 +144,10 @@ export default function SuperAdmin() {
         titre: formTitre,
         telephone: formTelephone,
         adresse_cabinet: formAdresseCabinet,
-        siret: cleanSiret, // <-- On utilise la version nettoyée
+        siret: cleanSiret,
         code_ape: formCodeApe.trim().toUpperCase(),
         adeli: formAdeli.trim(),
-        ite_web: formSiteWeb.trim(),
+        site_web: formSiteWeb.trim(),
         nom_cabinet: editingId ? undefined : formNomCabinet,
         lien_google: editingId ? undefined : formLienGoogle
       };
@@ -190,8 +190,13 @@ export default function SuperAdmin() {
     if (!therapeute) return;
 
     try {
+      const { data: { session: testSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${testSession?.access_token}`
+        },
         body: JSON.stringify({
           email: testEmail, nomPatient: "TEST PATIENT (SAV)", lienFacture: `${window.location.origin}`,
           nomTherapeute: therapeute.nom, titreTherapeute: therapeute.titre, telephoneTherapeute: therapeute.telephone,
@@ -213,6 +218,7 @@ export default function SuperAdmin() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <Toaster position="top-right" />
       <div className="max-w-[1400px] mx-auto space-y-6">
 
         {/* HEADER */}

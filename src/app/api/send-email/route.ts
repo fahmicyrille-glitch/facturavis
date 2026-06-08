@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { supabaseAdmin, escapeHtml } from '@/lib/supabase-admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
+  // Vérifie que l'appelant est un utilisateur authentifié
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new NextResponse('Non autorisé', { status: 401 });
+  }
+  const token = authHeader.slice(7);
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !user) {
+    return new NextResponse('Non autorisé', { status: 401 });
+  }
+
   try {
     const {
       email,
@@ -17,18 +29,24 @@ export async function POST(request: Request) {
       logoUrlTherapeute
     } = await request.json();
 
-    const titre = titreTherapeute || "Thérapeute";
-    const tel = telephoneTherapeute ? `📞 ${telephoneTherapeute}<br>` : "";
+    // Échappement HTML pour éviter toute injection dans le corps de l'email
+    const safeNomPatient = escapeHtml(nomPatient);
+    const safeNomTherapeute = escapeHtml(nomTherapeute);
+    const safeTitre = escapeHtml(titreTherapeute) || 'Thérapeute';
+    const safeCabinetNom = escapeHtml(cabinetNom);
+    const safeEmailTherapeute = escapeHtml(emailTherapeute);
+    const safeTel = telephoneTherapeute ? `📞 ${escapeHtml(telephoneTherapeute)}<br>` : '';
 
+    // L'URL du logo vient du storage Supabase — on l'utilise telle quelle dans le src
     const logoHtml = logoUrlTherapeute
-      ? `<img src="${logoUrlTherapeute}" alt="${nomTherapeute}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
-      : `<div style="text-align: center; color: #a9825a; font-size: 22px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">${nomTherapeute}</div>`;
+      ? `<img src="${logoUrlTherapeute}" alt="${safeNomTherapeute}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
+      : `<div style="text-align: center; color: #a9825a; font-size: 22px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">${safeNomTherapeute}</div>`;
 
     const { data, error } = await resend.emails.send({
-      from: `${nomTherapeute} <facture@facturavis.fr>`,
+      from: `${safeNomTherapeute} <facture@facturavis.fr>`,
       replyTo: emailTherapeute || 'hilaryfarid.osteopathe@gmail.com',
       to: [email],
-      subject: `Votre facture de consultation - ${nomTherapeute}`,
+      subject: `Votre facture de consultation - ${safeNomTherapeute}`,
       html: `
         <!DOCTYPE html>
         <html lang="fr">
@@ -58,7 +76,7 @@ export async function POST(request: Request) {
 
             <h1>Votre facture est disponible</h1>
 
-            <p>Bonjour <span class="highlight">${nomPatient}</span>,</p>
+            <p>Bonjour <span class="highlight">${safeNomPatient}</span>,</p>
 
             <p>J'espère que vous vous portez bien depuis votre dernière séance.</p>
 
@@ -78,16 +96,16 @@ export async function POST(request: Request) {
 
             <p style="margin-top: 30px;">
               Prenez soin de vous,<br>
-              <strong style="color: #6b4f3f;">${nomTherapeute}</strong><br>
-              <span style="font-size: 14px; color: #a9825a;">${titre}</span><br><br>
+              <strong style="color: #6b4f3f;">${safeNomTherapeute}</strong><br>
+              <span style="font-size: 14px; color: #a9825a;">${safeTitre}</span><br><br>
               <span style="font-size: 13px; color: #7a6a5f;">
-                ${tel}
-                ✉️ <a href="mailto:${emailTherapeute}" style="color: #7a6a5f; text-decoration: none;">${emailTherapeute}</a>
+                ${safeTel}
+                ✉️ <a href="mailto:${safeEmailTherapeute}" style="color: #7a6a5f; text-decoration: none;">${safeEmailTherapeute}</a>
               </span>
             </p>
 
             <div class="footer">
-              © ${new Date().getFullYear()} • ${nomTherapeute} — ${titre} • ${cabinetNom}<br>
+              © ${new Date().getFullYear()} • ${safeNomTherapeute} — ${safeTitre} • ${safeCabinetNom}<br>
               Envoyé de manière sécurisée via FacturAvis
             </div>
           </div>

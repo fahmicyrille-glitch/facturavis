@@ -241,9 +241,13 @@ function NouvelleFactureContent() {
         statut: 'Payée'
       }]).select().single();
 
+      const { data: { session: emailSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${emailSession?.access_token}`
+        },
         body: JSON.stringify({
           email: cleanEmail,
           nomPatient: nomCompletFinal,

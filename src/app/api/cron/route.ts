@@ -1,26 +1,22 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { Resend } from 'resend';
+import { escapeHtml } from '@/lib/supabase-admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function GET(request: Request) {
-  // 🔐 SÉCURITÉ : On accepte le format Vercel OU le format URL (pour tes tests)
   const authHeader = request.headers.get('authorization');
-  const url = new URL(request.url);
-  const secretDansUrl = url.searchParams.get('secret');
 
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && secretDansUrl !== process.env.CRON_SECRET) {
-    return new NextResponse('Non autorisé (Mauvais mot de passe ou fichier .env.local non lu)', { status: 401 });
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new NextResponse('Non autorisé', { status: 401 });
   }
 
   try {
-    // 1. On calcule la date d'il y a 5 jours exactement
     const ilYa5Jours = new Date();
     ilYa5Jours.setDate(ilYa5Jours.getDate() - 5);
     const dateLimiteISO = ilYa5Jours.toISOString();
 
-    // 2. On cherche toutes les factures "Envoyé" qui ont été créées il y a 5 jours (ou plus)
     const { data: facturesARelancer, error } = await supabase
       .from('factures')
       .select('*')
@@ -29,14 +25,12 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    // S'il n'y a personne à relancer, on s'arrête là
     if (!facturesARelancer || facturesARelancer.length === 0) {
       return NextResponse.json({ message: 'Aucune facture à relancer aujourd\'hui.' });
     }
 
     let envoisReussis = 0;
 
-    // 3. On fait une boucle sur chaque facture trouvée pour envoyer le rappel
     for (const facture of facturesARelancer) {
 
       const { data: therapeute } = await supabase
@@ -53,23 +47,25 @@ export async function GET(request: Request) {
         .eq('id', facture.cabinet_id)
         .single();
 
-      const nomCabinet = cabinet?.nom || 'notre cabinet';
+      const nomCabinet = escapeHtml(cabinet?.nom || 'notre cabinet');
       const lienReel = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
       const lienFacture = `${lienReel}/facture/${facture.id}`;
 
-      // Formatage des infos du thérapeute
-      const titre = therapeute.titre || "Thérapeute";
-      const tel = therapeute.telephone ? `📞 ${therapeute.telephone}<br>` : "";
-      const logoHtml = therapeute.logo_url
-        ? `<img src="${therapeute.logo_url}" alt="${therapeute.nom}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
-        : `${therapeute.nom}`;
+      const titre = escapeHtml(therapeute.titre) || 'Thérapeute';
+      const tel = therapeute.telephone ? `📞 ${escapeHtml(therapeute.telephone)}<br>` : '';
+      const safeNom = escapeHtml(therapeute.nom);
+      const safeEmail = escapeHtml(therapeute.email);
+      const safePatientNom = escapeHtml(facture.patient_nom);
 
-      // Envoi de l'e-mail de relance
+      const logoHtml = therapeute.logo_url
+        ? `<img src="${therapeute.logo_url}" alt="${safeNom}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
+        : safeNom;
+
       await resend.emails.send({
-        from: `${therapeute.nom} <facture@facturavis.fr>`, // ⚠️ Vérifie que "facturavis.fr" est bien ton domaine validé sur Resend
+        from: `${safeNom} <facture@facturavis.fr>`,
         replyTo: therapeute.email || 'hilaryfarid.osteopathe@gmail.com',
         to: facture.patient_email,
-        subject: `Rappel : Votre facture de consultation - ${therapeute.nom}`,
+        subject: `Rappel : Votre facture de consultation - ${safeNom}`,
         html: `
           <!DOCTYPE html>
           <html lang="fr">
@@ -96,7 +92,7 @@ export async function GET(request: Request) {
 
               <h1>Oubli de téléchargement ?</h1>
 
-              <p>Bonjour <span class="highlight">${facture.patient_nom}</span>,</p>
+              <p>Bonjour <span class="highlight">${safePatientNom}</span>,</p>
 
               <p>Sauf erreur de ma part, il semble que vous n'ayez pas encore téléchargé la facture de votre dernière consultation.</p>
 
@@ -115,16 +111,16 @@ export async function GET(request: Request) {
 
               <p style="margin-top: 30px;">
                 Prenez soin de vous,<br>
-                <strong style="color: #6b4f3f;">${therapeute.nom}</strong><br>
+                <strong style="color: #6b4f3f;">${safeNom}</strong><br>
                 <span style="font-size: 14px; color: #a9825a;">${titre}</span><br><br>
                 <span style="font-size: 13px; color: #7a6a5f;">
                   ${tel}
-                  ✉️ <a href="mailto:${therapeute.email}" style="color: #7a6a5f; text-decoration: none;">${therapeute.email}</a>
+                  ✉️ <a href="mailto:${safeEmail}" style="color: #7a6a5f; text-decoration: none;">${safeEmail}</a>
                 </span>
               </p>
 
               <div class="footer">
-                © ${new Date().getFullYear()} • ${therapeute.nom} — ${titre} • ${nomCabinet}<br>
+                © ${new Date().getFullYear()} • ${safeNom} — ${titre} • ${nomCabinet}<br>
                 Envoyé de manière sécurisée via FacturAvis
               </div>
             </div>
@@ -133,7 +129,6 @@ export async function GET(request: Request) {
         `
       });
 
-      // 4. TRÈS IMPORTANT : On change le statut en "Relancé"
       await supabase
         .from('factures')
         .update({ statut_email: 'Relancé' })

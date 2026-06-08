@@ -62,7 +62,7 @@ export default function PagePatient() {
 
         const { data: dataTherapeute, error: errTherapeute } = await supabase
           .from('therapeutes')
-          .select('*')
+          .select('nom, titre, telephone, email, logo_url')
           .eq('id', dataFacture.therapeute_id)
           .single();
 

@@ -281,7 +281,8 @@ function SettingsContent() {
 
     const { error } = await supabase.from('prestations')
       .update({ nom: editPrestaNom.trim(), prix: prixParsed })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId!);
 
     if (!error) {
       setPrestations(prestations.map(p => p.id === id ? { ...p, nom: editPrestaNom.trim(), prix: prixParsed } : p));
@@ -294,7 +295,7 @@ function SettingsContent() {
 
   const handleDeletePrestation = async (id: string) => {
     setDeletingPrestaId(id);
-    const { error } = await supabase.from('prestations').delete().eq('id', id);
+    const { error } = await supabase.from('prestations').delete().eq('id', id).eq('user_id', userId!);
     if (!error) {
         setPrestations(prestations.filter(p => p.id !== id));
     } else {
@@ -339,7 +340,7 @@ function SettingsContent() {
         });
         if (!res.ok) throw new Error(await res.text());
       } else {
-        const { error } = await supabase.from('cabinets').update({ nom: cleanNom, lien_avis_google: cleanLink }).eq('id', id_du_cabinet);
+        const { error } = await supabase.from('cabinets').update({ nom: cleanNom, lien_avis_google: cleanLink }).eq('id', id_du_cabinet).eq('therapeute_id', userId!);
         if (error) throw error;
       }
 
@@ -356,7 +357,7 @@ function SettingsContent() {
   const handleDeleteCabinet = async (id: string) => {
     if (!window.confirm("Supprimer ce lieu de consultation ?")) return;
     setDeletingId(id);
-    const { error } = await supabase.from('cabinets').delete().eq('id', id);
+    const { error } = await supabase.from('cabinets').delete().eq('id', id).eq('therapeute_id', userId!);
     if (!error) {
         setCabinets(cabinets.filter(c => c.id !== id));
     } else {

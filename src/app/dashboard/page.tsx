@@ -176,7 +176,7 @@ export default function Dashboard() {
       const uid = session.user.id;
       setUserId(uid);
 
-      if (session.user.email === 'fahmicyrille@gmail.com') {
+      if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
         setIsAdmin(true);
       }
 
@@ -301,9 +301,13 @@ export default function Dashboard() {
 
       showToast("Facture créée et prête à être envoyée !", "success");
 
+      const { data: { session: emailSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${emailSession?.access_token}`
+        },
         body: JSON.stringify({
           email: cleanEmail,
           nomPatient: nomComplet,
@@ -356,7 +360,8 @@ export default function Dashboard() {
       const { error: updateError } = await supabase
         .from('factures')
         .update({ patient_email: cleanNewEmail, statut_email: 'Renvoyé' })
-        .eq('id', factureToEdit.id);
+        .eq('id', factureToEdit.id)
+        .eq('therapeute_id', userId!);
 
       if (updateError) throw updateError;
 
@@ -365,9 +370,13 @@ export default function Dashboard() {
       const lien = `${window.location.origin}/facture/${factureToEdit.id}`;
       const currentCabinet = cabinets.find(c => c.id === factureToEdit.cabinet_id);
 
+      const { data: { session: resendSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendSession?.access_token}`
+        },
         body: JSON.stringify({
           email: cleanNewEmail,
           nomPatient: factureToEdit.patient_nom,
@@ -405,7 +414,8 @@ export default function Dashboard() {
       const { error } = await supabase
         .from('factures')
         .update({ statut: 'Annulée' })
-        .eq('id', factureToCancel.id);
+        .eq('id', factureToCancel.id)
+        .eq('therapeute_id', userId!);
 
       if (error) throw error;
 
