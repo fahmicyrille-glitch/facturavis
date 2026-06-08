@@ -53,24 +53,84 @@ export default function LandingPage() {
   };
 
   // --- DONNÉES STRUCTURÉES (JSON-LD) ---
-  const jsonLd = {
+  const jsonLdApp = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "FacturAvis",
     "applicationCategory": "HealthBusinessApplication",
     "operatingSystem": "Web",
-    "description": "Logiciel de gestion de cabinet, facturation et automatisation d'avis Google pour les Ostéopathes, Chiropracteurs, Psychologues, Psychothérapeutes, Diététiciens, Kinésiologues et tous les praticiens libéraux.",
+    "url": "https://facturavis.fr",
+    "description": "Logiciel de gestion de cabinet, facturation Factur-X 2026 et automatisation d'avis Google pour les Ostéopathes, Chiropracteurs, Psychologues, Psychothérapeutes, Diététiciens, Kinésiologues et tous les praticiens libéraux.",
     "offers": {
       "@type": "Offer",
       "price": "19.00",
       "priceCurrency": "EUR",
-      "priceValidUntil": "2026-12-31"
+      "priceValidUntil": "2026-12-31",
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "ratingCount": "158"
-    }
+  };
+
+  const jsonLdWebsite = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "FacturAvis",
+    "url": "https://facturavis.fr",
+    "description": "Logiciel de facturation Factur-X et d'automatisation d'avis Google pour praticiens libéraux.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "FacturAvis",
+      "url": "https://facturavis.fr",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://facturavis.fr/logo/logo.png",
+      },
+    },
+  };
+
+  const jsonLdFaq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Est-ce que FacturAvis remplace Doctolib ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Non, c'est complémentaire. Doctolib gère l'agenda, FacturAvis gère tout ce qui se passe APRÈS la séance : dossier patient, édition de la facture conforme aux normes Factur-X 2026, comptabilité et réputation Google.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Est-ce que FacturAvis est adapté à ma spécialité ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolument. Que vous soyez ostéopathe, chiropracteur, psychologue, diététicien, naturopathe ou sophrologue, les factures générées respectent les mentions légales propres à votre activité pour un remboursement mutuelle parfait.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Puis-je utiliser FacturAvis si j'ai déjà un logiciel de facturation ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui ! Si vous générez vos factures avec un autre logiciel, importez simplement le PDF sur FacturAvis. Nous gérons l'envoi sécurisé au patient et la récolte automatique d'avis Google Maps.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Qu'est-ce que la réforme Factur-X 2026 ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La réforme de la facturation électronique oblige tous les professionnels libéraux à émettre des factures au format structuré Factur-X (XML embarqué). FacturAvis génère automatiquement ce format pour chaque facture.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Comment FacturAvis collecte-t-il des avis Google ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Lors du téléchargement de sa facture, le patient est invité à laisser un avis sur Google Maps. Le moment est idéal : le patient vient de finir sa séance et télécharge son document pour sa mutuelle. Résultat : +300% d'avis en moyenne.",
+        },
+      },
+    ],
   };
 
   const praticiens = [
@@ -81,7 +141,9 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fcfaf8] text-[#3e2f25] font-sans selection:bg-[#a9825a] selection:text-white overflow-x-hidden scroll-smooth">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
       {/* --- NAVBAR --- */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#f0e6de]">
@@ -150,8 +212,12 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 h-full w-full pointer-events-none"></div>
             <img
               src="/Saas_Show.png"
-              alt="Aperçu de l'interface FacturAvis - Dossiers Patients"
+              alt="Interface FacturAvis — tableau de bord facturation et avis Google pour praticiens libéraux"
               className="relative w-full rounded-xl md:rounded-[2rem] shadow-2xl border border-[#f0e6de] transform transition-transform duration-500 hover:scale-[1.01]"
+              loading="eager"
+              fetchPriority="high"
+              width={1200}
+              height={750}
             />
           </div>
 

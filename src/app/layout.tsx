@@ -13,36 +13,76 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// --- SEO & METADATA ULTRA-VENDEUSES (MULTI-PRATICIENS + FACTUR-X) ---
 export const metadata: Metadata = {
   metadataBase: new URL('https://facturavis.fr'),
-  title: "FacturAvis | Logiciel Factur-X 2026 & Avis Google pour Praticiens",
-  description: "Praticiens libéraux (Ostéopathes, Psys, Chiros...) : Passez à la facturation électronique Factur-X 2026 en 1 clic. Automatisez vos avis Google et vos dossiers patients. Testez gratuitement.",
-  keywords: "logiciel ostéopathe, factur-x santé, facture électronique 2026, logiciel psychologue, facturation chiropracteur, gestion cabinet libéral, avis Google praticien santé, facturation mutuelle, FacturAvis",
+
+  title: {
+    default: "FacturAvis — Logiciel de Facturation & Avis Google pour Praticiens Libéraux",
+    template: "%s | FacturAvis",
+  },
+  description: "Ostéopathes, Psychologues, Chiropracteurs, Diététiciens : générez vos factures conformes Factur-X 2026 en 10 secondes et récoltez automatiquement vos avis Google. Essai gratuit, sans CB.",
+
+  keywords: [
+    "logiciel ostéopathe",
+    "logiciel facturation praticien libéral",
+    "facture ostéopathie mutuelle",
+    "factur-x praticien santé",
+    "facturation électronique 2026",
+    "logiciel psychologue facturation",
+    "logiciel chiropracteur",
+    "avis Google cabinet médical",
+    "automatiser avis Google praticien",
+    "gestion cabinet libéral",
+    "note d'honoraires ostéopathe",
+    "note d'honoraires psychologue",
+    "logiciel diététicien facturation",
+    "logiciel naturopathe",
+    "logiciel sophrologue",
+    "facturation hypnothérapeute",
+    "reçu honoraires kinésiologue",
+    "logiciel réflexologue",
+    "dossier patient sécurisé",
+    "réforme facturation 2026 professionnel santé",
+    "FacturAvis",
+  ],
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" },
+  },
+
+  alternates: {
+    canonical: "https://facturavis.fr",
+  },
+
   icons: {
     icon: "/logo/logo.png",
     shortcut: "/logo/logo.png",
     apple: "/logo/logo.png",
   },
+
   openGraph: {
-    title: 'FacturAvis | Factur-X 2026 & Boostez vos rendez-vous',
-    description: "L'outil tout-en-un adapté aux praticiens de santé. Facturez aux normes 2026 (Factur-X) en un clic et devenez n°1 sur Google Maps.",
-    url: 'https://facturavis.fr',
-    siteName: 'FacturAvis',
+    title: "FacturAvis — Factures Factur-X + Avis Google automatisés pour Praticiens",
+    description: "Générez vos factures conformes aux normes 2026 en 10s et récoltez 3× plus d'avis Google automatiquement. Logiciel tout-en-un pour praticiens libéraux.",
+    url: "https://facturavis.fr",
+    siteName: "FacturAvis",
     images: [{
-      url: '/og-image.jpg', // Pense bien à avoir cette image dans ton dossier "public"
+      url: "/og-image.jpg",
       width: 1200,
       height: 630,
-      alt: "FacturAvis - Le logiciel Factur-X des praticiens libéraux"
+      alt: "FacturAvis - Logiciel de facturation et avis Google pour praticiens libéraux",
     }],
-    locale: 'fr_FR',
-    type: 'website',
+    locale: "fr_FR",
+    type: "website",
   },
+
   twitter: {
-    card: 'summary_large_image',
-    title: 'FacturAvis | Le Logiciel des Thérapeutes Modernes',
-    description: "Passez aux normes Factur-X 2026. Factures, dossiers et avis Google automatisés pour Ostéos, Psys, Chiros... Rejoignez les Membres Fondateurs.",
-  }
+    card: "summary_large_image",
+    title: "FacturAvis — Factures Factur-X & Avis Google pour Praticiens",
+    description: "10 secondes pour facturer. 3× plus d'avis Google. L'outil des praticiens libéraux modernes. Essai gratuit.",
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({
