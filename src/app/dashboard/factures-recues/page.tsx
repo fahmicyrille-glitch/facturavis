@@ -122,12 +122,21 @@ export default function FacturesRecuesPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handlePreview = async (facture: FactureRecue) => {
-    const isIopole = facture.notes?.startsWith('iopole:');
+    const isPlatform = facture.notes?.startsWith('superpdp:') || facture.notes?.startsWith('iopole:');
 
-    if (isIopole) {
-      const iopoleId = facture.notes?.replace('iopole:', '');
+    if (isPlatform) {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`/api/iopole/preview?id=${iopoleId}`, {
+      let apiUrl: string;
+
+      if (facture.notes?.startsWith('superpdp:')) {
+        const id = facture.notes.replace('superpdp:', '');
+        apiUrl = `/api/superpdp/preview?id=${id}`;
+      } else {
+        const id = facture.notes?.replace('iopole:', '');
+        apiUrl = `/api/iopole/preview?id=${id}`;
+      }
+
+      const res = await fetch(apiUrl, {
         headers: { 'Authorization': `Bearer ${session?.access_token}` },
       });
       if (res.ok) {
@@ -146,17 +155,18 @@ export default function FacturesRecuesPage() {
   // ── Iopole sync ──
   const [syncing, setSyncing] = useState(false);
 
-  const handleIopoleSync = async (purgeFirst = false) => {
+  const handlePlatformSync = async (purgeFirst = false) => {
     setSyncing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const headers = { 'Authorization': `Bearer ${session?.access_token}` };
 
       if (purgeFirst) {
-        await fetch('/api/iopole/sync', { method: 'DELETE', headers });
+        await fetch('/api/superpdp/sync', { method: 'DELETE', headers });
+        await fetch('/api/iopole/sync', { method: 'DELETE', headers }).catch(() => {});
       }
 
-      const res = await fetch('/api/iopole/sync', { method: 'POST', headers });
+      const res = await fetch('/api/superpdp/sync', { method: 'POST', headers });
       const result = await res.json();
       if (res.ok) {
         showToast(result.message || `${result.synced} facture(s) synchronisée(s)`, result.synced > 0 ? 'success' : 'info');
@@ -165,7 +175,7 @@ export default function FacturesRecuesPage() {
         showToast(result.error || 'Erreur de synchronisation', 'error');
       }
     } catch {
-      showToast('Impossible de contacter Iopole', 'error');
+      showToast('Impossible de contacter la plateforme', 'error');
     } finally {
       setSyncing(false);
     }
@@ -444,20 +454,20 @@ export default function FacturesRecuesPage() {
             {iopoleActive && (
               <div className="flex items-center gap-0">
                 <button
-                  onClick={() => handleIopoleSync(false)}
+                  onClick={() => handlePlatformSync(false)}
                   disabled={syncing}
                   className="flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-l-lg shadow-sm transition-colors text-sm font-medium disabled:opacity-50"
                   title="Synchroniser les nouvelles factures Iopole"
                 >
                   <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
-                  {syncing ? 'Sync...' : 'Sync Iopole'}
+                  {syncing ? 'Sync...' : 'Sync PA'}
                 </button>
                 {isAdmin && (
                   <button
                     onClick={() => setConfirmModal({
                       title: 'Re-synchroniser Iopole ?',
                       message: 'Toutes les factures Iopole seront supprimées et re-importées depuis la plateforme.',
-                      onConfirm: () => { setConfirmModal(null); handleIopoleSync(true); },
+                      onConfirm: () => { setConfirmModal(null); handlePlatformSync(true); },
                     })}
                     disabled={syncing}
                     className="flex items-center bg-white border border-l-0 border-gray-200 hover:bg-red-50 text-gray-400 hover:text-red-600 px-2 py-2.5 rounded-r-lg shadow-sm transition-colors disabled:opacity-50"
@@ -614,9 +624,24 @@ export default function FacturesRecuesPage() {
                         <span className="font-semibold text-gray-900">{f.fournisseur_nom}</span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${CATEGORY_COLORS[f.categorie] || CATEGORY_COLORS['Autre']}`}>
-                          {f.categorie}
-                        </span>
+                        <select
+                          value={f.categorie}
+                          onChange={async (e) => {
+                            const newCat = e.target.value;
+                            const { error } = await supabase
+                              .from('factures_recues')
+                              .update({ categorie: newCat })
+                              .eq('id', f.id);
+                            if (!error) {
+                              setFactures(prev => prev.map(fac => fac.id === f.id ? { ...fac, categorie: newCat } : fac));
+                            }
+                          }}
+                          className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer outline-none ${CATEGORY_COLORS[f.categorie] || CATEGORY_COLORS['Autre']}`}
+                        >
+                          {CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-5 py-3.5 text-right font-medium text-gray-900 whitespace-nowrap">
                         {formatMontant(f.montant)}

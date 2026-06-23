@@ -16,6 +16,7 @@ function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const forcedId = searchParams.get('as');
+  const receptionResult = searchParams.get('reception');
 
   // Profile state
   const [nom, setNom] = useState('');
@@ -109,35 +110,34 @@ function SettingsContent() {
     fetchData();
   }, [router, forcedId]);
 
+  useEffect(() => {
+    if (receptionResult === 'success') {
+      setIopoleStatus('active');
+      setIopoleMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
+    } else if (receptionResult === 'error') {
+      setIopoleMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
+    }
+  }, [receptionResult]);
+
   // --- SUBSCRIPTION ---
   const [iopoleMessage, setIopoleMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  const handleActivateIopole = async () => {
-    if (!siret || siret.replace(/\s/g, '').length !== 14) {
-      setIopoleMessage({ text: 'Veuillez d\'abord renseigner votre SIRET (14 chiffres) dans votre profil ci-dessous.', type: 'error' });
-      return;
-    }
+  const handleActivateReception = async () => {
     setActivatingIopole(true);
     setIopoleMessage(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/iopole/onboard', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ siret: siret.replace(/\s/g, ''), nom, email: session?.user?.email }),
+      const res = await fetch('/api/superpdp/authorize', {
+        headers: { 'Authorization': `Bearer ${session?.access_token}` },
       });
       const data = await res.json();
-      if (res.ok) {
-        setIopoleStatus('pending');
-        setIopoleMessage({ text: 'Demande envoyée ! Consultez votre boîte email pour valider votre identité et signer le mandat.', type: 'success' });
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        setIopoleMessage({ text: "L'activation a échoué. Le service de réception est en cours de mise en place. Réessayez ultérieurement.", type: 'error' });
+        setIopoleMessage({ text: 'Impossible de lancer l\'activation. Réessayez.', type: 'error' });
       }
     } catch {
-      setIopoleMessage({ text: 'Impossible de joindre le service. Vérifiez votre connexion et réessayez.', type: 'error' });
+      setIopoleMessage({ text: 'Impossible de joindre le service. Réessayez.', type: 'error' });
     } finally {
       setActivatingIopole(false);
     }
@@ -454,7 +454,7 @@ function SettingsContent() {
                 </ul>
               </div>
               <button
-                onClick={handleActivateIopole}
+                onClick={handleActivateReception}
                 disabled={activatingIopole || !siret}
                 className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 font-bold hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 transition-all shadow-md"
               >

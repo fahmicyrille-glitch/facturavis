@@ -43,8 +43,14 @@ export default function InscriptionPage() {
       if (authError) {
         if (authError.message.includes('already')) {
           setError('Un compte existe déjà avec cet email. Connectez-vous.');
+        } else if (authError.message.includes('rate') || authError.message.includes('limit')) {
+          setError('Trop de tentatives. Veuillez patienter quelques minutes avant de réessayer.');
+        } else if (authError.message.includes('valid') || authError.message.includes('email')) {
+          setError('Adresse email invalide. Vérifiez votre saisie.');
+        } else if (authError.message.includes('password') || authError.message.includes('weak')) {
+          setError('Le mot de passe doit contenir au moins 6 caractères.');
         } else {
-          setError(authError.message);
+          setError('Une erreur est survenue. Réessayez dans quelques instants.');
         }
         setLoading(false);
         return;
