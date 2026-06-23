@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Loader2, FileText, User, Euro, Send,
-  MapPin, CheckCircle, X, Shield, Building, CreditCard
+  MapPin, CheckCircle, X, Shield, Building,
+  Eye, Plus, Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -18,6 +19,12 @@ interface Patient {
 }
 
 interface Prestation {
+  id: string;
+  nom: string;
+  prix: number;
+}
+
+interface LigneFacture {
   id: string;
   nom: string;
   prix: number;
@@ -57,10 +64,26 @@ function NouvelleFactureContent() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDropdownPrenom, setShowDropdownPrenom] = useState(false);
 
+  const [lignes, setLignes] = useState<LigneFacture[]>([{ id: crypto.randomUUID(), nom: '', prix: 0 }]);
   const [selectedPrestaId, setSelectedPrestaId] = useState<string>('');
-  const [customPrestaNom, setCustomPrestaNom] = useState('');
-  const [customPrestaPrix, setCustomPrestaPrix] = useState('');
   const [modeReglement, setModeReglement] = useState('CB');
+  const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const addLigne = () => {
+    setLignes([...lignes, { id: crypto.randomUUID(), nom: '', prix: 0 }]);
+  };
+
+  const removeLigne = (id: string) => {
+    if (lignes.length <= 1) return;
+    setLignes(lignes.filter(l => l.id !== id));
+  };
+
+  const updateLigne = (id: string, field: 'nom' | 'prix', value: string | number) => {
+    setLignes(lignes.map(l => l.id === id ? { ...l, [field]: field === 'prix' ? Number(value) : value } : l));
+  };
+
+  const totalMontant = lignes.reduce((sum, l) => sum + (l.prix || 0), 0);
 
   const filteredPatients = patientsDb.filter(p => {
     if (!patientNom && !patientPrenom) return false;
@@ -122,7 +145,16 @@ function NouvelleFactureContent() {
   }, [router, emailParam, idParam]);
 
   const selectPatient = (patient: Patient) => {
-    setPatientNom(patient.nom_complet);
+    // Extract civilité and set it
+    if (patient.nom_complet.startsWith('Mme ')) {
+      setPatientCivilite('Mme');
+      setPatientNom(patient.nom_complet.substring(4));
+    } else if (patient.nom_complet.startsWith('M. ')) {
+      setPatientCivilite('M.');
+      setPatientNom(patient.nom_complet.substring(3));
+    } else {
+      setPatientNom(patient.nom_complet);
+    }
     setPatientEmail(patient.email || '');
     setPatientAdresse(patient.adresse || '');
     setPatientSecu(patient.num_secu || '');
@@ -137,12 +169,68 @@ function NouvelleFactureContent() {
     if (val !== '') {
       const presta = prestationsDb.find(p => p.id === val);
       if (presta) {
-        setCustomPrestaNom(presta.nom);
-        setCustomPrestaPrix(presta.prix.toString());
+        // Find the first empty line, or add a new one
+        const emptyLine = lignes.find(l => l.nom.trim() === '' && l.prix === 0);
+        if (emptyLine) {
+          setLignes(lignes.map(l => l.id === emptyLine.id ? { ...l, nom: presta.nom, prix: presta.prix } : l));
+        } else {
+          setLignes([...lignes, { id: crypto.randomUUID(), nom: presta.nom, prix: presta.prix }]);
+        }
       }
-    } else {
-      setCustomPrestaNom('');
-      setCustomPrestaPrix('');
+    }
+    // Reset the dropdown so the same presta can be selected again
+    setTimeout(() => setSelectedPrestaId(''), 100);
+  };
+
+  const handlePreview = async () => {
+    setPreviewing(true);
+    try {
+      const cleanNom = patientNom.trim();
+      const cleanPrenom = patientPrenom.trim();
+      const prenomFormatte = cleanPrenom ? ` ${cleanPrenom}` : '';
+      const nomCompletFinal = cleanNom.includes(cleanPrenom) && cleanPrenom !== ''
+        ? cleanNom
+        : `${patientCivilite} ${cleanNom.toUpperCase()}${prenomFormatte}`.trim();
+
+      const { data: profile } = await supabase.from('therapeutes').select('*').eq('id', userId).single();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const accessToken = currentSession?.access_token;
+
+      const payloadPdf = {
+        patientNom: nomCompletFinal,
+        patientAdresse: patientAdresse.trim(),
+        patientSecu: patientSecu.trim(),
+        email: patientEmail.trim().toLowerCase(),
+        lignes: lignes.map(l => ({ nom: l.nom.trim(), prix: l.prix })),
+        prix: totalMontant,
+        modeReglement,
+        numFacture: 'APERCU',
+        nomTherapeute: profile?.nom,
+        titreTherapeute: profile?.titre,
+        telephone: profile?.telephone,
+        emailTherapeute: userEmail,
+        adresseCabinet: profile?.adresse_cabinet,
+        siret: profile?.siret,
+        codeApe: profile?.code_ape,
+        adeli: profile?.adeli,
+        siteWeb: profile?.site_web,
+        logoUrl: profile?.logo_url,
+        signatureUrl: profile?.signature_url
+      };
+
+      const pdfResponse = await fetch('/api/factures/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify(payloadPdf),
+      });
+      const pdfData = await pdfResponse.json();
+      if (pdfData.success) {
+        setPreviewUrl(pdfData.pdfDataUri);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setPreviewing(false);
     }
   };
 
@@ -189,14 +277,17 @@ function NouvelleFactureContent() {
       const { data: profile } = await supabase.from('therapeutes').select('*').eq('id', userId).single();
       const currentCabinet = cabinets.find(c => c.id === selectedCabinetId);
 
-      const montantFinal = parseFloat(customPrestaPrix.replace(',', '.')) || 0;
+      const montantFinal = totalMontant;
+
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const accessToken = currentSession?.access_token;
 
       const payloadPdf = {
         patientNom: nomCompletFinal,
         patientAdresse: patientAdresse.trim(),
         patientSecu: patientSecu.trim(),
         email: cleanEmail,
-        acte: customPrestaNom.trim(),
+        lignes: lignes.map(l => ({ nom: l.nom.trim(), prix: l.prix })),
         prix: montantFinal,
         modeReglement,
         numFacture: numFactureSeq,
@@ -215,7 +306,7 @@ function NouvelleFactureContent() {
 
       const pdfResponse = await fetch('/api/factures/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
         body: JSON.stringify(payloadPdf),
       });
 
@@ -275,8 +366,7 @@ function NouvelleFactureContent() {
 
   const isFormValid = patientNom.trim() !== '' &&
                       patientEmail.trim() !== '' &&
-                      customPrestaNom.trim() !== '' &&
-                      customPrestaPrix.trim() !== '' &&
+                      lignes.some(l => l.nom.trim() !== '' && l.prix > 0) &&
                       cabinets.length > 0;
 
   if (loading) return (
@@ -409,18 +499,61 @@ function NouvelleFactureContent() {
             </h2>
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Acte réalisé *</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">Sélectionner un acte</label>
                 <select className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all mb-3 appearance-none cursor-pointer bg-white" value={selectedPrestaId} onChange={handlePrestaChange}>
-                  <option value="">-- Sélectionner un acte --</option>
+                  <option value="">-- Ajouter un acte prédéfini --</option>
                   {prestationsDb.map(p => <option key={p.id} value={p.id}>{p.nom} ({p.prix}€)</option>)}
                 </select>
-                <div className="flex gap-3">
-                  <input type="text" required className="flex-[3] border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" value={customPrestaNom} onChange={(e) => setCustomPrestaNom(e.target.value)} placeholder="Intitulé de l'acte" />
-                  <div className="relative flex-[1] min-w-[120px]">
-                    <Euro size={14} className="absolute left-3 top-3 text-gray-500" />
-                    <input type="number" step="0.01" required className="w-full border border-black text-black rounded-lg py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500" value={customPrestaPrix} onChange={(e) => setCustomPrestaPrix(e.target.value)} placeholder="0.00" />
-                  </div>
+
+                <div className="space-y-3">
+                  {lignes.map((ligne) => (
+                    <div key={ligne.id} className="flex gap-3 items-start">
+                      <input
+                        type="text"
+                        className="flex-[3] border border-black text-black rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500"
+                        value={ligne.nom}
+                        onChange={(e) => updateLigne(ligne.id, 'nom', e.target.value)}
+                        placeholder="Intitulé de l'acte"
+                      />
+                      <div className="relative flex-[1] min-w-[120px]">
+                        <Euro size={14} className="absolute left-3 top-3 text-gray-500" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="w-full border border-black text-black rounded-lg py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-500"
+                          value={ligne.prix || ''}
+                          onChange={(e) => updateLigne(ligne.id, 'prix', e.target.value)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      {lignes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeLigne(ligne.id)}
+                          className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          title="Supprimer cette ligne"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
+
+                <button
+                  type="button"
+                  onClick={addLigne}
+                  className="mt-3 w-full py-2.5 rounded-lg border border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2"
+                >
+                  <Plus size={16} /> Ajouter une ligne
+                </button>
+
+                {lignes.length > 1 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
+                    <span className="text-sm font-bold text-gray-700">Total</span>
+                    <span className="text-lg font-black text-gray-900">{totalMontant.toFixed(2).replace('.', ',')} EUR</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2">
@@ -444,15 +577,39 @@ function NouvelleFactureContent() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={generating || !isFormValid}
-            className="w-full py-4 rounded-xl shadow-sm text-sm font-bold text-white bg-[#7ab4f5] hover:bg-blue-400 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all mt-4 flex items-center justify-center gap-2"
-          >
-            {generating ? <Loader2 className="animate-spin" size={20} /> : <><Send size={18} /> Émettre la facture & Avis</>}
-          </button>
+          <div className="flex gap-3 mt-4">
+            <button
+              type="button"
+              onClick={handlePreview}
+              disabled={previewing || !isFormValid}
+              className="flex-1 py-4 rounded-xl shadow-sm text-sm font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              {previewing ? <Loader2 className="animate-spin" size={20} /> : <><Eye size={18} /> Prévisualiser</>}
+            </button>
+            <button
+              type="submit"
+              disabled={generating || !isFormValid}
+              className="flex-1 py-4 rounded-xl shadow-sm text-sm font-bold text-white bg-[#7ab4f5] hover:bg-blue-400 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              {generating ? <Loader2 className="animate-spin" size={20} /> : <><Send size={18} /> Émettre la facture & Avis</>}
+            </button>
+          </div>
         </form>
       </div>
+
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold text-gray-900">Previsualisation de la facture</h3>
+              <button onClick={() => setPreviewUrl(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <iframe src={previewUrl} className="flex-1 w-full" title="Previsualisation facture" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

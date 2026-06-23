@@ -2,13 +2,33 @@
 
 import { useState, useEffect } from 'react';
 import {
-  CheckCircle, ArrowRight, Loader2, ShieldCheck,
-  Cloud, Lock, Sparkles, Check, User, Mail, Phone, Stethoscope, AlertCircle, Star, Quote
+  ArrowRight, Loader2, ShieldCheck,
+  Cloud, Lock, Sparkles, Check, User, Mail, Phone, Stethoscope, AlertCircle, Star, Quote,
+  Inbox, BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { trackConversion } from '@/lib/gtag';
+
+function getRelativeTime(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+
+  if (diffMinutes < 1) return "il y a quelques secondes";
+  if (diffMinutes < 60) return `il y a ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
+  if (diffHours < 24) return `il y a ${diffHours} heure${diffHours > 1 ? 's' : ''}`;
+  if (diffDays < 7) return `il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+  if (diffWeeks < 5) return `il y a ${diffWeeks} semaine${diffWeeks > 1 ? 's' : ''}`;
+  return `il y a ${diffMonths} mois`;
+}
 
 export default function FondateurPage() {
   const router = useRouter();
@@ -21,13 +41,42 @@ export default function FondateurPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [prospectCount, setProspectCount] = useState<number>(0);
+  const [lastSignupText, setLastSignupText] = useState<string>('');
 
-  const spotsLeft = 12;
   const totalSpots = 50;
+  const spotsLeft = Math.max(0, totalSpots - prospectCount);
   const progressPercentage = (spotsLeft / totalSpots) * 100;
 
   useEffect(() => {
     setIsVisible(true);
+
+    const fetchProspectCount = async () => {
+      const { count } = await supabase
+        .from('prospects')
+        .select('*', { count: 'exact', head: true })
+        .or('statut.is.null,statut.neq.sans_suite');
+
+      if (count !== null) {
+        setProspectCount(count);
+      }
+    };
+
+    const fetchLastSignup = async () => {
+      const { data: latest } = await supabase
+        .from('prospects')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (latest?.created_at) {
+        setLastSignupText(getRelativeTime(latest.created_at));
+      }
+    };
+
+    fetchProspectCount();
+    fetchLastSignup();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,7 +162,7 @@ export default function FondateurPage() {
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#d4b494] to-[#a9825a] rounded-xl blur opacity-25 group-hover:opacity-75 transition duration-500"></div>
-            <img src="/logo/logo.png" alt="FacturAvis - Logiciel de gestion de cabinet libéral" className="relative w-10 h-10 object-contain shadow-sm rounded-xl" />
+            <Image src="/logo/logo.png" alt="FacturAvis - Logiciel de gestion de cabinet libéral" width={40} height={40} className="relative object-contain shadow-sm rounded-xl" />
           </div>
           <span className="text-xl font-black tracking-tighter text-[#3e2f25]">FacturAvis</span>
         </Link>
@@ -155,7 +204,7 @@ export default function FondateurPage() {
                 </div>
             </div>
             <p className="text-[10px] text-[#7a6a5f] font-bold italic text-right opacity-80 flex items-center justify-end gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Dernière inscription il y a 4 heures
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> {lastSignupText ? `Dernière inscription ${lastSignupText}` : ' '}
             </p>
         </div>
 
@@ -166,9 +215,11 @@ export default function FondateurPage() {
                 <h3 className="font-black text-2xl text-[#3e2f25] border-b border-[#f0e6de] pb-4">Fonctionnalités incluses :</h3>
 
                 {[
-                  { icon: Check, title: "Dossiers Patients Pro", desc: "Fiches complètes, observations thérapeutiques et auto-sauvegarde sécurisée en temps réel." },
+                  { icon: Check, title: "Dossiers Patients Pro", desc: "Fiches complètes, observations auto-sauvegardées, import CSV. Ne perdez plus jamais une information patient." },
                   { icon: Sparkles, title: "Boost Réputation Google", desc: "Récoltez automatiquement des avis 5 étoiles après chaque séance. Dominez les recherches de votre ville." },
-                  { icon: ShieldCheck, title: "Logiciel de Facturation 2026", desc: "Factures PDF certifiées Factur-X en 1 clic, export comptable et archivage Cloud conforme RGPD." }
+                  { icon: ShieldCheck, title: "Logiciel de Facturation 2026", desc: "Factures multi-lignes, prévisualisation PDF, export CSV et FEC. Conforme Factur-X à l'émission ET réception via Plateforme Agréée." },
+                  { icon: Inbox, title: "Réception Fournisseurs Automatique", desc: "Vos factures fournisseurs arrivent automatiquement via notre Plateforme Agréée certifiée DGFiP. Conforme à la réforme sept. 2026 sans effort." },
+                  { icon: BarChart3, title: "Dashboard & Analytics", desc: "Suivez votre CA, vos avis et vos performances avec des graphiques en temps réel. Export FEC en 1 clic pour votre comptable." }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-4 md:gap-5 group cursor-default" style={{ animationDelay: `${(i + 1) * 200}ms` }}>
                       <div className="mt-1 bg-gradient-to-br from-[#fdf2e9] to-white border border-[#d4b494]/40 text-[#a9825a] rounded-2xl p-2.5 md:p-3 shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
@@ -187,8 +238,8 @@ export default function FondateurPage() {
                   <div className="flex gap-1 mb-2 text-yellow-400">
                     <Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" />
                   </div>
-                  <p className="text-sm text-[#7a6a5f] italic font-medium mb-3">"Enfin un outil pensé pour les thérapeutes et pas pour les comptables. La demande d'avis automatique m'a ramené 7 nouveaux patients ce mois-ci."</p>
-                  <p className="text-xs font-black text-[#3e2f25]">— Thomas R., Ostéopathe</p>
+                  <p className="text-sm text-[#7a6a5f] italic font-medium mb-3">"Enfin un outil qui fait TOUT : facturation, avis Google, et maintenant la réception automatique de mes factures fournisseurs. Je ne me soucie plus de la réforme 2026."</p>
+                  <p className="text-xs font-black text-[#3e2f25]">— Marie L., Psychologue</p>
                 </div>
             </div>
 
@@ -224,7 +275,7 @@ export default function FondateurPage() {
                       <div className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-xs font-bold text-green-600 shadow-sm">M</div>
                       <div className="w-8 h-8 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-bold text-orange-600 shadow-sm">S</div>
                     </div>
-                    <p className="text-xs text-gray-600 font-medium">Rejoignez les <span className="font-bold text-[#3e2f25]">38 fondateurs</span> déjà inscrits.</p>
+                    <p className="text-xs text-gray-600 font-medium">Rejoignez les <span className="font-bold text-[#3e2f25]">{prospectCount} fondateur{prospectCount > 1 ? 's' : ''}</span> déjà inscrits.</p>
                   </div>
 
                   {errorMsg && (

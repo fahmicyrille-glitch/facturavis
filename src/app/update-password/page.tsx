@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Lock, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, Lock, CheckCircle, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function UpdatePassword() {
   const [password, setPassword] = useState('');
@@ -11,6 +11,8 @@ export default function UpdatePassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const router = useRouter();
 
@@ -88,12 +90,20 @@ export default function UpdatePassword() {
                     <Lock size={18} className="text-gray-400" />
                   </div>
                   <input
-                    type="password" required
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#a9825a] focus:border-[#a9825a] outline-none transition-colors"
+                    type={showPassword ? 'text' : 'password'} required
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-[#a9825a] focus:border-[#a9825a] outline-none transition-colors"
                     placeholder="Au moins 6 caractères"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 
@@ -104,12 +114,20 @@ export default function UpdatePassword() {
                     <Lock size={18} className="text-gray-400" />
                   </div>
                   <input
-                    type="password" required
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#a9825a] focus:border-[#a9825a] outline-none transition-colors"
+                    type={showConfirmPassword ? 'text' : 'password'} required
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-[#a9825a] focus:border-[#a9825a] outline-none transition-colors"
                     placeholder="Répétez le mot de passe"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 

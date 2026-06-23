@@ -24,6 +24,8 @@ interface Therapeute {
   adeli: string;
   site_web: string;
   created_at: string;
+  plan?: string;
+  subscription_status?: string;
 }
 
 interface Facture {
@@ -288,6 +290,7 @@ export default function SuperAdmin() {
                     <th className="px-6 py-4 text-center">Envois</th>
                     <th className="px-6 py-4 text-center">Conversion</th>
                     <th className="px-6 py-4 text-center">Note Google</th>
+                    <th className="px-6 py-4 text-center">Abonnement</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -307,6 +310,46 @@ export default function SuperAdmin() {
                         <td className="px-6 py-4 text-center font-bold">{fT.length}</td>
                         <td className="px-6 py-4 text-center font-black text-blue-600">{fT.length > 0 ? Math.round((fT.filter(f => f.note).length / fT.length) * 100) : 0}%</td>
                         <td className="px-6 py-4 text-center text-lg font-black text-yellow-500">{fT.filter(f => f.note === 5).length} ⭐</td>
+                        <td className="px-6 py-4 text-center">
+                          <select
+                            value={t.plan || 'trial'}
+                            onChange={async (e) => {
+                              const newPlan = e.target.value;
+                              const { data: { session: s } } = await supabase.auth.getSession();
+                              const res = await fetch('/api/admin/users', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s?.access_token}` },
+                                body: JSON.stringify({ id: t.id, plan: newPlan, subscription_status: newPlan === 'trial' ? 'trial' : 'active' })
+                              });
+                              if (res.ok) {
+                                setTherapeutes(prev => prev.map(th => th.id === t.id ? { ...th, plan: newPlan, subscription_status: newPlan === 'trial' ? 'trial' : 'active' } : th));
+                                toast.success(`Plan mis à jour : ${newPlan}`);
+                              } else {
+                                toast.error('Erreur lors de la mise à jour');
+                              }
+                            }}
+                            className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border outline-none cursor-pointer ${
+                              t.plan === 'founder' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              t.plan === 'standard' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              'bg-gray-50 text-gray-600 border-gray-200'
+                            }`}
+                          >
+                            <option value="trial">🆓 Essai</option>
+                            <option value="founder">⭐ Fondateur 19€</option>
+                            <option value="standard">💎 Standard 29€</option>
+                          </select>
+                          <div className={`text-[8px] mt-1 font-bold ${
+                            t.subscription_status === 'active' ? 'text-green-600' :
+                            t.subscription_status === 'past_due' ? 'text-orange-600' :
+                            t.subscription_status === 'cancelled' ? 'text-red-600' :
+                            'text-gray-400'
+                          }`}>
+                            {t.subscription_status === 'active' ? '● Actif' :
+                             t.subscription_status === 'past_due' ? '● En retard' :
+                             t.subscription_status === 'cancelled' ? '● Annulé' :
+                             '● Essai gratuit'}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 text-right flex justify-end gap-1">
                           <button onClick={() => window.open(`/dashboard/settings?as=${t.id}`, '_blank')} className="text-gray-400 p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Gérer les cabinets/logo"><Settings size={16} /></button>
                           <button onClick={() => handleEditClick(t)} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg" title="Modifier infos"><Edit size={16} /></button>

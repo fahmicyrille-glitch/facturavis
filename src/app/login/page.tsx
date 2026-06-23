@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Lock, Mail, ArrowRight, CheckCircle, AlertCircle, FileCheck } from 'lucide-react';
+import { Loader2, Lock, Mail, ArrowRight, CheckCircle, AlertCircle, FileCheck, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -11,10 +11,10 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
 
   const router = useRouter();
 
@@ -177,26 +177,21 @@ export default function Home() {
                     <Lock size={18} />
                   </div>
                   <input
-                    type="password" required
-                    className="w-full pl-11 pr-4 py-3.5 bg-[#fcfaf8] border-2 border-[#f0e6de] rounded-xl focus:border-[#a9825a] outline-none transition-all font-medium text-sm"
+                    type={showPassword ? 'text' : 'password'} required
+                    className="w-full pl-11 pr-11 py-3.5 bg-[#fcfaf8] border-2 border-[#f0e6de] rounded-xl focus:border-[#a9825a] outline-none transition-all font-medium text-sm"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a9825a] hover:text-[#3e2f25] transition-colors"
+                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-              </div>
-
-              <div className="flex items-center ml-1">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-[#a9825a] focus:ring-[#a9825a] border-[#f0e6de] rounded cursor-pointer"
-                />
-                <label htmlFor="remember-me" className="ml-3 block text-sm text-[#7a6a5f] font-bold cursor-pointer">
-                  Rester connecté
-                </label>
               </div>
 
               {error && (

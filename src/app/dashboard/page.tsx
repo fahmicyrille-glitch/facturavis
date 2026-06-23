@@ -4,11 +4,26 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import {
-  UploadCloud, CheckCircle, Copy, LogOut, MapPin, Loader2, Settings,
-  Star, FileText, MessageSquare, Search, Calendar, Download, X,
-  Edit, Mail, PlusCircle, ArrowRight, Euro, CreditCard, Ban, Users
+  Loader2, LogOut, Settings, Users, CheckCircle, X, Inbox,
 } from 'lucide-react';
 import Link from 'next/link';
+import type { Facture } from '@/lib/types';
+import { generateFEC, downloadFEC } from '@/lib/export-fec';
+
+interface PatientMin {
+  id: string;
+  nom_complet: string;
+  email: string;
+}
+
+import StatsCards from '@/components/dashboard/StatsCards';
+import ChartCA from '@/components/dashboard/ChartCA';
+import ChartAvis from '@/components/dashboard/ChartAvis';
+import UploadForm from '@/components/dashboard/UploadForm';
+import HistoriqueTable from '@/components/dashboard/HistoriqueTable';
+import EditEmailModal from '@/components/dashboard/EditEmailModal';
+import CancelModal from '@/components/dashboard/CancelModal';
+import QuickInvoice from '@/components/dashboard/QuickInvoice';
 
 interface Cabinet {
   id: string;
@@ -22,27 +37,7 @@ interface Therapeute {
   telephone: string;
   email: string;
   logo_url: string;
-}
-
-interface Patient {
-  id: string;
-  nom_complet: string;
-  email: string;
-}
-
-interface Facture {
-  id: string;
-  created_at: string;
-  patient_nom: string;
-  patient_email: string;
-  cabinet_id: string;
-  fichier_path: string;
-  note: number | null;
-  commentaire: string | null;
-  statut_email: string;
-  montant: number;
-  mode_reglement: string | null;
-  statut: string | null;
+  siret?: string;
 }
 
 interface ToastMessage {
@@ -51,6 +46,7 @@ interface ToastMessage {
 }
 
 export default function Dashboard() {
+  // ── Upload form state ──
   const [file, setFile] = useState<File | null>(null);
   const [patientEmail, setPatientEmail] = useState('');
   const [civilite, setCivilite] = useState('Mme');
@@ -58,43 +54,49 @@ export default function Dashboard() {
   const [prenom, setPrenom] = useState('');
   const [montant, setMontant] = useState('');
   const [modeReglement, setModeReglement] = useState('CB');
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Core data state ──
   const [therapeuteInfo, setTherapeuteInfo] = useState<Therapeute | null>(null);
   const [cabinets, setCabinets] = useState<Cabinet[]>([]);
   const [selectedCabinetId, setSelectedCabinetId] = useState<string>('');
-
-  const [patientsDb, setPatientsDb] = useState<Patient[]>([]);
+  const [patientsDb, setPatientsDb] = useState<PatientMin[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDropdownPrenom, setShowDropdownPrenom] = useState(false);
-
   const [facturesHistorique, setFacturesHistorique] = useState<Facture[]>([]);
 
+  // ── Filter state ──
+  const [filterCabinetId, setFilterCabinetId] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
 
+  // ── Pagination state ──
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  // ── UI state ──
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [successLink, setSuccessLink] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const router = useRouter();
 
-  const [toast, setToast] = useState<ToastMessage | null>(null);
-
+  // ── Modal state ──
   const [isEditEmailModalOpen, setIsEditEmailModalOpen] = useState(false);
   const [factureToEdit, setFactureToEdit] = useState<Facture | null>(null);
   const [emailToEdit, setEmailToEdit] = useState('');
-
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [factureToCancel, setFactureToCancel] = useState<Facture | null>(null);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+
+  // ── Helpers ──
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 3000);
+    setTimeout(() => setToast(null), 3000);
   };
 
   const formatLocalYYYYMMDD = (date: Date) => {
@@ -106,126 +108,94 @@ export default function Dashboard() {
 
   const handleDateDebutChange = (val: string) => {
     setDateDebut(val);
-    if (!dateFin || dateFin < val) {
-      setDateFin(val);
-    }
+    setCurrentPage(1);
+    if (!dateFin || dateFin < val) setDateFin(val);
   };
 
   const setFilterToday = () => {
     const today = formatLocalYYYYMMDD(new Date());
     setDateDebut(today);
     setDateFin(today);
+    setCurrentPage(1);
   };
 
   const setFilterMonth = () => {
     const today = new Date();
-    const firstDay = formatLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth(), 1));
-    const lastDay = formatLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth() + 1, 0));
-    setDateDebut(firstDay);
-    setDateFin(lastDay);
+    setDateDebut(formatLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth(), 1)));
+    setDateFin(formatLocalYYYYMMDD(new Date(today.getFullYear(), today.getMonth() + 1, 0)));
+    setCurrentPage(1);
   };
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setDateDebut('');
-    setDateFin('');
-  };
+  const clearFilters = () => { setSearchTerm(''); setDateDebut(''); setDateFin(''); setCurrentPage(1); };
+
+  const handleSearchTermChange = (val: string) => { setSearchTerm(val); setCurrentPage(1); };
+  const handleDateFinChange = (val: string) => { setDateFin(val); setCurrentPage(1); };
+
+  // ── Data fetching ──
 
   const fetchHistorique = async (uid: string) => {
     const { data, error } = await supabase
-      .from('factures')
-      .select('*')
-      .eq('therapeute_id', uid)
+      .from('factures').select('*').eq('therapeute_id', uid)
       .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("Erreur Historique:", error);
-      showToast("Erreur lors du chargement de l'historique", "error");
-    } else if (data) {
-      setFacturesHistorique(data);
-    }
+    if (error) { console.error("Erreur Historique:", error); showToast("Erreur lors du chargement de l'historique", "error"); }
+    else if (data) setFacturesHistorique(data);
   };
 
   const fetchPatients = async (uid: string) => {
     const { data, error } = await supabase
-      .from('patients')
-      .select('id, nom_complet, email')
-      .eq('therapeute_id', uid)
+      .from('patients').select('id, nom_complet, email').eq('therapeute_id', uid)
       .order('nom_complet', { ascending: true });
-
-    if (error) {
-      console.error("Erreur Patients:", error);
-    } else if (data) {
-      setPatientsDb(data);
-    }
+    if (error) console.error("Erreur Patients:", error);
+    else if (data) setPatientsDb(data);
   };
 
-  const [isAdmin, setIsAdmin] = useState(false);
-
   useEffect(() => {
-    let channel: any;
+    let channel: ReturnType<typeof supabase.channel> | undefined;
 
     const initDashboard = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.push('/');
-        return;
-      }
+      if (!session) { router.push('/'); return; }
 
       const uid = session.user.id;
       setUserId(uid);
+      if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) setIsAdmin(true);
 
-      if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-        setIsAdmin(true);
-      }
-
-      const { data: dataTherapeute } = await supabase.from('therapeutes').select('nom, titre, telephone, email, logo_url').eq('id', uid).single();
+      const { data: dataTherapeute } = await supabase.from('therapeutes').select('nom, titre, telephone, email, logo_url, siret').eq('id', uid).single();
       if (dataTherapeute) setTherapeuteInfo(dataTherapeute);
 
       const { data: dataCabinets } = await supabase.from('cabinets').select('*').eq('therapeute_id', uid);
-      if (dataCabinets) {
-        setCabinets(dataCabinets);
-        if (dataCabinets.length > 0) setSelectedCabinetId(dataCabinets[0].id);
-      }
+      if (dataCabinets) { setCabinets(dataCabinets); if (dataCabinets.length > 0) setSelectedCabinetId(dataCabinets[0].id); }
 
       await fetchHistorique(uid);
       await fetchPatients(uid);
       setFetchingData(false);
 
-      // AMÉLIORATION : On n'écoute que les factures de CE thérapeute pour la performance
       channel = supabase
         .channel('schema-db-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'factures',
-            filter: `therapeute_id=eq.${uid}` // <-- Optimisation majeure
-          },
-          (payload) => {
-            console.log("Changement détecté dans Supabase :", payload);
-            fetchHistorique(uid);
-          }
-        )
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'factures', filter: `therapeute_id=eq.${uid}` },
+          () => fetchHistorique(uid))
         .subscribe();
     };
 
     initDashboard();
-
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
+    return () => { if (channel) supabase.removeChannel(channel); };
   }, [router]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
-  };
+  // ── Actions ──
 
-  const selectPatient = (p: Patient) => {
-    setNom(p.nom_complet);
+  const handleLogout = async () => { await supabase.auth.signOut(); router.push('/'); };
+
+  const selectPatient = (p: PatientMin) => {
+    // Extract civilité and set it
+    if (p.nom_complet.startsWith('Mme ')) {
+      setCivilite('Mme');
+      setNom(p.nom_complet.substring(4));
+    } else if (p.nom_complet.startsWith('M. ')) {
+      setCivilite('M.');
+      setNom(p.nom_complet.substring(3));
+    } else {
+      setNom(p.nom_complet);
+    }
     setPatientEmail(p.email);
     setPrenom('');
     setShowDropdown(false);
@@ -235,34 +205,24 @@ export default function Dashboard() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !userId || !patientEmail || !selectedCabinetId || !therapeuteInfo) return;
-
     setLoading(true);
     setSuccessLink(null);
 
     try {
-      // Nettoyage des données
       const cleanEmail = patientEmail.trim().toLowerCase();
       const prenomFormatte = prenom ? ` ${prenom.trim()}` : '';
       const nomComplet = `${civilite} ${nom.trim().toUpperCase()}${prenomFormatte}`.trim();
 
       const existingPatient = patientsDb.find(p =>
-        p.email.toLowerCase() === cleanEmail &&
-        p.nom_complet.toLowerCase() === nomComplet.toLowerCase()
+        p.email.toLowerCase() === cleanEmail && p.nom_complet.toLowerCase() === nomComplet.toLowerCase()
       );
 
       if (!existingPatient) {
         const { data: newPat, error: patError } = await supabase.from('patients').insert([{
-          therapeute_id: userId,
-          nom_complet: nomComplet,
-          email: cleanEmail,
-          notes_consultation: ""
+          therapeute_id: userId, nom_complet: nomComplet, email: cleanEmail, notes_consultation: ""
         }]).select().single();
-
-        if (patError) {
-          console.error("Erreur de création de fiche patient :", patError);
-        } else if (newPat) {
-          setPatientsDb([...patientsDb, newPat]);
-        }
+        if (patError) console.error("Erreur de création de fiche patient :", patError);
+        else if (newPat) setPatientsDb([...patientsDb, newPat]);
       }
 
       const fileExt = file.name.split('.').pop();
@@ -277,61 +237,33 @@ export default function Dashboard() {
       const { data: dbData, error: dbError } = await supabase
         .from('factures')
         .insert([{
-          therapeute_id: userId,
-          cabinet_id: selectedCabinetId,
-          patient_email: cleanEmail,
-          patient_nom: nomComplet,
-          fichier_path: filePath,
-          statut_email: 'Envoyé',
-          montant: parseFloat(montant) || 0,
-          mode_reglement: modeReglement,
-          statut: 'Valide'
+          therapeute_id: userId, cabinet_id: selectedCabinetId, patient_email: cleanEmail,
+          patient_nom: nomComplet, fichier_path: filePath, statut_email: 'Envoyé',
+          montant: parseFloat(montant) || 0, mode_reglement: modeReglement, statut: 'Valide'
         }])
-        .select('*')
-        .single();
-
+        .select('*').single();
       if (dbError) throw dbError;
 
-      if (dbData) {
-        setFacturesHistorique(prev => [dbData, ...prev]);
-      }
+      if (dbData) setFacturesHistorique(prev => [dbData, ...prev]);
 
       const lien = `${window.location.origin}/facture/${dbData.id}`;
       setSuccessLink(lien);
-
       showToast("Facture créée et prête à être envoyée !", "success");
 
       const { data: { session: emailSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${emailSession?.access_token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${emailSession?.access_token}` },
         body: JSON.stringify({
-          email: cleanEmail,
-          nomPatient: nomComplet,
-          lienFacture: lien,
-          nomTherapeute: therapeuteInfo.nom,
-          titreTherapeute: therapeuteInfo.titre,
-          telephoneTherapeute: therapeuteInfo.telephone,
-          emailTherapeute: therapeuteInfo.email,
-          logoUrlTherapeute: therapeuteInfo.logo_url,
-          cabinetNom: currentCabinet?.nom
+          email: cleanEmail, nomPatient: nomComplet, lienFacture: lien,
+          nomTherapeute: therapeuteInfo.nom, titreTherapeute: therapeuteInfo.titre,
+          telephoneTherapeute: therapeuteInfo.telephone, emailTherapeute: therapeuteInfo.email,
+          logoUrlTherapeute: therapeuteInfo.logo_url, cabinetNom: currentCabinet?.nom
         }),
       });
 
-      setFile(null);
-      setPatientEmail('');
-      setNom('');
-      setPrenom('');
-      setMontant('');
-      setModeReglement('CB');
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
+      setFile(null); setPatientEmail(''); setNom(''); setPrenom(''); setMontant(''); setModeReglement('CB');
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error('Erreur:', error);
       showToast("Une erreur est survenue lors de l'envoi.", "error");
@@ -341,28 +273,19 @@ export default function Dashboard() {
   };
 
   const handleEditEmail = (facture: Facture) => {
-    setFactureToEdit(facture);
-    setEmailToEdit(facture.patient_email);
-    setIsEditEmailModalOpen(true);
+    setFactureToEdit(facture); setEmailToEdit(facture.patient_email); setIsEditEmailModalOpen(true);
   };
 
   const handleConfirmEditEmail = async () => {
     const cleanNewEmail = emailToEdit.trim().toLowerCase();
-
     if (!factureToEdit || !cleanNewEmail || cleanNewEmail === factureToEdit.patient_email.toLowerCase()) {
-      setIsEditEmailModalOpen(false);
-      return;
+      setIsEditEmailModalOpen(false); return;
     }
-
     setLoading(true);
-
     try {
       const { error: updateError } = await supabase
-        .from('factures')
-        .update({ patient_email: cleanNewEmail, statut_email: 'Renvoyé' })
-        .eq('id', factureToEdit.id)
-        .eq('therapeute_id', userId!);
-
+        .from('factures').update({ patient_email: cleanNewEmail, statut_email: 'Renvoyé' })
+        .eq('id', factureToEdit.id).eq('therapeute_id', userId!);
       if (updateError) throw updateError;
 
       setFacturesHistorique(prev => prev.map(f => f.id === factureToEdit.id ? { ...f, patient_email: cleanNewEmail, statut_email: 'Renvoyé' } : f));
@@ -373,62 +296,38 @@ export default function Dashboard() {
       const { data: { session: resendSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${resendSession?.access_token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendSession?.access_token}` },
         body: JSON.stringify({
-          email: cleanNewEmail,
-          nomPatient: factureToEdit.patient_nom,
-          lienFacture: lien,
-          nomTherapeute: therapeuteInfo?.nom,
-          titreTherapeute: therapeuteInfo?.titre,
-          telephoneTherapeute: therapeuteInfo?.telephone,
-          emailTherapeute: therapeuteInfo?.email,
-          logoUrlTherapeute: therapeuteInfo?.logo_url,
-          cabinetNom: currentCabinet?.nom
+          email: cleanNewEmail, nomPatient: factureToEdit.patient_nom, lienFacture: lien,
+          nomTherapeute: therapeuteInfo?.nom, titreTherapeute: therapeuteInfo?.titre,
+          telephoneTherapeute: therapeuteInfo?.telephone, emailTherapeute: therapeuteInfo?.email,
+          logoUrlTherapeute: therapeuteInfo?.logo_url, cabinetNom: currentCabinet?.nom
         }),
       });
-
       showToast("L'email a été mis à jour et la facture renvoyée !", "success");
       setIsEditEmailModalOpen(false);
-
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'email :", error);
       showToast("Une erreur est survenue lors de la modification.", "error");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  const handleCancelClick = (facture: Facture) => {
-    setFactureToCancel(facture);
-    setIsCancelModalOpen(true);
-  };
+  const handleCancelClick = (facture: Facture) => { setFactureToCancel(facture); setIsCancelModalOpen(true); };
 
   const confirmCancelInvoice = async () => {
     if (!factureToCancel) return;
     setLoading(true);
-
     try {
-      const { error } = await supabase
-        .from('factures')
-        .update({ statut: 'Annulée' })
-        .eq('id', factureToCancel.id)
-        .eq('therapeute_id', userId!);
-
+      const { error } = await supabase.from('factures').update({ statut: 'Annulée' })
+        .eq('id', factureToCancel.id).eq('therapeute_id', userId!);
       if (error) throw error;
-
       setFacturesHistorique(prev => prev.map(f => f.id === factureToCancel.id ? { ...f, statut: 'Annulée' } : f));
       showToast("La facture a bien été annulée.", "success");
       setIsCancelModalOpen(false);
-
     } catch (error) {
       console.error("Erreur lors de l'annulation :", error);
       showToast("Erreur lors de l'annulation de la facture.", "error");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleDownloadPdf = async (filePath: string, patientNom: string) => {
@@ -436,7 +335,6 @@ export default function Dashboard() {
       showToast("Préparation du téléchargement...", "info");
       const { data, error } = await supabase.storage.from('factures_pdf').download(filePath);
       if (error) throw error;
-
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = url;
@@ -451,14 +349,36 @@ export default function Dashboard() {
     }
   };
 
-  const facturesFiltrees = facturesHistorique.filter((f) => {
+  const handlePreviewPdf = async (filePath: string) => {
+    try {
+      const { data, error } = await supabase.storage.from('factures_pdf').download(filePath);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      setPreviewPdfUrl(url);
+    } catch {
+      showToast('Impossible de charger la previsualisation', 'error');
+    }
+  };
+
+  // ── Derived data ──
+
+  const facturesFiltered = filterCabinetId === 'all'
+    ? facturesHistorique
+    : facturesHistorique.filter(f => f.cabinet_id === filterCabinetId);
+
+  const facturesFiltrees = facturesFiltered.filter((f) => {
     const matchRecherche = f.patient_nom.toLowerCase().includes(searchTerm.toLowerCase()) || f.patient_email.toLowerCase().includes(searchTerm.toLowerCase());
     const dateFacture = new Date(f.created_at).getTime();
     const matchDebut = dateDebut ? dateFacture >= new Date(dateDebut).getTime() : true;
     const matchFin = dateFin ? dateFacture <= new Date(dateFin).getTime() + 86400000 : true;
-
     return matchRecherche && matchDebut && matchFin;
   });
+
+  const totalPages = Math.ceil(facturesFiltrees.length / ITEMS_PER_PAGE);
+  const paginatedFactures = facturesFiltrees.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const filteredPatients = patientsDb.filter(p => {
     if (!nom && !prenom) return false;
@@ -466,6 +386,19 @@ export default function Dashboard() {
     const matchPrenom = prenom ? p.nom_complet.toLowerCase().includes(prenom.toLowerCase()) : true;
     return matchNom && matchPrenom;
   });
+
+  const facturesValides = facturesFiltrees.filter(f => f.statut !== 'Annulée');
+  const totalFactures = facturesValides.length;
+  const avisRecoltes = facturesValides.filter(f => f.note !== null).length;
+  const notesExistantes = facturesValides.filter(f => f.note !== null).map(f => f.note as number);
+  const noteMoyenne = notesExistantes.length > 0 ? (notesExistantes.reduce((a, b) => a + b, 0) / notesExistantes.length).toFixed(1) : '-';
+  const chiffreAffaires = facturesValides.reduce((acc, curr) => acc + (curr.montant || 0), 0);
+  const caParMode = facturesValides.reduce((acc, curr) => {
+    const mode = curr.mode_reglement || 'Autre';
+    if (!acc[mode]) acc[mode] = 0;
+    acc[mode] += (curr.montant || 0);
+    return acc;
+  }, {} as Record<string, number>);
 
   const exportCSV = () => {
     let csvContent = "Date;Patient;Email;Cabinet;Statut;Montant (€);Mode Règlement;Note (sur 5);Commentaire;Lien de la facture\n";
@@ -480,8 +413,7 @@ export default function Dashboard() {
       const commentaire = f.commentaire ? `"${f.commentaire.replace(/"/g, '""')}"` : '';
       csvContent += `${date};${f.patient_nom};${f.patient_email};${cab};${statut};${montantVal};${mode};${note};${commentaire};${lien}\n`;
     });
-
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(["﻿" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -491,21 +423,23 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  const facturesValides = facturesFiltrees.filter(f => f.statut !== 'Annulée');
+  const exportFEC = () => {
+    const siret = therapeuteInfo?.siret || '';
+    if (!siret) {
+      showToast("Veuillez renseigner votre SIRET dans les paramètres avant d'exporter le FEC.", "error");
+      return;
+    }
+    const content = generateFEC({
+      factures: facturesFiltrees,
+      cabinets,
+      siret,
+      nomTherapeute: therapeuteInfo?.nom || '',
+    });
+    downloadFEC(content, siret);
+    showToast("Export FEC téléchargé avec succès !", "success");
+  };
 
-  const totalFactures = facturesValides.length;
-  const avisRecoltes = facturesValides.filter(f => f.note !== null).length;
-  const notesExistantes = facturesValides.filter(f => f.note !== null).map(f => f.note as number);
-  const noteMoyenne = notesExistantes.length > 0 ? (notesExistantes.reduce((a, b) => a + b, 0) / notesExistantes.length).toFixed(1) : '-';
-
-  const chiffreAffaires = facturesValides.reduce((acc, curr) => acc + (curr.montant || 0), 0);
-
-  const caParMode = facturesValides.reduce((acc, curr) => {
-    const mode = curr.mode_reglement || 'Autre';
-    if (!acc[mode]) acc[mode] = 0;
-    acc[mode] += (curr.montant || 0);
-    return acc;
-  }, {} as Record<string, number>);
+  // ── Render ──
 
   if (fetchingData) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -518,13 +452,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 relative">
       <div className="max-w-[1500px] w-[96%] mx-auto space-y-6">
 
-        {/* EN-TÊTE DU DASHBOARD */}
+        {/* EN-TETE */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
-             <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
-             <p className="text-sm text-gray-500 mt-1">
-               Connecté en tant que <span className="font-semibold">{therapeuteInfo?.nom}</span>
-             </p>
+            <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Connecté en tant que <span className="font-semibold">{therapeuteInfo?.nom}</span>
+            </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             {isAdmin && (
@@ -532,6 +466,9 @@ export default function Dashboard() {
                 <Settings size={16} className="mr-2" /> Admin
               </Link>
             )}
+            <Link href="/dashboard/factures-recues" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
+              <Inbox size={16} className="mr-2" /> Factures Reçues
+            </Link>
             <Link href="/dashboard/patients" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
               <Users size={16} className="mr-2" /> Fiches Patients
             </Link>
@@ -539,483 +476,136 @@ export default function Dashboard() {
               <Settings size={16} className="mr-2" /> Paramètres
             </Link>
             <button onClick={handleLogout} className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-500 hover:text-red-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
-              <LogOut size={16} className="mr-2" /> Déconnexion
+              <LogOut size={16} className="mr-2" /> Deconnexion
             </button>
           </div>
+          {cabinets.length > 1 && (
+            <select
+              value={filterCabinetId}
+              onChange={(e) => setFilterCabinetId(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+            >
+              <option value="all">Tous les cabinets</option>
+              {cabinets.map(c => (
+                <option key={c.id} value={c.id}>{c.nom}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* STATISTIQUES */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCards
+          chiffreAffaires={chiffreAffaires}
+          caParMode={caParMode}
+          totalFactures={totalFactures}
+          avisRecoltes={avisRecoltes}
+          noteMoyenne={noteMoyenne}
+        />
 
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
-            <div className="flex items-center">
-              <div className="bg-indigo-50 p-3 rounded-lg mr-4"><Euro className="text-indigo-600" size={24} /></div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Chiffre d'affaires</p>
-                <h3 className="text-2xl font-bold text-gray-900">{chiffreAffaires.toLocaleString('fr-FR')} €</h3>
-              </div>
-            </div>
-            {chiffreAffaires > 0 && (
-              <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-x-4 gap-y-2">
-                {Object.entries(caParMode).map(([mode, total]) => total > 0 && (
-                  <div key={mode} className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">{mode}</span>
-                    <span className="font-semibold text-gray-800">{total.toLocaleString('fr-FR')} €</span>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* GRAPHIQUES */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-sm font-bold text-gray-700 mb-4">Chiffre d'Affaires (6 derniers mois)</h3>
+            <ChartCA factures={facturesFiltered} />
           </div>
-
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-            <div className="bg-blue-50 p-3 rounded-lg mr-4"><FileText className="text-blue-600" size={24} /></div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Factures valides</p>
-              <h3 className="text-2xl font-bold text-gray-900">{totalFactures}</h3>
-            </div>
-          </div>
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-            <div className="bg-green-50 p-3 rounded-lg mr-4"><MessageSquare className="text-green-600" size={24} /></div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Avis récoltés</p>
-              <h3 className="text-2xl font-bold text-gray-900">{avisRecoltes}</h3>
-            </div>
-          </div>
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-            <div className="bg-yellow-50 p-3 rounded-lg mr-4"><Star className="text-yellow-600" size={24} /></div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Note moyenne</p>
-              <h3 className="text-2xl font-bold text-gray-900">{noteMoyenne} <span className="text-sm text-gray-400 font-normal">/ 5</span></h3>
-            </div>
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-sm font-bold text-gray-700 mb-4">Taux de collecte d'avis (6 derniers mois)</h3>
+            <ChartAvis factures={facturesFiltered} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-          {/* COLONNE GAUCHE (FORMULAIRES) : LG:COL-SPAN-5 */}
+          {/* COLONNE GAUCHE */}
           <div className="lg:col-span-5 space-y-6">
-
-            {/* BLOC BLEU GÉNÉRER & ENVOYER */}
-            <div className="bg-[#1b64f2] rounded-2xl shadow-md p-6 text-white overflow-hidden relative group">
-              <div className="relative z-10">
-                <h2 className="text-xl font-bold mb-2">Générer & Envoyer</h2>
-                <p className="text-blue-100 text-sm mb-6">Créez une facture pro en 3 clics et récoltez un avis Google automatiquement.</p>
-                <Link
-                  href="/dashboard/facture/nouvelle"
-                  className="w-full bg-white text-[#1b64f2] py-3 px-4 rounded-xl font-bold text-center flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors shadow-sm"
-                >
-                  <PlusCircle size={20} />
-                  Nouvelle Facture
-                  <ArrowRight size={16} className="ml-1" />
-                </Link>
-              </div>
-              <PlusCircle className="absolute -bottom-6 -right-6 text-white/10 w-32 h-32 rotate-12 group-hover:rotate-0 transition-transform duration-500" />
-            </div>
-
-            {/* FORMULAIRE UPLOAD "MIXTE" : Fond clair, Inputs noirs */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative">
-              <div className="flex items-center gap-2 mb-6 text-gray-800">
-                <UploadCloud size={20} className="text-gray-400" />
-                <h2 className="text-lg font-semibold">Uploader une facture PDF</h2>
-              </div>
-
-              <form onSubmit={handleUpload} className="space-y-5 relative z-10">
-                {/* Lieux de consultation clairs */}
-                <div className="bg-[#f2f7ff] p-4 rounded-xl border border-blue-50">
-                  <div className="flex items-center gap-2 mb-3 text-blue-700">
-                    <MapPin size={16} />
-                    <span className="font-bold text-xs uppercase tracking-wider">Lieu</span>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {cabinets.map((cab) => (
-                      <label key={cab.id} className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${selectedCabinetId === cab.id ? 'border-blue-500 bg-white shadow-sm' : 'border-transparent text-gray-600 hover:bg-white/50'}`}>
-                        <input type="radio" className="hidden" name="cabinet" checked={selectedCabinetId === cab.id} onChange={() => setSelectedCabinetId(cab.id)} />
-                        <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${selectedCabinetId === cab.id ? 'border-blue-500' : 'border-gray-400'}`}>
-                            {selectedCabinetId === cab.id && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
-                        </div>
-                        <span className={`text-sm font-bold ${selectedCabinetId === cab.id ? 'text-blue-700' : 'text-gray-600'}`}>{cab.nom}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Zone de drop claire */}
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors group cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    required
-                    id="file-upload"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
-                    <UploadCloud size={24} className={file ? "text-green-500" : "text-blue-500 group-hover:scale-110 transition-transform"} />
-                    <span className="mt-2 text-xs font-medium text-gray-800">{file ? file.name : "Sélectionner le PDF"}</span>
-                  </label>
-                </div>
-
-                {/* Champs de saisie */}
-                <div className="space-y-4 pt-2">
-                  <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-4">
-                      <label className="block text-xs font-bold text-gray-900 mb-1.5">Civilité</label>
-                      <select className="w-full border border-black text-black rounded-md py-2.5 px-2 text-sm bg-white focus:outline-none focus:border-blue-500" value={civilite} onChange={(e) => setCivilite(e.target.value)}>
-                        <option value="Mme">Mme</option>
-                        <option value="M.">M.</option>
-                      </select>
-                    </div>
-                    <div className="relative col-span-8">
-                      <label className="block text-xs font-bold text-gray-900 mb-1.5">Prénom</label>
-                      <input
-                        type="text"
-                        className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
-                        value={prenom}
-                        onChange={(e) => {setPrenom(e.target.value); setShowDropdownPrenom(true);}}
-                        onFocus={() => setShowDropdownPrenom(true)}
-                        onBlur={() => setTimeout(() => setShowDropdownPrenom(false), 200)}
-                        placeholder="Ex: Jean"
-                      />
-                      {showDropdownPrenom && prenom.length > 0 && filteredPatients.length > 0 && (
-                        <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
-                          {filteredPatients.map(p => (
-                            <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-black flex justify-between items-center border-b border-gray-50 last:border-none">
-                              <span className="font-bold">{p.nom_complet}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <label className="block text-xs font-bold text-gray-900 mb-1.5">Nom (ou Nom Prénom) *</label>
-                    <input
-                      type="text" required
-                      className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
-                      value={nom}
-                      onChange={(e) => {setNom(e.target.value); setShowDropdown(true);}}
-                      onFocus={() => setShowDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                      placeholder="Ex: Dupont"
-                    />
-                    {showDropdown && nom.length > 0 && filteredPatients.length > 0 && (
-                      <ul className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-auto">
-                        {filteredPatients.map(p => (
-                          <li key={p.id} onClick={() => selectPatient(p)} className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-black flex flex-col border-b border-gray-50 last:border-none">
-                            <span className="font-bold">{p.nom_complet}</span>
-                            <span className="text-[10px] text-gray-600">{p.email}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-900 mb-1.5">Email du patient *</label>
-                    <input
-                      type="email" required
-                      className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
-                      value={patientEmail}
-                      onChange={(e) => setPatientEmail(e.target.value)}
-                      placeholder="patient@email.com"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-2">
-                    <div className="relative">
-                      <label className="block text-xs font-bold text-gray-900 mb-1.5">Montant *</label>
-                      <div className="absolute inset-y-0 left-0 pl-3 pt-6 flex items-center pointer-events-none">
-                        <Euro size={14} className="text-gray-500" />
-                      </div>
-                      <input type="number" step="0.01" min="0" required className="w-full border border-black text-black rounded-md py-2.5 pl-8 pr-3 text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500" value={montant} onChange={(e) => setMontant(e.target.value)} placeholder="0.00" />
-                    </div>
-
-                    <div className="relative">
-                      <label className="block text-xs font-bold text-gray-900 mb-1.5">Règlement *</label>
-                      <select className="w-full border border-black text-black rounded-md py-2.5 px-3 text-sm bg-white focus:outline-none focus:border-blue-500" value={modeReglement} onChange={(e) => setModeReglement(e.target.value)}>
-                        <option value="CB">CB</option>
-                        <option value="Espèces">Espèces</option>
-                        <option value="Chèque">Chèque</option>
-                        <option value="Virement">Virement</option>
-                      </select>
-                    </div>
-                  </div>
-
-                </div>
-
-                <button type="submit" disabled={loading || !file || cabinets.length === 0} className="w-full flex justify-center py-3.5 rounded-lg shadow-sm text-sm font-bold text-white bg-[#7ab4f5] hover:bg-blue-400 disabled:bg-gray-300 transition-all mt-4">
-                  {loading ? <Loader2 className="animate-spin" size={20} /> : 'Envoyer la facture'}
-                </button>
-              </form>
-            </div>
+            <UploadForm
+              cabinets={cabinets}
+              selectedCabinetId={selectedCabinetId}
+              setSelectedCabinetId={setSelectedCabinetId}
+              file={file}
+              setFile={setFile}
+              fileInputRef={fileInputRef}
+              civilite={civilite}
+              setCivilite={setCivilite}
+              nom={nom}
+              setNom={setNom}
+              prenom={prenom}
+              setPrenom={setPrenom}
+              patientEmail={patientEmail}
+              setPatientEmail={setPatientEmail}
+              montant={montant}
+              setMontant={setMontant}
+              modeReglement={modeReglement}
+              setModeReglement={setModeReglement}
+              loading={loading}
+              handleUpload={handleUpload}
+              filteredPatients={filteredPatients}
+              selectPatient={selectPatient}
+              showDropdown={showDropdown}
+              setShowDropdown={setShowDropdown}
+              showDropdownPrenom={showDropdownPrenom}
+              setShowDropdownPrenom={setShowDropdownPrenom}
+            />
+            <QuickInvoice factures={facturesFiltered} cabinets={cabinets} />
           </div>
 
-          {/* COLONNE DROITE : HISTORIQUE (LG:COL-SPAN-7) */}
-          <div className="lg:col-span-7 flex flex-col">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
-
-              <div className="p-4 sm:p-5 border-b border-gray-100 bg-gray-50 flex flex-col gap-3">
-                <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                  <div className="flex-1 w-full relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search size={16} className="text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Rechercher un patient..."
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex w-full sm:w-auto items-center gap-2">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                        <Calendar size={14} className="text-gray-400" />
-                      </div>
-                      <input
-                        type="date"
-                        className="pl-8 pr-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500"
-                        value={dateDebut} onChange={(e) => handleDateDebutChange(e.target.value)} title="Date de début"
-                      />
-                    </div>
-                    <span className="text-gray-400">-</span>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                        <Calendar size={14} className="text-gray-400" />
-                      </div>
-                      <input
-                        type="date"
-                        className="pl-8 pr-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-blue-500 focus:border-blue-500"
-                        value={dateFin} onChange={(e) => setDateFin(e.target.value)} title="Date de fin"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={exportCSV}
-                    disabled={facturesFiltrees.length === 0}
-                    className="flex w-full sm:w-auto justify-center items-center bg-gray-800 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300"
-                  >
-                    <Download size={16} className="mr-2" />
-                    Compta
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <span className="text-xs text-gray-500 font-medium mr-1">Raccourcis :</span>
-                  <button onClick={setFilterToday} className="text-xs bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 px-3 py-1 rounded-full transition-colors">
-                    Aujourd'hui
-                  </button>
-                  <button onClick={setFilterMonth} className="text-xs bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 px-3 py-1 rounded-full transition-colors">
-                    Ce mois-ci
-                  </button>
-
-                  {(searchTerm || dateDebut || dateFin) && (
-                    <button onClick={clearFilters} className="text-xs flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors ml-auto">
-                      <X size={12} className="mr-1" /> Effacer les filtres
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="overflow-x-auto flex-1 w-full">
-                <table className="w-full text-left text-sm min-w-[650px]">
-                  <thead className="bg-white border-b border-gray-100 text-gray-500 uppercase text-xs">
-                    <tr>
-                      <th className="px-3 py-3 font-medium whitespace-nowrap">Date</th>
-                      <th className="px-3 py-3 font-medium">Patient</th>
-                      <th className="px-3 py-3 font-medium whitespace-nowrap">Montant</th>
-                      <th className="px-3 py-3 font-medium">Avis</th>
-                      <th className="px-3 py-3 font-medium text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {facturesFiltrees.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-12 text-center text-gray-500 italic">
-                          Aucune facture trouvée pour cette recherche.
-                        </td>
-                      </tr>
-                    ) : (
-                      facturesFiltrees.map((facture) => {
-                        const date = new Date(facture.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        const lien = `${window.location.origin}/facture/${facture.id}`;
-                        const isAnnulee = facture.statut === 'Annulée';
-
-                        return (
-                          <tr key={facture.id} className={`hover:bg-blue-50/30 transition-colors ${isAnnulee ? 'bg-gray-50 opacity-60' : ''}`}>
-                            <td className="px-3 py-3 text-gray-500 font-medium whitespace-nowrap">{date}</td>
-                            <td className="px-3 py-3">
-                              <div className="font-bold text-gray-900 truncate max-w-[150px]" title={facture.patient_nom}>
-                                {facture.patient_nom}
-                                {isAnnulee && <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Annulée</span>}
-                              </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-gray-500 truncate max-w-[150px]" title={facture.patient_email}>{facture.patient_email}</span>
-
-                                {!isAnnulee && (
-                                  <button onClick={() => handleEditEmail(facture)} className="text-gray-400 hover:text-blue-600 transition-colors shrink-0" title="Modifier l'email et renvoyer la facture">
-                                    <Edit size={12} />
-                                  </button>
-                                )}
-
-                                {!isAnnulee && (
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                                    facture.statut_email === 'Ouvert'
-                                    ? 'bg-green-100 text-green-700 border border-green-200'
-                                    : facture.statut_email === 'Renvoyé'
-                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                                    : facture.statut_email === 'Relancé'
-                                    ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                                    : 'bg-gray-100 text-gray-600 border border-gray-200'
-                                  }`}>
-                                    {facture.statut_email || 'Envoyé'}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              <div className={`font-bold ${isAnnulee ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                                {facture.montant ? `${facture.montant.toLocaleString('fr-FR')} €` : '-'}
-                              </div>
-                              <div className="text-[11px] text-gray-500 mt-0.5">
-                                {facture.mode_reglement || 'Non précisé'}
-                              </div>
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap min-w-[120px]">
-                              {facture.note ? (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex text-yellow-400">
-                                    {[1,2,3,4,5].map(star => (
-                                      <Star key={star} size={14} className={star <= facture.note! ? "fill-current" : "text-gray-100"} />
-                                    ))}
-                                  </div>
-                                  {facture.commentaire && (
-                                    <span className="text-[10px] text-gray-400 truncate max-w-[100px] italic" title={facture.commentaire}>
-                                      "{facture.commentaire}"
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-[11px] text-gray-400 italic">En attente</span>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-right">
-                              <div className="flex justify-end items-center gap-2">
-                                {!isAnnulee && (
-                                  <button
-                                    onClick={() => handleCancelClick(facture)}
-                                    className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors flex items-center justify-center"
-                                    title="Annuler cette facture"
-                                  >
-                                    <Ban size={16} />
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() => handleDownloadPdf(facture.fichier_path, facture.patient_nom)}
-                                  className="text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-colors flex items-center justify-center"
-                                  title="Télécharger la facture PDF"
-                                >
-                                  <Download size={16} />
-                                </button>
-
-                                {!isAnnulee && (
-                                  <button
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(lien);
-                                      showToast("Lien copié avec succès !");
-                                    }}
-                                    className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors flex items-center justify-center"
-                                    title="Copier le lien"
-                                  >
-                                    <Copy size={16} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          {/* COLONNE DROITE */}
+          <HistoriqueTable
+            facturesFiltrees={paginatedFactures}
+            cabinets={cabinets}
+            searchTerm={searchTerm}
+            setSearchTerm={handleSearchTermChange}
+            dateDebut={dateDebut}
+            dateFin={dateFin}
+            handleDateDebutChange={handleDateDebutChange}
+            setDateFin={handleDateFinChange}
+            setFilterToday={setFilterToday}
+            setFilterMonth={setFilterMonth}
+            clearFilters={clearFilters}
+            exportCSV={exportCSV}
+            exportFEC={exportFEC}
+            handleEditEmail={handleEditEmail}
+            handleCancelClick={handleCancelClick}
+            handleDownloadPdf={handleDownloadPdf}
+            onPreviewPdf={handlePreviewPdf}
+            showToast={showToast}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={facturesFiltrees.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
-      {/* MODALE EMAIL */}
-      {isEditEmailModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-md border border-gray-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-blue-50 p-2 rounded-lg"><Mail className="text-blue-600" size={20}/></div>
-              <h3 className="text-lg font-semibold text-gray-900">Corriger l'email et renvoyer la facture :</h3>
-            </div>
+      {/* MODALS */}
+      <EditEmailModal
+        isOpen={isEditEmailModalOpen}
+        onClose={() => setIsEditEmailModalOpen(false)}
+        emailToEdit={emailToEdit}
+        setEmailToEdit={setEmailToEdit}
+        loading={loading}
+        onConfirm={handleConfirmEditEmail}
+      />
 
-            <input
-              type="email"
-              value={emailToEdit}
-              onChange={(e) => setEmailToEdit(e.target.value)}
-              placeholder="Nouvel email du patient"
-              className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 mb-6"
-              autoFocus
-            />
+      <CancelModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        facture={factureToCancel}
+        loading={loading}
+        onConfirm={confirmCancelInvoice}
+      />
 
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsEditEmailModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleConfirmEditEmail}
-                disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-              >
-                {loading ? <Loader2 className="animate-spin" size={16}/> : 'OK'}
+      {/* PDF PREVIEW OVERLAY */}
+      {previewPdfUrl && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold text-gray-900">Previsualisation de la facture</h3>
+              <button onClick={() => { if (previewPdfUrl) URL.revokeObjectURL(previewPdfUrl); setPreviewPdfUrl(null); }} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X size={20} className="text-gray-500" />
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODALE D'ANNULATION */}
-      {isCancelModalOpen && factureToCancel && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-md border border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-red-50 p-2 rounded-lg"><Ban className="text-red-600" size={24}/></div>
-              <h3 className="text-lg font-bold text-gray-900">Annuler la facture ?</h3>
-            </div>
-
-            <p className="text-sm text-gray-600 mb-6">
-              Voulez-vous vraiment annuler la facture de <strong>{factureToCancel.patient_nom}</strong> d'un montant de <strong>{factureToCancel.montant} €</strong> ? <br/><br/>
-              Cette action retirera le montant du Chiffre d'Affaires total. Elle ne supprimera pas le fichier PDF, mais cette facture sera marquée comme annulée.
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setIsCancelModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition"
-              >
-                Retour
-              </button>
-              <button
-                onClick={confirmCancelInvoice}
-                disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition flex items-center gap-2"
-              >
-                {loading ? <Loader2 className="animate-spin" size={16}/> : 'Confirmer l\'annulation'}
-              </button>
-            </div>
+            <iframe src={previewPdfUrl} className="flex-1 w-full" title="Previsualisation facture" />
           </div>
         </div>
       )}

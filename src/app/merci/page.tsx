@@ -28,7 +28,6 @@ export default function MerciPage() {
         'currency': 'EUR'
       });
 
-      console.log('Conversion Google Ads (ipOTCJ...) envoyée !');
     }
   }, []);
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Download, Star, Loader2, MessageSquare, CheckCircle, X, Info } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 
 export default function PagePatient() {
   const params = useParams();
@@ -188,10 +189,13 @@ export default function PagePatient() {
       <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 sm:p-10 text-center relative">
         <div className="flex justify-center mb-6">
           {therapeute?.logo_url ? (
-            <img
+            <Image
               src={therapeute.logo_url}
               alt="Logo"
+              width={128}
+              height={128}
               className="h-28 w-28 sm:h-32 sm:w-32 object-contain rounded-full shadow-sm border border-gray-100 bg-white"
+              unoptimized
             />
           ) : (
             <div className="bg-[#e8f5e9] p-6 rounded-full">

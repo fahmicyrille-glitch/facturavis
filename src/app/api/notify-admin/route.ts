@@ -6,7 +6,43 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    const { nom, prenom, email, telephone, profession } = await request.json();
+    // Vérification basique d'origine (Referer/Origin)
+    const origin = request.headers.get('origin') || request.headers.get('referer') || '';
+    const allowedOrigins = [
+      'https://facturavis.fr',
+      'https://www.facturavis.fr',
+      process.env.NEXT_PUBLIC_SITE_URL,
+    ].filter(Boolean);
+    const isAllowedOrigin = allowedOrigins.some(allowed => origin.startsWith(allowed!)) || origin.startsWith('http://localhost');
+    if (!isAllowedOrigin) {
+      return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { nom, prenom, email, telephone, profession } = body;
+
+    // Validation des champs requis
+    if (!nom || typeof nom !== 'string' || !nom.trim()) {
+      return NextResponse.json({ error: 'Le champ nom est requis' }, { status: 400 });
+    }
+    if (!prenom || typeof prenom !== 'string' || !prenom.trim()) {
+      return NextResponse.json({ error: 'Le champ prenom est requis' }, { status: 400 });
+    }
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return NextResponse.json({ error: 'Le champ email est requis' }, { status: 400 });
+    }
+    if (!telephone || typeof telephone !== 'string' || !telephone.trim()) {
+      return NextResponse.json({ error: 'Le champ telephone est requis' }, { status: 400 });
+    }
+    if (!profession || typeof profession !== 'string' || !profession.trim()) {
+      return NextResponse.json({ error: 'Le champ profession est requis' }, { status: 400 });
+    }
+
+    // Validation du format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return NextResponse.json({ error: 'Format email invalide' }, { status: 400 });
+    }
 
     const safeNom = escapeHtml(nom);
     const safePrenom = escapeHtml(prenom);
@@ -16,7 +52,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await resend.emails.send({
       from: 'FacturAvis <facture@facturavis.fr>',
-      to: ['fahmicyrille@gmail.com'],
+      to: ['facturavispro@gmail.com'],
       subject: `🚀 Nouveau Prospect (${safeProfession}) : ${safePrenom} ${safeNom}`,
       html: `
         <div style="font-family: sans-serif; color: #3e2f25; padding: 20px; border: 1px solid #f0e6de; border-radius: 15px; background-color: #fcfaf8;">

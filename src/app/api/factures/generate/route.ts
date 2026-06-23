@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { isAllowedStorageUrl } from '@/lib/supabase-admin';
+import { supabaseAdmin, isAllowedStorageUrl } from '@/lib/supabase-admin';
 
-function generateFacturXXML(data: any) {
+function generateFacturXXML(data: any, totalAmount?: number) {
   const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const prixFormatte = Number(data.prix).toFixed(2);
+  const amount = totalAmount !== undefined ? totalAmount : Number(data.prix);
+  const prixFormatte = amount.toFixed(2);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100" xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100" xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
@@ -50,13 +51,31 @@ function generateFacturXXML(data: any) {
 
 export async function POST(request: Request) {
   try {
+    // Auth: vérifier le Bearer token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new NextResponse('Non autorisé', { status: 401 });
+    }
+    const token = authHeader.slice(7);
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) {
+      return new NextResponse('Non autorisé', { status: 401 });
+    }
+
     const body = await request.json();
     const {
       nomTherapeute, titreTherapeute, telephone, emailTherapeute,
       patientNom, patientAdresse, patientSecu, acte, prix,
       numFacture, adresseCabinet, siteWeb, adeli, siret,
-      codeApe, logoUrl, signatureUrl, modeReglement
+      codeApe, logoUrl, signatureUrl, modeReglement, lignes
     } = body;
+
+    // Multi-line support with backwards compatibility
+    const lignesArray: { nom: string; prix: number }[] = lignes && Array.isArray(lignes)
+      ? lignes
+      : [{ nom: acte || "Consultation", prix: Number(prix) || 0 }];
+
+    const totalAmount = lignesArray.reduce((sum: number, l: any) => sum + (Number(l.prix) || 0), 0);
 
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595.28, 841.89]);
@@ -131,27 +150,42 @@ export async function POST(request: Request) {
     page.drawText("PRIX", { x: width - 200, y: tableY + 12, size: 10, font: fontBold });
     page.drawText("TOTAL", { x: width - 110, y: tableY + 12, size: 10, font: fontBold });
 
-    page.drawRectangle({ x: 50, y: tableY - 50, width: width - 100, height: 50, color: rgb(0.96, 0.96, 0.96) });
-    page.drawText(acte || "Consultation d'ostéopathie", { x: 70, y: tableY - 30, size: 10, font: fontRegular });
-    const prixStr = `${Number(prix).toFixed(2).replace('.', ',')} EUR`;
-    page.drawText(prixStr, { x: width - 200, y: tableY - 30, size: 10, font: fontRegular });
-    page.drawText(prixStr, { x: width - 110, y: tableY - 30, size: 10, font: fontRegular });
-
-    // 5. BAS DE PAGE
-    page.drawText("Fait pour servir et valoir ce que de droit.", { x: 50, y: 180, size: 10, font: fontRegular, color: colorGray });
-    page.drawRectangle({ x: 50, y: 110, width: 140, height: 40, borderColor: colorBlack, borderWidth: 2 });
-    page.drawText("FACTURE\nACQUITTÉE", { x: 72, y: 135, size: 11, font: fontBold, lineHeight: 14 });
-
-    if (modeReglement) {
-      page.drawText(`Réglée par : ${modeReglement}`, { x: 50, y: 92, size: 10, font: fontBold, color: colorBlack });
+    // Draw each line item
+    let currentY = tableY;
+    for (const ligne of lignesArray) {
+      currentY -= 40;
+      page.drawRectangle({ x: 50, y: currentY, width: width - 100, height: 40, color: rgb(0.96, 0.96, 0.96) });
+      page.drawText(ligne.nom || "Consultation", { x: 70, y: currentY + 14, size: 10, font: fontRegular });
+      const lignePrix = `${Number(ligne.prix).toFixed(2).replace('.', ',')} EUR`;
+      page.drawText(lignePrix, { x: width - 200, y: currentY + 14, size: 10, font: fontRegular });
+      page.drawText(lignePrix, { x: width - 110, y: currentY + 14, size: 10, font: fontRegular });
     }
 
-    page.drawText("TVA non applicable - Article 261, 4, 1° du CGI", { x: 50, y: 70, size: 8, font: fontRegular, color: colorGray });
-    page.drawText("Dispensé d'immatriculation au RCS et au RM - SIRET :", { x: 50, y: 55, size: 8, font: fontRegular, color: colorGray });
-    page.drawText(`${siret || ''}`, { x: 255, y: 55, size: 8, font: fontBold, color: colorBlack });
+    // Total row if multiple lines
+    if (lignesArray.length > 1) {
+      currentY -= 35;
+      page.drawRectangle({ x: 50, y: currentY, width: width - 100, height: 35, borderColor: colorBlack, borderWidth: 1 });
+      page.drawText("TOTAL", { x: 70, y: currentY + 10, size: 11, font: fontBold });
+      const totalStr = `${totalAmount.toFixed(2).replace('.', ',')} EUR`;
+      page.drawText(totalStr, { x: width - 110, y: currentY + 10, size: 11, font: fontBold });
+    }
+
+    // 5. BAS DE PAGE - positions adjusted based on table height
+    const basDePageY = Math.min(currentY - 60, 180);
+    page.drawText("Fait pour servir et valoir ce que de droit.", { x: 50, y: basDePageY, size: 10, font: fontRegular, color: colorGray });
+    page.drawRectangle({ x: 50, y: basDePageY - 70, width: 140, height: 40, borderColor: colorBlack, borderWidth: 2 });
+    page.drawText("FACTURE\nACQUITTÉE", { x: 72, y: basDePageY - 45, size: 11, font: fontBold, lineHeight: 14 });
+
+    if (modeReglement) {
+      page.drawText(`Réglée par : ${modeReglement}`, { x: 50, y: basDePageY - 88, size: 10, font: fontBold, color: colorBlack });
+    }
+
+    page.drawText("TVA non applicable - Article 261, 4, 1° du CGI", { x: 50, y: basDePageY - 110, size: 8, font: fontRegular, color: colorGray });
+    page.drawText("Dispensé d'immatriculation au RCS et au RM - SIRET :", { x: 50, y: basDePageY - 125, size: 8, font: fontRegular, color: colorGray });
+    page.drawText(`${siret || ''}`, { x: 255, y: basDePageY - 125, size: 8, font: fontBold, color: colorBlack });
 
     const stampX = width - 240;
-    let stampY = 160;
+    let stampY = basDePageY - 20;
 
     page.drawText(`${nomHeader} ${titreHeader || ''}`, { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
     stampY -= 16;
@@ -180,7 +214,7 @@ export async function POST(request: Request) {
     }
 
     // 6. INJECTION FACTUR-X
-    const xmlString = generateFacturXXML(body);
+    const xmlString = generateFacturXXML(body, totalAmount);
     const xmlBytes = new TextEncoder().encode(xmlString);
     await pdfDoc.attach(xmlBytes, 'factur-x.xml', {
       mimeType: 'text/xml',

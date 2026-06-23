@@ -14,12 +14,17 @@ export async function POST(request: Request) {
 
     const { data: facture, error: factureError } = await supabaseAdmin
       .from('factures')
-      .select('therapeute_id, patient_nom, created_at')
+      .select('therapeute_id, patient_nom, created_at, note')
       .eq('id', factureId)
       .single();
 
     if (factureError || !facture) {
       return NextResponse.json({ error: 'Facture introuvable' }, { status: 404 });
+    }
+
+    // Protection anti-spam : vérifier que la facture n'a pas déjà été notée
+    if (facture.note !== null && facture.note !== undefined) {
+      return NextResponse.json({ error: 'Cette facture a déjà été évaluée' }, { status: 409 });
     }
 
     const { data: therapeute, error: therError } = await supabaseAdmin

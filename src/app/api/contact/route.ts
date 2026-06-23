@@ -6,7 +6,36 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    const { name, email, phone, message } = await request.json();
+    const body = await request.json();
+    const { name, email, phone, message, website } = body;
+
+    // Honeypot : si le champ "website" est rempli, c'est un bot
+    if (website && typeof website === 'string' && website.trim().length > 0) {
+      // On retourne un faux succès pour ne pas alerter le bot
+      return NextResponse.json({ success: true });
+    }
+
+    // Validation des champs requis
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return NextResponse.json({ error: 'Le champ nom est requis' }, { status: 400 });
+    }
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return NextResponse.json({ error: 'Le champ email est requis' }, { status: 400 });
+    }
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return NextResponse.json({ error: 'Le champ message est requis' }, { status: 400 });
+    }
+
+    // Validation du format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return NextResponse.json({ error: 'Format email invalide' }, { status: 400 });
+    }
+
+    // Limite de longueur du message
+    if (message.length > 2000) {
+      return NextResponse.json({ error: 'Le message ne doit pas dépasser 2000 caractères' }, { status: 400 });
+    }
 
     const safeName = escapeHtml(name);
     const safeEmail = escapeHtml(email);
@@ -15,7 +44,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await resend.emails.send({
       from: 'FacturAvis <facture@facturavis.fr>',
-      to: ['fahmicyrille@gmail.com'],
+      to: ['facturavispro@gmail.com'],
       subject: `💡 Nouveau besoin spécifique de ${safeName}`,
       html: `
         <div style="font-family: sans-serif; color: #3e2f25; padding: 20px; border: 1px solid #f0e6de; border-radius: 15px; background-color: #fcfaf8;">
