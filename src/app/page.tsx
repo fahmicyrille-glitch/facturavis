@@ -3,15 +3,17 @@ import {
   Cloud, FilePlus,
   Users, Building2,
   ShieldAlert, UploadCloud, Sparkles,
-  Inbox, BarChart3
+  Inbox, BarChart3, ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
+import CountdownBanner from '@/components/landing/CountdownBanner';
 import HeroAnimations from '@/components/landing/HeroAnimations';
 import ContactForm from '@/components/landing/ContactForm';
 import MockupDashboard from '@/components/landing/MockupDashboard';
 import MockupPatients from '@/components/landing/MockupPatients';
 import MockupFacturesRecues from '@/components/landing/MockupFacturesRecues';
+import AnimatedDemo from '@/components/landing/AnimatedDemo';
 
 export default function LandingPage() {
   // --- DONNÉES STRUCTURÉES (JSON-LD) ---
@@ -117,6 +119,9 @@ export default function LandingPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
+      {/* --- COUNTDOWN BANNER --- */}
+      <CountdownBanner />
+
       {/* --- NAVBAR (Client Component) --- */}
       <Navbar />
 
@@ -161,6 +166,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* --- DEMO ANIMEE --- */}
+      <AnimatedDemo />
 
       {/* --- SECTION : LES 2 METHODES DE FACTURATION --- */}
       <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6">
@@ -408,6 +416,67 @@ export default function LandingPage() {
       {/* --- CONTACT FORM (Client Component) --- */}
       <ContactForm />
 
+      {/* --- COMPARATIF PRIX --- */}
+      <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
+              Tout inclus. <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">Sans surprise.</span>
+            </h2>
+            <p className="text-[#7a6a5f] text-lg font-medium">Un seul abonnement, toutes les fonctionnalités. Comparez.</p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-[#f0e6de]">
+                  <th className="text-left py-4 px-4 text-[#7a6a5f] font-bold">Fonctionnalité</th>
+                  <th className="py-4 px-4 text-center">
+                    <div className="bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white px-4 py-2 rounded-xl font-black text-base inline-block">
+                      FacturAvis<br/><span className="text-lg">19€</span><span className="text-xs font-medium">/mois</span>
+                    </div>
+                  </th>
+                  <th className="py-4 px-4 text-center text-[#7a6a5f] font-bold">
+                    <div className="text-xs">Logiciels<br/>concurrents</div>
+                    <div className="text-base font-black text-gray-400">29-49€</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  { feature: 'Facturation Factur-X 2026', us: true, them: true },
+                  { feature: 'Dossiers patients sécurisés', us: true, them: true },
+                  { feature: 'Récolte automatique d\'avis Google', us: true, them: false },
+                  { feature: 'Réception factures fournisseurs (PA DGFiP)', us: true, them: false },
+                  { feature: 'Export FEC pour comptable', us: true, them: 'partial' as const },
+                  { feature: 'Multi-cabinets & multi-SIRET', us: true, them: 'partial' as const },
+                  { feature: 'Dashboard & analytics en temps réel', us: true, them: 'partial' as const },
+                  { feature: 'Import CSV patients', us: true, them: false },
+                ].map((row, i) => (
+                  <tr key={i} className="hover:bg-[#fcfaf8] transition-colors">
+                    <td className="py-3.5 px-4 font-bold text-[#3e2f25]">{row.feature}</td>
+                    <td className="py-3.5 px-4 text-center text-lg">
+                      {row.us ? '✅' : '❌'}
+                    </td>
+                    <td className="py-3.5 px-4 text-center text-lg">
+                      {row.them === true ? '✅' : row.them === 'partial' ? '⚠️' : '❌'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="text-center mt-8">
+            <Link href="/inscription" className="inline-flex items-center gap-2 bg-[#3e2f25] text-white px-8 py-4 rounded-2xl font-black text-lg hover:scale-[1.02] transition-transform shadow-lg">
+              Essayer gratuitement 14 jours
+              <ArrowRight size={20} />
+            </Link>
+            <p className="text-xs text-[#7a6a5f] mt-3 font-bold">Sans carte bancaire • Annulable à tout moment</p>
+          </div>
+        </div>
+      </section>
+
       {/* --- FAQ SECTION --- */}
       <section className="py-16 md:py-24 bg-[#fcfaf8] border-t border-[#f0e6de] px-4 md:px-6">
         <div className="max-w-3xl mx-auto">
@@ -443,7 +512,7 @@ export default function LandingPage() {
         <p className="text-gray-300 text-lg md:text-xl mb-12 max-w-2xl mx-auto font-medium">
           Déléguez la paperasse, sécurisez vos données et devenez le praticien le plus recommandé de votre ville.
         </p>
-        <Link href="/fondateur" className="relative inline-flex group">
+        <Link href="/inscription" className="relative inline-flex group">
           <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-[#a9825a] rounded-[24px] blur opacity-60 group-hover:opacity-100 transition duration-500 animate-pulse"></div>
           <button className="relative bg-white text-[#3e2f25] px-10 md:px-14 py-5 md:py-6 rounded-[24px] font-black text-xl md:text-2xl hover:scale-105 transition-transform flex items-center gap-3">
             <Sparkles size={24} className="text-[#a9825a]"/>

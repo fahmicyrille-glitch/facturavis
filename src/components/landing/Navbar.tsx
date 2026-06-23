@@ -20,7 +20,7 @@ export default function Navbar() {
   }, [pathname]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#f0e6de]">
+    <nav className="sticky top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#f0e6de]">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 max-w-7xl mx-auto">
         <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2 md:gap-3 group">
           <div className="relative">
@@ -39,8 +39,8 @@ export default function Navbar() {
           <Link href="/login" className="hidden sm:block text-xs md:text-sm font-bold text-[#7a6a5f] hover:text-[#3e2f25] px-3 py-2 transition">
             Connexion
           </Link>
-          <Link href="/fondateur" className="relative group overflow-hidden bg-[#3e2f25] text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-bold shadow-lg shadow-[#3e2f25]/20 hover:shadow-xl transition-all hover:-translate-y-0.5">
-            <span className="relative z-10">Essai Gratuit</span>
+          <Link href="/inscription" className="relative group overflow-hidden bg-[#3e2f25] text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-bold shadow-lg shadow-[#3e2f25]/20 hover:shadow-xl transition-all hover:-translate-y-0.5">
+            <span className="relative z-10">S&apos;inscrire</span>
             <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
           </Link>
 
@@ -75,8 +75,8 @@ export default function Navbar() {
             <Link href="/login" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#3e2f25] hover:bg-[#fdf2e9] transition-all">
               Connexion
             </Link>
-            <Link href="/fondateur" onClick={closeMobileMenu} className="flex items-center justify-center gap-2 bg-[#3e2f25] text-white px-4 py-3 rounded-xl text-sm font-bold shadow-lg shadow-[#3e2f25]/20 hover:shadow-xl transition-all mt-1">
-              Essai Gratuit
+            <Link href="/inscription" onClick={closeMobileMenu} className="flex items-center justify-center gap-2 bg-[#3e2f25] text-white px-4 py-3 rounded-xl text-sm font-bold shadow-lg shadow-[#3e2f25]/20 hover:shadow-xl transition-all mt-1">
+              S&apos;inscrire
             </Link>
           </div>
         </div>

@@ -217,8 +217,8 @@ export default function Home() {
       <div className="mt-8 text-center">
         <p className="text-[#7a6a5f] font-medium text-sm">
           Pas encore de compte ?{' '}
-          <Link href="/fondateur" className="text-[#a9825a] font-black hover:underline">
-            Devenir membre fondateur
+          <Link href="/inscription" className="text-[#a9825a] font-black hover:underline">
+            Créer mon espace gratuitement
           </Link>
         </p>
       </div>
