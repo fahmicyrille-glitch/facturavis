@@ -23,8 +23,8 @@ export default function CountdownBanner() {
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 md:gap-3">
           <AlertTriangle size={16} className="shrink-0 animate-pulse" />
           <span>
-            Réforme facturation électronique dans <span className="bg-white/20 px-2 py-0.5 rounded-md font-black">{days} jours</span> —
-            Votre cabinet est-il conforme ?
+            Réception de factures fournisseurs obligatoire dans <span className="bg-white/20 px-2 py-0.5 rounded-md font-black">{days} jours</span> —
+            Êtes-vous prêt ?
           </span>
           <Link href="/fondateur" className="hidden sm:inline-flex bg-white text-red-600 px-3 py-1 rounded-full text-xs font-black hover:bg-red-50 transition-colors ml-2">
             Se mettre en conformité

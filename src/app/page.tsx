@@ -83,7 +83,7 @@ export default function LandingPage() {
         "name": "Qu'est-ce que la réforme Factur-X 2026 ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "La réforme de la facturation électronique oblige tous les professionnels libéraux à émettre ET recevoir des factures au format structuré. FacturAvis couvre les deux : émission au format Factur-X (XML embarqué) et réception automatique via une Plateforme Agréée certifiée par la DGFiP.",
+          "text": "Même exonéré de TVA, tous les professionnels doivent pouvoir RECEVOIR les factures électroniques de leurs fournisseurs dès septembre 2026. L'émission aux patients n'est pas obligatoire pour les professions de santé exonérées, mais FacturAvis le fait quand même au format Factur-X. Résultat : vous êtes conforme et en avance.",
         },
       },
       {
@@ -99,7 +99,7 @@ export default function LandingPage() {
         "name": "Comment FacturAvis gère-t-il la réforme de septembre 2026 ?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "FacturAvis couvre les deux obligations : l'émission de factures au format Factur-X ET la réception automatique des factures fournisseurs via notre Plateforme Agréée certifiée par la DGFiP. En vous inscrivant, vous n'avez aucune démarche à faire sur impots.gouv.fr.",
+          "text": "L'obligation de RÉCEPTION de factures fournisseurs s'applique à tous, même les praticiens exonérés de TVA. FacturAvis vous connecte automatiquement à une Plateforme Agréée certifiée DGFiP. Aucune démarche sur impots.gouv.fr. En bonus, vos factures patients sont émises au format Factur-X, conforme aux normes même si ce n'est pas encore obligatoire pour vous.",
         },
       },
       {
@@ -251,7 +251,7 @@ export default function LandingPage() {
               Vos factures fournisseurs <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">arrivent toutes seules.</span>
             </h2>
             <p className="text-[#7a6a5f] text-lg font-medium max-w-3xl mx-auto">
-              Vous avez reçu le courrier de la DGFiP ? En vous inscrivant sur FacturAvis, votre plateforme de réception agréée est automatiquement désignée. Aucune démarche sur impots.gouv.fr.
+              Vous avez reçu le courrier de la DGFiP ? Même exonéré de TVA, vous devez pouvoir recevoir les factures de vos fournisseurs au format électronique. En vous inscrivant sur FacturAvis, c&apos;est automatique. Aucune démarche sur impots.gouv.fr.
             </p>
           </div>
 
@@ -298,11 +298,11 @@ export default function LandingPage() {
               <ShieldAlert size={14} /> Loi de Finances
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] leading-tight">
-              Émission + Réception : <br/>
-              <span className="text-red-500">les deux obligations couvertes.</span>
+              Septembre 2026 : <br/>
+              <span className="text-red-500">la réception devient obligatoire.</span>
             </h2>
             <p className="text-[#7a6a5f] text-lg font-medium leading-relaxed">
-              La réforme de la facturation électronique oblige tous les professionnels libéraux à émettre et recevoir des factures au format structuré (Factur-X).
+              Même exonéré de TVA, vous <strong className="text-[#3e2f25]">devez pouvoir recevoir</strong> les factures électroniques de vos fournisseurs dès septembre 2026. L&apos;émission aux patients n&apos;est pas obligatoire, mais FacturAvis le fait quand même — au format Factur-X, prêt pour votre comptable.
             </p>
             <ul className="space-y-4 pt-4">
               <li className="flex items-start gap-3">
@@ -495,12 +495,12 @@ export default function LandingPage() {
               <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">Oui ! Et c&apos;est justement la force de l&apos;outil. Si vous générez vos factures avec un autre logiciel, uploadez simplement le PDF sur FacturAvis. Nous nous chargeons de l&apos;envoi au patient et de la récolte d&apos;avis Maps.</p>
             </div>
             <div className="p-6 md:p-8 bg-white rounded-2xl md:rounded-[24px] border border-[#f0e6de] hover:shadow-md transition-shadow">
-              <h3 className="font-black text-base md:text-lg mb-2 text-[#3e2f25]">Comment FacturAvis gère-t-il la réforme de septembre 2026 ?</h3>
-              <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">FacturAvis couvre les deux obligations : l&apos;émission de factures au format Factur-X ET la réception automatique des factures fournisseurs via notre Plateforme Agréée certifiée par la DGFiP. En vous inscrivant, vous n&apos;avez aucune démarche à faire sur impots.gouv.fr.</p>
+              <h3 className="font-black text-base md:text-lg mb-2 text-[#3e2f25]">Je suis exonéré de TVA, suis-je concerné par la réforme ?</h3>
+              <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">Oui, partiellement. Vous n&apos;êtes <strong>pas obligé d&apos;émettre</strong> des factures électroniques à vos patients. En revanche, vous <strong>devez pouvoir recevoir</strong> celles de vos fournisseurs (comptable, loyer, télécom...) dès septembre 2026. FacturAvis vous met en conformité automatiquement via sa Plateforme Agréée. En bonus, vos factures patients sont déjà au format Factur-X.</p>
             </div>
             <div className="p-6 md:p-8 bg-white rounded-2xl md:rounded-[24px] border border-[#f0e6de] hover:shadow-md transition-shadow">
               <h3 className="font-black text-base md:text-lg mb-2 text-[#3e2f25]">Qu&apos;est-ce que la réception de factures fournisseurs ?</h3>
-              <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">À partir de septembre 2026, tous les professionnels doivent pouvoir recevoir les factures de leurs fournisseurs au format électronique. FacturAvis est connecté à une Plateforme Agréée qui reçoit automatiquement ces factures pour vous : comptable, loyer, télécom, matériel médical... Tout arrive dans votre espace sans manipulation.</p>
+              <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">Dès septembre 2026, vos fournisseurs n&apos;enverront plus de PDF par email. Leurs factures transiteront par le réseau des Plateformes Agréées. FacturAvis vous connecte automatiquement — les factures de votre comptable, loyer, télécom, matériel médical arrivent dans votre espace sans manipulation. Aucune inscription sur impots.gouv.fr n&apos;est nécessaire.</p>
             </div>
           </div>
         </div>
