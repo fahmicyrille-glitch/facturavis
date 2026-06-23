@@ -9,6 +9,9 @@ import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import HeroAnimations from '@/components/landing/HeroAnimations';
 import ContactForm from '@/components/landing/ContactForm';
+import MockupDashboard from '@/components/landing/MockupDashboard';
+import MockupPatients from '@/components/landing/MockupPatients';
+import MockupFacturesRecues from '@/components/landing/MockupFacturesRecues';
 
 export default function LandingPage() {
   // --- DONNÉES STRUCTURÉES (JSON-LD) ---
@@ -147,6 +150,15 @@ export default function LandingPage() {
                <p className="text-sm md:text-base text-[#7a6a5f]">FacturAvis l&apos;invite automatiquement à laisser 5 étoiles sur la page Google de votre cabinet.</p>
              </div>
           </div>
+
+          {/* Mockup Dashboard */}
+          <div className="mt-12 md:mt-16 relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#d4b494]/20 to-[#a9825a]/20 rounded-3xl blur-xl -z-10 opacity-50 group-hover:opacity-100 transition" />
+            <div className="transform hover:scale-[1.01] transition-transform duration-500 rotate-0 md:-rotate-1">
+              <MockupDashboard />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#fdf2e9]/50 to-transparent pointer-events-none rounded-b-2xl" />
+          </div>
         </div>
       </section>
 
@@ -258,6 +270,15 @@ export default function LandingPage() {
               <p className="text-sm text-[#7a6a5f]">Factures émises + reçues, exportées au format FEC légal pour votre comptable. Fini les soirées à trier des papiers.</p>
             </div>
           </div>
+
+          {/* Mockup Factures Recues */}
+          <div className="mt-12 md:mt-16 relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-3xl blur-xl -z-10 opacity-50 group-hover:opacity-100 transition" />
+            <div className="transform hover:scale-[1.01] transition-transform duration-500 rotate-0 md:-rotate-1">
+              <MockupFacturesRecues />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-2xl" />
+          </div>
         </div>
       </section>
 
@@ -339,6 +360,15 @@ export default function LandingPage() {
                 <p className="text-[#7a6a5f] font-medium leading-relaxed text-sm md:text-base">{feat.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Mockup Patients */}
+          <div className="mt-12 md:mt-16 relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#d4b494]/20 to-[#a9825a]/20 rounded-3xl blur-xl -z-10 opacity-50 group-hover:opacity-100 transition" />
+            <div className="transform hover:scale-[1.01] transition-transform duration-500 rotate-0 md:rotate-1">
+              <MockupPatients />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#fcfaf8] to-transparent pointer-events-none rounded-b-2xl" />
           </div>
         </div>
       </section>
