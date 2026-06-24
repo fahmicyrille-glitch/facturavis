@@ -85,16 +85,41 @@ export async function DELETE(request: Request) {
     const targetUserId = url.searchParams.get('id');
     if (!targetUserId) return new NextResponse('ID manquant', { status: 400 });
 
-    // Nettoyage des dépendances
-    await supabaseAdmin.from('cabinets').delete().eq('therapeute_id', targetUserId);
+    // 1. Supprimer les fichiers Storage (factures PDF)
+    const { data: factures } = await supabaseAdmin.from('factures').select('fichier_path').eq('therapeute_id', targetUserId);
+    if (factures && factures.length > 0) {
+      const paths = factures.map(f => f.fichier_path).filter(Boolean);
+      if (paths.length > 0) await supabaseAdmin.storage.from('factures_pdf').remove(paths);
+    }
+
+    // 2. Supprimer les fichiers Storage (pièces jointes)
+    const { data: piecesJointes } = await supabaseAdmin.from('attachments').select('file_path').eq('therapeute_id', targetUserId);
+    if (piecesJointes && piecesJointes.length > 0) {
+      const paths = piecesJointes.map(a => a.file_path).filter(Boolean);
+      if (paths.length > 0) await supabaseAdmin.storage.from('attachments').remove(paths);
+    }
+
+    // 3. Supprimer les fichiers Storage (factures reçues)
+    const { data: facturesRecues } = await supabaseAdmin.from('factures_recues').select('fichier_path').eq('therapeute_id', targetUserId);
+    if (facturesRecues && facturesRecues.length > 0) {
+      const paths = facturesRecues.map(f => f.fichier_path).filter(Boolean);
+      if (paths.length > 0) await supabaseAdmin.storage.from('factures_recues').remove(paths);
+    }
+
+    // 4. Nettoyage des tables dépendantes
+    await supabaseAdmin.from('attachments').delete().eq('therapeute_id', targetUserId);
+    await supabaseAdmin.from('consultations').delete().eq('therapeute_id', targetUserId);
+    await supabaseAdmin.from('factures_recues').delete().eq('therapeute_id', targetUserId);
+    await supabaseAdmin.from('prestations').delete().eq('user_id', targetUserId);
     await supabaseAdmin.from('factures').delete().eq('therapeute_id', targetUserId);
+    await supabaseAdmin.from('cabinets').delete().eq('therapeute_id', targetUserId);
     await supabaseAdmin.from('patients').delete().eq('therapeute_id', targetUserId);
 
-    // Suppression Profil
+    // 5. Suppression Profil
     const { error: dbError } = await supabaseAdmin.from('therapeutes').delete().eq('id', targetUserId);
     if (dbError) throw dbError;
 
-    // Suppression Auth
+    // 6. Suppression Auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
     if (deleteError) throw deleteError;
 

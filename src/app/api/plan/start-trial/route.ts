@@ -33,10 +33,14 @@ export async function POST(request: Request) {
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
-  await supabaseAdmin.from('therapeutes').update({
+  const { error: updateError } = await supabaseAdmin.from('therapeutes').update({
     plan: 'trial',
     trial_ends_at: trialEndsAt.toISOString(),
   }).eq('id', user.id);
+
+  if (updateError) {
+    return NextResponse.json({ error: 'Erreur lors de l\'activation' }, { status: 500 });
+  }
 
   return NextResponse.json({
     success: true,

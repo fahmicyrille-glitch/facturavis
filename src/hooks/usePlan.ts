@@ -22,10 +22,14 @@ export function usePlan() {
 
       if (data) {
         let effectivePlan = data.plan || 'free';
-        if (data.subscription_status === 'active' && (effectivePlan === 'founder' || effectivePlan === 'standard')) {
-          // Keep paid plan
+        const activeStatuses = ['active', 'past_due', 'trialing'];
+        if (activeStatuses.includes(data.subscription_status) && (effectivePlan === 'founder' || effectivePlan === 'standard')) {
+          // Keep paid plan (including grace period for past_due)
         } else if (effectivePlan === 'trial') {
           // Keep trial
+        } else if (effectivePlan === 'founder' || effectivePlan === 'standard') {
+          // Plan set but subscription cancelled/expired
+          effectivePlan = 'free';
         } else {
           effectivePlan = 'free';
         }

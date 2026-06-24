@@ -10,6 +10,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'userId et email requis' }, { status: 400 });
     }
 
+    // Vérifier que le userId correspond à un vrai utilisateur Auth avec cet email
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (userError || !user || user.email?.toLowerCase() !== email.toLowerCase().trim()) {
+      return NextResponse.json({ error: 'Utilisateur invalide' }, { status: 403 });
+    }
+
     // Check if profile already exists
     const { data: existing } = await supabaseAdmin
       .from('therapeutes')

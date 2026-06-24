@@ -248,7 +248,8 @@ export default function Dashboard() {
         .select('*').single();
       if (dbError) throw dbError;
 
-      if (dbData) setFacturesHistorique(prev => [dbData, ...prev]);
+      if (!dbData) throw new Error('Erreur lors de la création de la facture');
+      setFacturesHistorique(prev => [dbData, ...prev]);
 
       const lien = `${window.location.origin}/facture/${dbData.id}`;
       setSuccessLink(lien);
@@ -391,7 +392,7 @@ export default function Dashboard() {
     return matchNom && matchPrenom;
   });
 
-  const facturesValides = facturesFiltrees.filter(f => f.statut !== 'Annulée');
+  const facturesValides = facturesFiltrees.filter(f => f.statut !== 'Annulée' && f.statut !== 'Annulee');
   const totalFactures = facturesValides.length;
   const avisRecoltes = facturesValides.filter(f => f.note !== null).length;
   const notesExistantes = facturesValides.filter(f => f.note !== null).map(f => f.note as number);
@@ -411,7 +412,7 @@ export default function Dashboard() {
       const cab = cabinets.find(c => c.id === f.cabinet_id)?.nom || 'Inconnu';
       const lien = `${window.location.origin}/facture/${f.id}`;
       const statut = f.statut || 'Valide';
-      const note = f.note ? f.note : '';
+      const note = f.note !== null && f.note !== undefined ? f.note : '';
       const montantVal = f.montant || 0;
       const mode = f.mode_reglement || 'Non précisé';
       const commentaire = f.commentaire ? `"${f.commentaire.replace(/"/g, '""')}"` : '';

@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { supabaseAdmin, isAllowedStorageUrl } from '@/lib/supabase-admin';
 
+function escapeXml(str: string): string {
+  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
 function generateFacturXXML(data: any, totalAmount?: number) {
   const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
   const amount = totalAmount !== undefined ? totalAmount : Number(data.prix);
@@ -19,7 +23,7 @@ function generateFacturXXML(data: any, totalAmount?: number) {
         <ram:LineID>${idx + 1}</ram:LineID>
       </ram:AssociatedDocumentLineDocument>
       <ram:SpecifiedTradeProduct>
-        <ram:Name>${ligne.nom || 'Consultation'}</ram:Name>
+        <ram:Name>${escapeXml(ligne.nom || 'Consultation')}</ram:Name>
       </ram:SpecifiedTradeProduct>
       <ram:SpecifiedLineTradeAgreement>
         <ram:NetPriceProductTradePrice>
@@ -58,7 +62,7 @@ function generateFacturXXML(data: any, totalAmount?: number) {
     </ram:GuidelineSpecifiedDocumentContextParameter>
   </rsm:ExchangedDocumentContext>
   <rsm:ExchangedDocument>
-    <ram:ID>${data.numFacture}</ram:ID>
+    <ram:ID>${escapeXml(data.numFacture)}</ram:ID>
     <ram:TypeCode>380</ram:TypeCode>
     <ram:IssueDateTime>
       <udt:DateTimeString format="102">${dateStr}</udt:DateTimeString>
@@ -79,7 +83,7 @@ function generateFacturXXML(data: any, totalAmount?: number) {
   <rsm:SupplyChainTradeTransaction>${linesXml}
     <ram:ApplicableHeaderTradeAgreement>
       <ram:SellerTradeParty>
-        <ram:Name>${data.nomTherapeute}</ram:Name>
+        <ram:Name>${escapeXml(data.nomTherapeute)}</ram:Name>
         <ram:SpecifiedLegalOrganization>
           <ram:ID schemeID="0002">${siren}</ram:ID>
         </ram:SpecifiedLegalOrganization>
@@ -94,7 +98,7 @@ function generateFacturXXML(data: any, totalAmount?: number) {
         </ram:SpecifiedTaxRegistration>
       </ram:SellerTradeParty>
       <ram:BuyerTradeParty>
-        <ram:Name>${data.patientNom}</ram:Name>
+        <ram:Name>${escapeXml(data.patientNom)}</ram:Name>
         <ram:PostalTradeAddress>
           <ram:CountryID>FR</ram:CountryID>
         </ram:PostalTradeAddress>

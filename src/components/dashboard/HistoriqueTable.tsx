@@ -167,20 +167,21 @@ export default function HistoriqueTable({
 
         {/* Table */}
         <div className="overflow-x-auto flex-1 w-full">
-          <table className="w-full text-left text-sm min-w-[650px]">
-            <thead className="bg-white border-b border-gray-100 text-gray-500 uppercase text-xs">
+          <table className="w-full text-left text-sm min-w-[700px]">
+            <thead className="bg-gray-50/80 border-b border-gray-200 text-gray-500 uppercase text-[11px] tracking-wider">
               <tr>
-                <th className="px-3 py-3 font-medium whitespace-nowrap">Date</th>
-                <th className="px-3 py-3 font-medium">Patient</th>
-                <th className="px-3 py-3 font-medium whitespace-nowrap">Montant</th>
-                <th className="px-3 py-3 font-medium">Avis</th>
-                <th className="px-3 py-3 font-medium text-right">Action</th>
+                <th className="px-4 py-3.5 font-semibold whitespace-nowrap w-[100px]">Date</th>
+                <th className="px-4 py-3.5 font-semibold">Patient</th>
+                <th className="px-4 py-3.5 font-semibold whitespace-nowrap w-[100px]">Statut</th>
+                <th className="px-4 py-3.5 font-semibold whitespace-nowrap w-[110px]">Montant</th>
+                <th className="px-4 py-3.5 font-semibold w-[130px]">Avis</th>
+                <th className="px-4 py-3.5 font-semibold text-right w-[140px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {facturesFiltrees.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500 italic">
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
                     Aucune facture trouv&eacute;e pour cette recherche.
                   </td>
                 </tr>
@@ -188,104 +189,110 @@ export default function HistoriqueTable({
                 facturesFiltrees.map((facture) => {
                   const date = new Date(facture.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                   const lien = `${window.location.origin}/facture/${facture.id}`;
-                  const isAnnulee = facture.statut === 'Annulée';
+                  const isAnnulee = facture.statut === 'Annulée' || facture.statut === 'Annulee';
 
                   return (
-                    <tr key={facture.id} className={`hover:bg-blue-50/30 transition-colors ${isAnnulee ? 'bg-gray-50 opacity-60' : ''}`}>
-                      <td className="px-3 py-3 text-gray-500 font-medium whitespace-nowrap">{date}</td>
-                      <td className="px-3 py-3">
-                        <div className="font-bold text-gray-900 truncate max-w-[150px]" title={facture.patient_nom}>
+                    <tr key={facture.id} className={`transition-colors ${isAnnulee ? 'bg-red-50/40' : 'hover:bg-blue-50/30'}`}>
+                      <td className="px-4 py-3.5 text-gray-500 text-xs font-medium whitespace-nowrap tabular-nums">{date}</td>
+                      <td className="px-4 py-3.5">
+                        <div className={`font-semibold truncate max-w-[250px] ${isAnnulee ? 'text-gray-400' : 'text-gray-900'}`} title={facture.patient_nom}>
                           {facture.patient_nom}
-                          {isAnnulee && <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Annul&eacute;e</span>}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-gray-500 truncate max-w-[150px]" title={facture.patient_email}>{facture.patient_email}</span>
-
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-xs truncate max-w-[200px] ${isAnnulee ? 'text-gray-400' : 'text-gray-500'}`} title={facture.patient_email}>{facture.patient_email}</span>
                           {!isAnnulee && (
-                            <button onClick={() => handleEditEmail(facture)} className="text-gray-400 hover:text-blue-600 transition-colors shrink-0" title="Modifier l'email et renvoyer la facture">
+                            <button onClick={() => handleEditEmail(facture)} className="text-gray-300 hover:text-blue-600 transition-colors shrink-0" title="Modifier l'email et renvoyer la facture">
                               <Edit size={12} />
                             </button>
                           )}
-
-                          {!isAnnulee && (
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                              facture.statut_email === 'Ouvert'
-                              ? 'bg-green-100 text-green-700 border border-green-200'
-                              : facture.statut_email === 'Renvoyé'
-                              ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                              : facture.statut_email === 'Relancé'
-                              ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                              : 'bg-gray-100 text-gray-600 border border-gray-200'
-                            }`}>
-                              {facture.statut_email || 'Envoyé'}
-                            </span>
-                          )}
                         </div>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
-                        <div className={`font-bold ${isAnnulee ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                          {facture.montant ? `${facture.montant.toLocaleString('fr-FR')} €` : '-'}
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        {isAnnulee ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-100 border border-red-200 px-2.5 py-1 rounded-md">
+                            <Ban size={12} />
+                            Annul&eacute;e
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md ${
+                            facture.statut_email === 'Ouvert'
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : facture.statut_email === 'Renvoyé'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : facture.statut_email === 'Relancé'
+                            ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                            : 'bg-gray-50 text-gray-600 border border-gray-200'
+                          }`}>
+                            {facture.statut_email || 'Envoyé'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div className={`font-bold tabular-nums ${isAnnulee ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                          {facture.montant ? `${facture.montant.toLocaleString('fr-FR')} €` : '-'}
                         </div>
-                        <div className="text-[11px] text-gray-500 mt-0.5">
+                        <div className={`text-[11px] mt-0.5 ${isAnnulee ? 'text-gray-400' : 'text-gray-500'}`}>
                           {facture.mode_reglement || 'Non précisé'}
                         </div>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap min-w-[120px]">
-                        {facture.note ? (
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        {isAnnulee ? (
+                          <span className="text-xs text-gray-400">&mdash;</span>
+                        ) : facture.note ? (
                           <div className="flex flex-col gap-1">
                             <div className="flex text-yellow-400">
                               {[1,2,3,4,5].map(star => (
-                                <Star key={star} size={14} className={star <= facture.note! ? "fill-current" : "text-gray-100"} />
+                                <Star key={star} size={14} className={star <= facture.note! ? "fill-current" : "text-gray-200"} />
                               ))}
                             </div>
                             {facture.commentaire && (
-                              <span className="text-[10px] text-gray-400 truncate max-w-[100px] italic" title={facture.commentaire}>
+                              <span className="text-[10px] text-gray-400 truncate max-w-[110px] italic" title={facture.commentaire}>
                                 &ldquo;{facture.commentaire}&rdquo;
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-[11px] text-gray-400 italic">En attente</span>
+                          <span className="text-xs text-gray-400 italic">En attente</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-right">
-                        <div className="flex justify-end items-center gap-2">
+                      <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                        <div className="flex justify-end items-center gap-1.5">
                           {!isAnnulee && (
                             <button
                               onClick={() => handleCancelClick(facture)}
-                              className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors flex items-center justify-center"
+                              className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                               title="Annuler cette facture"
                             >
-                              <Ban size={16} />
+                              <Ban size={15} />
                             </button>
                           )}
 
                           <button
                             onClick={() => onPreviewPdf(facture.fichier_path)}
-                            className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors flex items-center justify-center"
-                            title="Previsualiser"
+                            className="text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors"
+                            title="Prévisualiser"
                           >
-                            <Eye size={16} />
+                            <Eye size={15} />
                           </button>
 
                           <button
                             onClick={() => handleDownloadPdf(facture.fichier_path, facture.patient_nom)}
-                            className="text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-colors flex items-center justify-center"
-                            title="Telecharger la facture PDF"
+                            className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-lg transition-colors"
+                            title="Télécharger le PDF"
                           >
-                            <Download size={16} />
+                            <Download size={15} />
                           </button>
 
                           {!isAnnulee && (
                             <button
                               onClick={() => {
                                 navigator.clipboard.writeText(lien);
-                                showToast("Lien copié avec succès !");
+                                showToast("Lien copié !");
                               }}
-                              className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors flex items-center justify-center"
+                              className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
                               title="Copier le lien"
                             >
-                              <Copy size={16} />
+                              <Copy size={15} />
                             </button>
                           )}
                         </div>

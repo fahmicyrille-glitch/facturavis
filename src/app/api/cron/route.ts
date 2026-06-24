@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin, escapeHtml } from '@/lib/supabase-admin';
+import { supabaseAdmin, escapeHtml, isAllowedStorageUrl } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -20,6 +20,8 @@ export async function GET(request: Request) {
       .from('factures')
       .select('*')
       .eq('statut_email', 'Envoyé')
+      .neq('statut', 'Annulée')
+      .neq('statut', 'Annulee')
       .lte('created_at', dateLimiteISO);
 
     if (error) throw error;
@@ -56,13 +58,13 @@ export async function GET(request: Request) {
       const safeEmail = escapeHtml(therapeute.email);
       const safePatientNom = escapeHtml(facture.patient_nom);
 
-      const logoHtml = therapeute.logo_url
+      const logoHtml = therapeute.logo_url && isAllowedStorageUrl(therapeute.logo_url)
         ? `<img src="${therapeute.logo_url}" alt="${safeNom}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
         : safeNom;
 
       await resend.emails.send({
         from: `${safeNom} <facture@facturavis.fr>`,
-        replyTo: therapeute.email || 'hilaryfarid.osteopathe@gmail.com',
+        replyTo: therapeute.email || 'noreply@facturavis.fr',
         to: facture.patient_email,
         subject: `Rappel : Votre facture de consultation - ${safeNom}`,
         html: `

@@ -122,7 +122,18 @@ function NouvelleFactureContent() {
         }
 
         if (found) {
-          setPatientNom(found.nom_complet);
+          if (found.nom_complet.startsWith('Mme ')) {
+            setPatientCivilite('Mme');
+            setPatientNom(found.nom_complet.substring(4));
+          } else if (found.nom_complet.startsWith('M. ')) {
+            setPatientCivilite('M.');
+            setPatientNom(found.nom_complet.substring(3));
+          } else if (found.nom_complet.startsWith('Enfant ')) {
+            setPatientCivilite('Enfant');
+            setPatientNom(found.nom_complet.substring(7));
+          } else {
+            setPatientNom(found.nom_complet);
+          }
           setPatientEmail(found.email);
           setPatientAdresse(found.adresse || '');
           setPatientSecu(found.num_secu || '');
@@ -155,6 +166,9 @@ function NouvelleFactureContent() {
     } else if (patient.nom_complet.startsWith('M. ')) {
       setPatientCivilite('M.');
       setPatientNom(patient.nom_complet.substring(3));
+    } else if (patient.nom_complet.startsWith('Enfant ')) {
+      setPatientCivilite('Enfant');
+      setPatientNom(patient.nom_complet.substring(7));
     } else {
       setPatientNom(patient.nom_complet);
     }
@@ -321,9 +335,10 @@ function NouvelleFactureContent() {
       const fileName = `${Date.now()}-${numFactureSeq}.pdf`;
       const filePath = `${userId}/${fileName}`;
 
-      await supabase.storage.from('factures_pdf').upload(filePath, blob, { contentType: 'application/pdf' });
+      const { error: uploadError } = await supabase.storage.from('factures_pdf').upload(filePath, blob, { contentType: 'application/pdf' });
+      if (uploadError) throw new Error('Erreur lors du stockage du PDF');
 
-      const { data: dbData } = await supabase.from('factures').insert([{
+      const { data: dbData, error: insertError } = await supabase.from('factures').insert([{
         therapeute_id: userId,
         cabinet_id: selectedCabinetId,
         patient_nom: nomCompletFinal,
@@ -334,6 +349,7 @@ function NouvelleFactureContent() {
         mode_reglement: modeReglement,
         statut: 'Payée'
       }]).select().single();
+      if (insertError || !dbData) throw new Error('Erreur lors de l\'enregistrement de la facture');
 
       const { data: { session: emailSession } } = await supabase.auth.getSession();
       await fetch('/api/send-email', {
@@ -428,6 +444,7 @@ function NouvelleFactureContent() {
                   <select className="w-full border border-black text-black rounded-lg py-2.5 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" value={patientCivilite} onChange={(e) => setPatientCivilite(e.target.value)}>
                     <option value="Mme">Mme</option>
                     <option value="M.">M.</option>
+                    <option value="Enfant">Enfant</option>
                   </select>
                 </div>
 

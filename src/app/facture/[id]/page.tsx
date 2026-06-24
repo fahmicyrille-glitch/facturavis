@@ -132,14 +132,12 @@ export default function PagePatient() {
 
       // CORRECTION : Si 5 étoiles MAIS que le thérapeute n'a pas mis de lien Google
       if (selectedStar === 5) {
-        if (cabinet?.lien_avis_google) {
+        const googleLink = cabinet?.lien_avis_google;
+        if (googleLink && (googleLink.startsWith('https://') || googleLink.startsWith('http://'))) {
           setIsRedirecting(true);
           setTimeout(() => {
-            window.location.href = cabinet.lien_avis_google;
+            window.location.href = googleLink;
           }, 800);
-        } else {
-          // Pas de lien ? On affiche juste l'écran de remerciement (comme pour 4 étoiles)
-          setRating(4);
         }
       }
     };

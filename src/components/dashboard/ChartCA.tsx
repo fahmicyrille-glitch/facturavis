@@ -20,7 +20,7 @@ export default function ChartCA({ factures }: ChartCAProps) {
       const month = d.getMonth();
 
       const monthFactures = factures.filter(f => {
-        if (f.statut === 'Annulee') return false;
+        if (f.statut === 'Annulée' || f.statut === 'Annulee') return false;
         const fd = new Date(f.created_at);
         return fd.getFullYear() === year && fd.getMonth() === month;
       });

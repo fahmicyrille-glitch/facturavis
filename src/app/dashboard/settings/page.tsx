@@ -183,7 +183,7 @@ function SettingsContent() {
     const cleanAdeli = adeli.replace(/\s/g, '');
 
     const siretRegex = /^[0-9]{14}$/;
-    if (!siretRegex.test(cleanSiret)) {
+    if (cleanSiret && !siretRegex.test(cleanSiret)) {
       setMessage({ text: "Le numéro SIRET doit contenir exactement 14 chiffres sans lettres.", type: 'error' });
       setTimeout(() => setMessage({ text: '', type: '' }), 4000);
       return;

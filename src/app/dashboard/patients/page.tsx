@@ -50,6 +50,46 @@ export default function PatientsAnnuaire() {
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, [selectedPatient?.notes_consultation]);
 
+  // --- AUTO-CREATE DRAFT when nom + email are filled ---
+  const draftSaveRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!selectedPatient || selectedPatient.id !== 'temp-new-patient' || !userId) return;
+    const justName = extractName(selectedPatient.nom_complet).trim();
+    const email = selectedPatient.email.trim();
+    if (!justName || !email || !/^\S+@\S+\.\S+$/.test(email)) return;
+
+    if (draftSaveRef.current) clearTimeout(draftSaveRef.current);
+    draftSaveRef.current = setTimeout(async () => {
+      const cleanedNom = selectedPatient.nom_complet.trim();
+      const cleanedEmail = email.toLowerCase();
+
+      const isDuplicate = patients.some(p =>
+        p.id !== 'temp-new-patient' &&
+        p.email.toLowerCase() === cleanedEmail &&
+        p.nom_complet.toLowerCase() === cleanedNom.toLowerCase()
+      );
+      if (isDuplicate) return;
+
+      const { data, error } = await supabase.from('patients').insert([{
+        therapeute_id: userId,
+        nom_complet: cleanedNom,
+        email: cleanedEmail,
+        telephone: selectedPatient.telephone?.trim() || '',
+        adresse: selectedPatient.adresse?.trim() || '',
+        num_secu: selectedPatient.num_secu?.trim() || '',
+        notes_consultation: selectedPatient.notes_consultation || '',
+      }]).select().single();
+
+      if (!error && data) {
+        setPatients(prev => [data, ...prev.filter(p => p.id !== 'temp-new-patient')]);
+        setSelectedPatient(data);
+        showToast('Patient enregistré automatiquement');
+      }
+    }, 1500);
+
+    return () => { if (draftSaveRef.current) clearTimeout(draftSaveRef.current); };
+  }, [selectedPatient?.nom_complet, selectedPatient?.email, userId]);
+
   const autoSaveNotes = async () => {
     if (!selectedPatient || selectedPatient.id === 'temp-new-patient') return;
 
@@ -57,7 +97,8 @@ export default function PatientsAnnuaire() {
     const { error } = await supabase
       .from('patients')
       .update({ notes_consultation: selectedPatient.notes_consultation })
-      .eq('id', selectedPatient.id);
+      .eq('id', selectedPatient.id)
+      .eq('therapeute_id', userId!);
 
     if (error) {
       console.error("Erreur Auto-save :", error);
@@ -86,23 +127,31 @@ export default function PatientsAnnuaire() {
   };
 
   const fetchHistorique = async (pEmail: string, pNom: string) => {
-    if (!userId || !pEmail) return;
+    if (!userId || !pEmail || !pNom) return;
+
+    const nomSansPrefix = pNom.replace(/^(Mme |M\. |Enfant )/, '').trim().toLowerCase();
 
     const { data, error } = await supabase
       .from('factures')
-      .select('id, created_at, montant, statut, fichier_path, note, commentaire, mode_reglement, statut_email')
+      .select('id, created_at, montant, statut, fichier_path, note, commentaire, mode_reglement, statut_email, patient_nom')
       .eq('patient_email', pEmail.toLowerCase())
       .eq('therapeute_id', userId)
       .order('created_at', { ascending: false });
 
+    if (!error && data) {
+      const filtered = data.filter(f => {
+        const fNom = f.patient_nom.replace(/^(Mme |M\. |Enfant )/, '').trim().toLowerCase();
+        return fNom === nomSansPrefix;
+      });
+      setHistoriqueFactures(filtered);
+      return;
+    }
+
     if (error) {
       console.error(error);
       showToast("Erreur lors du chargement de l'historique", "error");
-    } else if (data) {
-      setHistoriqueFactures(data);
-    } else {
-      setHistoriqueFactures([]);
     }
+    setHistoriqueFactures([]);
   };
 
   const handleSelectPatient = async (p: Patient) => {
@@ -209,7 +258,8 @@ export default function PatientsAnnuaire() {
           telephone: cleanedPhone,
           notes_consultation: selectedPatient.notes_consultation
         })
-        .eq('id', selectedPatient.id);
+        .eq('id', selectedPatient.id)
+        .eq('therapeute_id', userId!);
 
       if (error) {
         console.error("Update error:", error);
@@ -362,6 +412,7 @@ export default function PatientsAnnuaire() {
             historiqueFactures={historiqueFactures}
             onDownloadPdf={handleDownloadPdf}
             showToast={showToast}
+            onRefreshHistorique={() => { if (selectedPatient) fetchHistorique(selectedPatient.email, selectedPatient.nom_complet); }}
           />
         </div>
       </div>

@@ -56,12 +56,13 @@ export interface FactureHistorique {
   id: string;
   created_at: string;
   montant: number;
-  statut: string;
+  statut: string | null;
   fichier_path: string;
   note: number | null;
   commentaire: string | null;
   mode_reglement: string | null;
   statut_email: string;
+  patient_nom?: string;
 }
 
 export interface Prospect {
@@ -84,6 +85,27 @@ export interface FactureRecue {
   categorie: string;
   notes: string;
   fichier_path: string;
+  created_at: string;
+}
+
+export interface Consultation {
+  id: string;
+  patient_id: string;
+  therapeute_id: string;
+  date_consultation: string;
+  notes: string;
+  facture_id: string | null;
+  created_at: string;
+}
+
+export interface Attachment {
+  id: string;
+  therapeute_id: string;
+  consultation_id: string | null;
+  patient_id: string | null;
+  file_path: string;
+  file_name: string;
+  file_size: number | null;
   created_at: string;
 }
 

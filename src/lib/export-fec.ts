@@ -40,7 +40,7 @@ export function generateFEC({ factures, cabinets, siret, nomTherapeute }: FECPar
   const lines: string[] = [header];
   let ecritureNum = 1;
 
-  const validFactures = factures.filter(f => f.statut !== 'Annulée');
+  const validFactures = factures.filter(f => f.statut !== 'Annulée' && f.statut !== 'Annulee');
 
   for (const f of validFactures) {
     const date = new Date(f.created_at);

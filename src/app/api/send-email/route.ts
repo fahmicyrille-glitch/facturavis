@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { supabaseAdmin, escapeHtml } from '@/lib/supabase-admin';
+import { supabaseAdmin, escapeHtml, isAllowedStorageUrl } from '@/lib/supabase-admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -29,6 +29,12 @@ export async function POST(request: Request) {
       logoUrlTherapeute
     } = await request.json();
 
+    // Validation du lien facture : doit être une URL interne
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://facturavis.fr';
+    if (!lienFacture || !lienFacture.startsWith(siteUrl)) {
+      return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
+    }
+
     // Échappement HTML pour éviter toute injection dans le corps de l'email
     const safeNomPatient = escapeHtml(nomPatient);
     const safeNomTherapeute = escapeHtml(nomTherapeute);
@@ -37,14 +43,14 @@ export async function POST(request: Request) {
     const safeEmailTherapeute = escapeHtml(emailTherapeute);
     const safeTel = telephoneTherapeute ? `📞 ${escapeHtml(telephoneTherapeute)}<br>` : '';
 
-    // L'URL du logo vient du storage Supabase — on l'utilise telle quelle dans le src
-    const logoHtml = logoUrlTherapeute
+    // L'URL du logo doit provenir du storage Supabase uniquement
+    const logoHtml = logoUrlTherapeute && isAllowedStorageUrl(logoUrlTherapeute)
       ? `<img src="${logoUrlTherapeute}" alt="${safeNomTherapeute}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
       : `<div style="text-align: center; color: #a9825a; font-size: 22px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">${safeNomTherapeute}</div>`;
 
     const { data, error } = await resend.emails.send({
       from: `${safeNomTherapeute} <facture@facturavis.fr>`,
-      replyTo: emailTherapeute || 'hilaryfarid.osteopathe@gmail.com',
+      replyTo: emailTherapeute || 'noreply@facturavis.fr',
       to: [email],
       subject: `Votre facture de consultation - ${safeNomTherapeute}`,
       html: `

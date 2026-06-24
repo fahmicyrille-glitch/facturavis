@@ -13,7 +13,7 @@ export default function QuickInvoice({ factures, cabinets }: QuickInvoiceProps) 
   const topPatterns = useMemo(() => {
     const counts: Record<string, { nom: string; email: string; montant: number; count: number; cabinetId: string }> = {};
 
-    const validFactures = factures.filter(f => f.statut !== 'Annulee').slice(0, 50);
+    const validFactures = factures.filter(f => f.statut !== 'Annulée' && f.statut !== 'Annulee').slice(0, 50);
 
     for (const f of validFactures) {
       const key = `${f.patient_email}|${f.montant}`;

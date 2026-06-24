@@ -642,7 +642,8 @@ export default function FacturesRecuesPage() {
                             const { error } = await supabase
                               .from('factures_recues')
                               .update({ categorie: newCat })
-                              .eq('id', f.id);
+                              .eq('id', f.id)
+                              .eq('therapeute_id', userId!);
                             if (!error) {
                               setFactures(prev => prev.map(fac => fac.id === f.id ? { ...fac, categorie: newCat } : fac));
                             }

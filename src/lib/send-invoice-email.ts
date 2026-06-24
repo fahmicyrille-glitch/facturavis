@@ -14,7 +14,7 @@ interface SendInvoiceEmailParams {
 export async function sendInvoiceEmail(params: SendInvoiceEmailParams): Promise<void> {
   const lienFacture = `${window.location.origin}/facture/${params.factureId}`;
 
-  await fetch('/api/send-email', {
+  const res = await fetch('/api/send-email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -32,4 +32,7 @@ export async function sendInvoiceEmail(params: SendInvoiceEmailParams): Promise<
       cabinetNom: params.cabinetNom,
     }),
   });
+  if (!res.ok) {
+    throw new Error("Échec de l'envoi de l'email");
+  }
 }

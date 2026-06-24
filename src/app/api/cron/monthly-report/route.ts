@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       .from('factures')
       .select('therapeute_id, montant, note, patient_email')
       .neq('statut', 'Annulée')
+      .neq('statut', 'Annulee')
       .gte('created_at', firstDayLastMonth.toISOString())
       .lt('created_at', firstDayThisMonth.toISOString());
 
