@@ -215,14 +215,27 @@ export default function InscriptionPage() {
                 </div>
               )}
             </div>
-            <button onClick={() => {
+            <button onClick={async () => {
               if (!email || !password) { setError('Email et mot de passe requis'); return; }
               if (!/^\S+@\S+\.\S+$/.test(email)) { setError('Format d\'email invalide'); return; }
               if (password.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères'); return; }
               if (!/[A-Z]/.test(password)) { setError('Le mot de passe doit contenir au moins une majuscule'); return; }
               if (!/[a-z]/.test(password)) { setError('Le mot de passe doit contenir au moins une minuscule'); return; }
               if (!/[0-9]/.test(password)) { setError('Le mot de passe doit contenir au moins un chiffre'); return; }
-              setError(''); setStep(2);
+              setError('');
+              try {
+                const res = await fetch('/api/auth/check-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: email.trim().toLowerCase() }),
+                });
+                const data = await res.json();
+                if (data.exists) {
+                  setError('Un compte existe déjà avec cet email. Connectez-vous.');
+                  return;
+                }
+              } catch {}
+              setStep(2);
             }} className="w-full bg-[#a9825a] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#8b6a48] transition-all flex items-center justify-center gap-2">
               Continuer <ArrowRight size={20} />
             </button>
