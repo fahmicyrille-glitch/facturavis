@@ -2,12 +2,10 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, ArrowRight, Lock, Mail, User, Eye, EyeOff, Stethoscope, Building, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Lock, Mail, User, Eye, EyeOff, Stethoscope, Building, ShieldCheck, CheckCircle } from 'lucide-react';
 
 export default function InscriptionPage() {
-  const router = useRouter();
   const [step, setStep] = useState(1);
 
   // Step 1: Account
@@ -28,6 +26,20 @@ export default function InscriptionPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [signupComplete, setSignupComplete] = useState(false);
+
+  const getPasswordStrength = (pwd: string) => {
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[a-z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    return score;
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const strengthLabels = ['Très faible', 'Faible', 'Moyen', 'Bon', 'Fort'];
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
 
   const handleSignup = async () => {
     setLoading(true);
@@ -85,9 +97,8 @@ export default function InscriptionPage() {
         }]);
       }
 
-      // 4. Auto-login and redirect
-      await supabase.auth.signInWithPassword({ email, password });
-      router.push('/dashboard');
+      // 4. Show success screen (user must confirm email before logging in)
+      setSignupComplete(true);
 
     } catch (err) {
       setError('Une erreur est survenue. Réessayez.');
@@ -96,12 +107,60 @@ export default function InscriptionPage() {
     }
   };
 
+  if (signupComplete) {
+    return (
+      <div className="min-h-screen bg-[#fcfaf8] flex flex-col justify-center items-center p-4 font-sans text-[#3e2f25]">
+        <div className="max-w-md w-full text-center">
+          <div className="relative mx-auto w-24 h-24 mb-8">
+            <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-70"></div>
+            <div className="relative w-full h-full bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-200">
+              <CheckCircle size={48} className="text-white" />
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-black text-[#3e2f25] mb-4">Inscription réussie !</h1>
+          <p className="text-[#7a6a5f] font-medium mb-2">
+            Votre espace praticien <strong className="text-[#3e2f25]">FacturAvis</strong> a été créé avec succès.
+          </p>
+          <p className="text-sm text-[#7a6a5f] mb-8">
+            Un email de confirmation vous a été envoyé. Vérifiez votre boîte de réception pour activer votre compte.
+          </p>
+
+          <div className="bg-[#fdf2e9] rounded-2xl p-6 border border-[#f0e6de] mb-8 text-left">
+            <h3 className="font-black text-sm text-[#3e2f25] mb-3 uppercase tracking-wider">Prochaines étapes</h3>
+            <ul className="space-y-2 text-sm text-[#7a6a5f]">
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#a9825a] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                Confirmez votre email
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#a9825a] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                Connectez-vous à votre espace
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#a9825a] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                Activez la réception de factures fournisseurs (gratuit)
+              </li>
+            </ul>
+          </div>
+
+          <Link
+            href="/login"
+            className="w-full flex items-center justify-center bg-[#a9825a] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#8b6a48] transition-all gap-2"
+          >
+            Se connecter <ArrowRight size={20} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fcfaf8] flex flex-col justify-center items-center p-4 font-sans text-[#3e2f25]">
       <div className="mb-8 text-center">
         <div className="mb-6">
           <Link href="/" className="inline-flex items-center gap-2 bg-white border border-[#f0e6de] text-[#7a6a5f] font-bold hover:text-[#3e2f25] hover:border-[#a9825a] px-4 py-2 rounded-full text-sm transition-all shadow-sm hover:shadow-md">
-            <ArrowRight size={14} className="rotate-180" /> Retour à l&apos;accueil
+            <ArrowLeft size={14} /> Retour à l&apos;accueil
           </Link>
         </div>
         <Link href="/" className="block">
@@ -142,14 +201,31 @@ export default function InscriptionPage() {
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a9825a]" />
                 <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-11 pr-11 py-3.5 bg-[#fcfaf8] border-2 border-[#f0e6de] rounded-xl focus:border-[#a9825a] outline-none font-medium"
-                  placeholder="6 caractères minimum" />
+                  placeholder="8 caractères minimum" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {password && (
+                <div className="mt-2">
+                  <div className="flex gap-1 mb-1">
+                    {[0,1,2,3].map(i => (
+                      <div key={i} className={`h-1.5 flex-1 rounded-full ${i < passwordStrength ? strengthColors[passwordStrength] : 'bg-gray-200'}`} />
+                    ))}
+                  </div>
+                  <p className={`text-[10px] font-bold ${passwordStrength >= 3 ? 'text-green-600' : passwordStrength >= 2 ? 'text-yellow-600' : 'text-red-500'}`}>
+                    {strengthLabels[passwordStrength]}
+                  </p>
+                </div>
+              )}
             </div>
             <button onClick={() => {
-              if (!email || !password || password.length < 6) { setError('Email et mot de passe (6+ car.) requis'); return; }
+              if (!email || !password) { setError('Email et mot de passe requis'); return; }
+              if (!/^\S+@\S+\.\S+$/.test(email)) { setError('Format d\'email invalide'); return; }
+              if (password.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères'); return; }
+              if (!/[A-Z]/.test(password)) { setError('Le mot de passe doit contenir au moins une majuscule'); return; }
+              if (!/[a-z]/.test(password)) { setError('Le mot de passe doit contenir au moins une minuscule'); return; }
+              if (!/[0-9]/.test(password)) { setError('Le mot de passe doit contenir au moins un chiffre'); return; }
               setError(''); setStep(2);
             }} className="w-full bg-[#a9825a] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#8b6a48] transition-all flex items-center justify-center gap-2">
               Continuer <ArrowRight size={20} />
@@ -203,8 +279,19 @@ export default function InscriptionPage() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep(1)} className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all">Retour</button>
-              <button onClick={() => {
+              <button onClick={async () => {
                 if (!nom.trim() || !titre.trim()) { setError('Nom et profession requis'); return; }
+                if (siret.replace(/\s/g, '').length === 14) {
+                  const { data: existingSiret } = await supabase
+                    .from('therapeutes')
+                    .select('id')
+                    .eq('siret', siret.replace(/\s/g, ''))
+                    .limit(1);
+                  if (existingSiret && existingSiret.length > 0) {
+                    setError('Ce SIRET est déjà associé à un compte. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.');
+                    return;
+                  }
+                }
                 setError(''); setStep(3);
               }} className="flex-1 bg-[#a9825a] text-white py-3 rounded-xl font-black hover:bg-[#8b6a48] transition-all flex items-center justify-center gap-2">
                 Continuer <ArrowRight size={18} />

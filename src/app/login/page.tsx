@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Lock, Mail, ArrowRight, CheckCircle, AlertCircle, FileCheck, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Lock, Mail, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, FileCheck, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -71,6 +71,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#fcfaf8] flex flex-col justify-center items-center p-4 font-sans text-[#3e2f25]">
+
+      {/* RETOUR ACCUEIL */}
+      <div className="mb-6">
+        <Link href="/" className="inline-flex items-center gap-2 bg-white border border-[#f0e6de] text-[#7a6a5f] font-bold hover:text-[#3e2f25] hover:border-[#a9825a] px-4 py-2 rounded-full text-sm transition-all shadow-sm hover:shadow-md">
+          <ArrowLeft size={14} /> Retour à l&apos;accueil
+        </Link>
+      </div>
 
       {/* LOGO & TITRE */}
       <div className="mb-8 text-center">
