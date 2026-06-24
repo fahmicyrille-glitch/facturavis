@@ -86,7 +86,7 @@ export default function MockupFacturesRecues() {
             </div>
             <div className="bg-green-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
               <RefreshCw size={11} />
-              Sync Iopole
+              Synchroniser
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function MockupFacturesRecues() {
         {/* Footer note */}
         <div className="flex items-center justify-center gap-2 text-[9px] text-gray-400">
           <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-          Derni&egrave;re synchronisation : il y a 2 heures &mdash; Plateforme Agr&eacute;&eacute;e Iopole certifi&eacute;e DGFiP
+          Derni&egrave;re synchronisation : il y a 2 heures &mdash; Plateforme Agr&eacute;&eacute;e certifi&eacute;e DGFiP
         </div>
       </div>
     </div>
