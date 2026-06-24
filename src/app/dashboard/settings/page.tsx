@@ -54,8 +54,8 @@ function SettingsContent() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
-  const [iopoleStatus, setIopoleStatus] = useState<string | null>(null);
-  const [activatingIopole, setActivatingIopole] = useState(false);
+  const [receptionStatus, setReceptionStatus] = useState<string | null>(null);
+  const [activatingReception, setActivatingReception] = useState(false);
 
   // Global loading state
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,7 @@ function SettingsContent() {
         setSignatureUrl(profileData.signature_url || '');
         setSubscriptionPlan(profileData.plan || null);
         setSubscriptionStatus(profileData.subscription_status || null);
-        setIopoleStatus(profileData.iopole_status || null);
+        setReceptionStatus(profileData.iopole_status || null);
       }
 
       const { data: cabinetsData, error: cabError } = await supabase
@@ -112,19 +112,19 @@ function SettingsContent() {
 
   useEffect(() => {
     if (receptionResult === 'success') {
-      setIopoleStatus('active');
-      setIopoleMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
+      setReceptionStatus('active');
+      setReceptionMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
     } else if (receptionResult === 'error') {
-      setIopoleMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
+      setReceptionMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
     }
   }, [receptionResult]);
 
   // --- SUBSCRIPTION ---
-  const [iopoleMessage, setIopoleMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [receptionMessage, setReceptionMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const handleActivateReception = async () => {
-    setActivatingIopole(true);
-    setIopoleMessage(null);
+    setActivatingReception(true);
+    setReceptionMessage(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/superpdp/authorize', {
@@ -134,12 +134,12 @@ function SettingsContent() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setIopoleMessage({ text: 'Impossible de lancer l\'activation. Réessayez.', type: 'error' });
+        setReceptionMessage({ text: 'Impossible de lancer l\'activation. Réessayez.', type: 'error' });
       }
     } catch {
-      setIopoleMessage({ text: 'Impossible de joindre le service. Réessayez.', type: 'error' });
+      setReceptionMessage({ text: 'Impossible de joindre le service. Réessayez.', type: 'error' });
     } finally {
-      setActivatingIopole(false);
+      setActivatingReception(false);
     }
   };
 
@@ -414,7 +414,7 @@ function SettingsContent() {
             La réforme de la facturation électronique oblige tous les professionnels à pouvoir <strong>recevoir</strong> les factures de leurs fournisseurs au format électronique à partir du 1er septembre 2026, via une Plateforme Agréée par la DGFiP.
           </p>
 
-          {iopoleStatus === 'active' ? (
+          {receptionStatus === 'active' ? (
             <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
               <div className="bg-green-100 p-2 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -424,7 +424,7 @@ function SettingsContent() {
                 <p className="text-xs text-green-600">Votre cabinet est conforme. Les factures de vos fournisseurs arrivent automatiquement dans votre espace.</p>
               </div>
             </div>
-          ) : iopoleStatus === 'pending' ? (
+          ) : receptionStatus === 'pending' ? (
             <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
               <div className="bg-amber-100 p-2 rounded-lg">
                 <Loader2 size={20} className="text-amber-600 animate-spin" />
@@ -455,10 +455,10 @@ function SettingsContent() {
               </div>
               <button
                 onClick={handleActivateReception}
-                disabled={activatingIopole || !siret}
+                disabled={activatingReception || !siret}
                 className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 font-bold hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 transition-all shadow-md"
               >
-                {activatingIopole ? (
+                {activatingReception ? (
                   <><Loader2 className="animate-spin mr-2" size={18} /> Activation en cours...</>
                 ) : (
                   'Activer la réception de factures électroniques'
@@ -467,16 +467,16 @@ function SettingsContent() {
               {!siret && (
                 <p className="text-xs text-red-500 text-center">Renseignez votre SIRET dans le profil ci-dessous pour activer ce service.</p>
               )}
-              {iopoleMessage && (
+              {receptionMessage && (
                 <div className={`mt-4 p-4 rounded-xl flex items-start gap-3 ${
-                  iopoleMessage.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
-                  iopoleMessage.type === 'info' ? 'bg-blue-50 border border-blue-200 text-blue-800' :
+                  receptionMessage.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+                  receptionMessage.type === 'info' ? 'bg-blue-50 border border-blue-200 text-blue-800' :
                   'bg-red-50 border border-red-200 text-red-800'
                 }`}>
-                  {iopoleMessage.type === 'success' && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
-                  {iopoleMessage.type === 'info' && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>}
-                  {iopoleMessage.type === 'error' && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>}
-                  <p className="text-sm font-medium">{iopoleMessage.text}</p>
+                  {receptionMessage.type === 'success' && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+                  {receptionMessage.type === 'info' && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>}
+                  {receptionMessage.type === 'error' && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>}
+                  <p className="text-sm font-medium">{receptionMessage.text}</p>
                 </div>
               )}
             </div>

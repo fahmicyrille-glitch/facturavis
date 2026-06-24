@@ -47,7 +47,7 @@ export default function FacturesRecuesPage() {
   const [factures, setFactures] = useState<FactureRecue[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [iopoleActive, setIopoleActive] = useState(false);
+  const [receptionActive, setReceptionActive] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   // ── Confirm modal ──
@@ -104,11 +104,11 @@ export default function FacturesRecuesPage() {
 
       if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
         setIsAdmin(true);
-        setIopoleActive(true);
+        setReceptionActive(true);
       } else {
         const { data: profile } = await supabase.from('therapeutes').select('iopole_status').eq('id', uid).single();
         if (profile?.iopole_status === 'active' || profile?.iopole_status === 'pending') {
-          setIopoleActive(true);
+          setReceptionActive(true);
         }
       }
 
@@ -122,19 +122,12 @@ export default function FacturesRecuesPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handlePreview = async (facture: FactureRecue) => {
-    const isPlatform = facture.notes?.startsWith('superpdp:') || facture.notes?.startsWith('iopole:');
+    const isPlatform = facture.notes?.startsWith('superpdp:');
 
     if (isPlatform) {
       const { data: { session } } = await supabase.auth.getSession();
-      let apiUrl: string;
-
-      if (facture.notes?.startsWith('superpdp:')) {
-        const id = facture.notes.replace('superpdp:', '');
-        apiUrl = `/api/superpdp/preview?id=${id}`;
-      } else {
-        const id = facture.notes?.replace('iopole:', '');
-        apiUrl = `/api/iopole/preview?id=${id}`;
-      }
+      const id = facture.notes!.replace('superpdp:', '');
+      const apiUrl = `/api/superpdp/preview?id=${id}`;
 
       const res = await fetch(apiUrl, {
         headers: { 'Authorization': `Bearer ${session?.access_token}` },
@@ -152,7 +145,7 @@ export default function FacturesRecuesPage() {
     }
   };
 
-  // ── Iopole sync ──
+  // ── Plateforme Agreee sync ──
   const [syncing, setSyncing] = useState(false);
 
   const handlePlatformSync = async (purgeFirst = false) => {
@@ -163,7 +156,7 @@ export default function FacturesRecuesPage() {
 
       if (purgeFirst) {
         await fetch('/api/superpdp/sync', { method: 'DELETE', headers });
-        await fetch('/api/iopole/sync', { method: 'DELETE', headers }).catch(() => {});
+        // Legacy sync endpoint removed
       }
 
       const res = await fetch('/api/superpdp/sync', { method: 'POST', headers });
@@ -451,7 +444,7 @@ export default function FacturesRecuesPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {!iopoleActive && (
+            {!receptionActive && (
               <Link
                 href="/dashboard/settings"
                 className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:opacity-90 text-sm font-bold"
@@ -460,13 +453,13 @@ export default function FacturesRecuesPage() {
                 Activer la réception automatique
               </Link>
             )}
-            {iopoleActive && (
+            {receptionActive && (
               <div className="flex items-center gap-0">
                 <button
                   onClick={() => handlePlatformSync(false)}
                   disabled={syncing}
                   className="flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-l-lg shadow-sm transition-colors text-sm font-medium disabled:opacity-50"
-                  title="Synchroniser les nouvelles factures Iopole"
+                  title="Synchroniser les nouvelles factures"
                 >
                   <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
                   {syncing ? 'Sync...' : 'Sync PA'}
@@ -474,8 +467,8 @@ export default function FacturesRecuesPage() {
                 {isAdmin && (
                   <button
                     onClick={() => setConfirmModal({
-                      title: 'Re-synchroniser Iopole ?',
-                      message: 'Toutes les factures Iopole seront supprimées et re-importées depuis la plateforme.',
+                      title: 'Re-synchroniser la plateforme ?',
+                      message: 'Toutes les factures seront supprimées et re-importées depuis la plateforme agréée.',
                       onConfirm: () => { setConfirmModal(null); handlePlatformSync(true); },
                     })}
                     disabled={syncing}
@@ -622,7 +615,7 @@ export default function FacturesRecuesPage() {
                             ? 'Modifiez vos filtres pour voir des resultats.'
                             : 'Cliquez sur "Ajouter une facture" ou activez la réception automatique.'}
                         </p>
-                        {!iopoleActive && factures.length === 0 && (
+                        {!receptionActive && factures.length === 0 && (
                           <Link
                             href="/dashboard/settings"
                             className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all"
