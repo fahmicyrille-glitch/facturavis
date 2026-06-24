@@ -71,30 +71,26 @@ export default function InscriptionPage() {
       const userId = authData.user?.id;
       if (!userId) { setError('Erreur lors de la création du compte'); setLoading(false); return; }
 
-      // 2. Create therapeute profile
-      const { error: profileError } = await supabase.from('therapeutes').insert([{
-        id: userId,
-        email,
-        nom: nom.trim(),
-        titre: titre.trim(),
-        telephone: telephone.trim(),
-        siret: siret.replace(/\s/g, ''),
-        adresse_cabinet: adresseCabinet.trim(),
-        plan: 'free',
-      }]);
+      // 2. Create therapeute profile + cabinet via server API (bypasses RLS)
+      const profileRes = await fetch('/api/auth/setup-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          email,
+          nom: nom.trim(),
+          titre: titre.trim(),
+          telephone: telephone.trim(),
+          siret: siret.replace(/\s/g, ''),
+          adresseCabinet: adresseCabinet.trim(),
+          nomCabinet: nomCabinet.trim(),
+          lienGoogle: lienGoogle.trim(),
+        }),
+      });
 
-      if (profileError) {
-        console.error('Profile error:', profileError);
-        // Don't block — the account is created, profile can be completed later
-      }
-
-      // 3. Create cabinet
-      if (nomCabinet.trim()) {
-        await supabase.from('cabinets').insert([{
-          therapeute_id: userId,
-          nom: nomCabinet.trim(),
-          lien_avis_google: lienGoogle.trim() || '',
-        }]);
+      if (!profileRes.ok) {
+        const err = await profileRes.json();
+        console.error('Profile setup error:', err);
       }
 
       // 4. Show success screen (user must confirm email before logging in)
