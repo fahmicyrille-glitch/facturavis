@@ -56,6 +56,7 @@ function SettingsContent() {
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [receptionStatus, setReceptionStatus] = useState<string | null>(null);
   const [activatingReception, setActivatingReception] = useState(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
 
   // Global loading state
   const [loading, setLoading] = useState(true);
@@ -93,6 +94,7 @@ function SettingsContent() {
         setSubscriptionPlan(profileData.plan || null);
         setSubscriptionStatus(profileData.subscription_status || null);
         setReceptionStatus(profileData.iopole_status || null);
+        setTrialEndsAt(profileData.trial_ends_at || null);
       }
 
       const { data: cabinetsData, error: cabError } = await supabase
@@ -372,6 +374,9 @@ function SettingsContent() {
                 {subscriptionStatus === 'active' ? 'Abonnement actif' :
                  subscriptionStatus === 'past_due' ? 'Paiement en retard' :
                  subscriptionStatus === 'cancelled' ? 'Abonnement annulé' :
+                 subscriptionPlan === 'trial' && trialEndsAt ? (
+                   `Du ${new Date(new Date(trialEndsAt).getTime() - 14 * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR')} au ${new Date(trialEndsAt).toLocaleDateString('fr-FR')} (${Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}j restants)`
+                 ) :
                  subscriptionPlan === 'trial' ? 'Essai en cours' :
                  'Réception factures fournisseurs incluse'}
               </p>
