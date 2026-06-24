@@ -86,13 +86,12 @@ export default function PatientsAnnuaire() {
   };
 
   const fetchHistorique = async (pEmail: string, pNom: string) => {
-    if (!userId || !pEmail || !pNom) return;
+    if (!userId || !pEmail) return;
 
     const { data, error } = await supabase
       .from('factures')
       .select('id, created_at, montant, statut, fichier_path, note, commentaire, mode_reglement, statut_email')
-      .eq('patient_email', pEmail)
-      .eq('patient_nom', pNom)
+      .eq('patient_email', pEmail.toLowerCase())
       .eq('therapeute_id', userId)
       .order('created_at', { ascending: false });
 
