@@ -99,7 +99,10 @@ export default function InscriptionPage() {
   return (
     <div className="min-h-screen bg-[#fcfaf8] flex flex-col justify-center items-center p-4 font-sans text-[#3e2f25]">
       <div className="mb-8 text-center">
-        <Link href="/" className="inline-block">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm text-[#7a6a5f] font-bold hover:text-[#3e2f25] transition-colors mb-4">
+          <ArrowRight size={14} className="rotate-180" /> Retour à l&apos;accueil
+        </Link>
+        <Link href="/" className="block">
           <h1 className="text-4xl font-black tracking-tight text-[#3e2f25]">FacturAvis</h1>
         </Link>
         <p className="text-[#7a6a5f] font-medium mt-2">Créez votre espace praticien en 2 minutes</p>
