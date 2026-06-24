@@ -451,6 +451,15 @@ export default function FacturesRecuesPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {!iopoleActive && (
+              <Link
+                href="/dashboard/settings"
+                className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:opacity-90 text-sm font-bold"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Activer la réception automatique
+              </Link>
+            )}
             {iopoleActive && (
               <div className="flex items-center gap-0">
                 <button
@@ -608,11 +617,20 @@ export default function FacturesRecuesPage() {
                       <div className="flex flex-col items-center gap-2">
                         <FileText size={40} className="text-gray-300" />
                         <p className="text-gray-500 font-medium">Aucune facture trouvee</p>
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-gray-400 text-xs mb-3">
                           {factures.length > 0
                             ? 'Modifiez vos filtres pour voir des resultats.'
-                            : 'Cliquez sur "Ajouter une facture" pour commencer.'}
+                            : 'Cliquez sur "Ajouter une facture" ou activez la réception automatique.'}
                         </p>
+                        {!iopoleActive && factures.length === 0 && (
+                          <Link
+                            href="/dashboard/settings"
+                            className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Activer la réception automatique — Gratuit
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
