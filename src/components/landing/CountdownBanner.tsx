@@ -26,8 +26,8 @@ export default function CountdownBanner() {
             Réception de factures fournisseurs obligatoire dans <span className="bg-white/20 px-2 py-0.5 rounded-md font-black">{days} jours</span> —
             Êtes-vous prêt ?
           </span>
-          <Link href="/fondateur" className="hidden sm:inline-flex bg-white text-red-600 px-3 py-1 rounded-full text-xs font-black hover:bg-red-50 transition-colors ml-2">
-            Se mettre en conformité
+          <Link href="/inscription" className="hidden sm:inline-flex bg-white text-red-600 px-3 py-1 rounded-full text-xs font-black hover:bg-red-50 transition-colors ml-2">
+            Réception gratuite →
           </Link>
           <button onClick={() => setDismissed(true)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-lg">×</button>
         </div>

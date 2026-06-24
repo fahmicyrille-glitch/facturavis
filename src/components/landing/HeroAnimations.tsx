@@ -42,10 +42,10 @@ export default function HeroAnimations() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 relative z-20 mb-16 md:mb-24">
-          <Link href="/fondateur" className="w-full sm:w-auto relative group">
+          <Link href="/inscription" className="w-full sm:w-auto relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#d4b494] to-[#a9825a] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
             <button className="relative w-full sm:w-auto flex items-center justify-center bg-[#3e2f25] text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl font-black text-base md:text-lg hover:scale-[1.02] transition transform">
-              D&eacute;marrer mon essai sans CB
+              Réception gratuite — S'inscrire
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
             </button>
           </Link>

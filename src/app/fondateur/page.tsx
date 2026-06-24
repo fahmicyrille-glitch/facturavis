@@ -257,16 +257,33 @@ export default function FondateurPage() {
 
                   <div className="mb-8 md:mb-10 mt-2">
                       <h3 className="text-2xl md:text-3xl font-black text-[#3e2f25] mb-1 tracking-tight">Accès Privilège</h3>
-                      <p className="text-[10px] md:text-xs text-[#7a6a5f] font-bold mb-4 uppercase tracking-widest">Tout inclus. Sans limite.</p>
+                      <p className="text-[10px] md:text-xs text-[#7a6a5f] font-bold mb-4 uppercase tracking-widest">Freemium + Pro Fondateur</p>
 
-                      <div className="flex items-baseline gap-3 md:gap-4 bg-[#fdf2e9] p-4 rounded-2xl border border-[#f0e6de]/50 inline-flex shadow-inner">
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center gap-3 bg-green-50 p-3 rounded-2xl border border-green-100">
+                          <span className="text-2xl font-black text-green-700">0€</span>
+                          <div>
+                            <p className="text-xs font-black text-green-800">Réception fournisseurs</p>
+                            <p className="text-[10px] text-green-600 font-medium">Gratuit pour toujours — Conforme sept. 2026</p>
+                          </div>
+                        </div>
+                        <div className="flex items-baseline gap-3 md:gap-4 bg-[#fdf2e9] p-4 rounded-2xl border border-[#f0e6de]/50 shadow-inner">
                           <span className="text-5xl md:text-6xl font-black text-[#a9825a]">19€</span>
-                          <span className="text-lg md:text-xl text-[#7a6a5f] line-through decoration-[#3e2f25]/30 font-bold">29€/mois</span>
+                          <div>
+                            <span className="text-lg md:text-xl text-[#7a6a5f] line-through decoration-[#3e2f25]/30 font-bold">29€/mois</span>
+                            <p className="text-[10px] text-[#7a6a5f] font-bold">Plan Pro tout-en-un</p>
+                          </div>
+                        </div>
                       </div>
 
                       <p className="text-[10px] md:text-[11px] text-[#3e2f25] font-black mt-4 uppercase tracking-widest flex items-center gap-1.5">
-                          <Lock size={14} className="text-[#a9825a]" /> Tarif mensuel bloqué à vie
+                          <Lock size={14} className="text-[#a9825a]" /> Tarif Pro bloqué à 19€/mois à vie (au lieu de 29€)
                       </p>
+
+                      <div className="flex items-center gap-2 mt-3 bg-white px-3 py-2 rounded-full border border-green-200 text-[10px] font-bold text-green-800 w-fit">
+                        <ShieldCheck size={14} className="text-green-600" />
+                        Plateforme Agréée certifiée DGFiP
+                      </div>
                   </div>
 
                   <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">

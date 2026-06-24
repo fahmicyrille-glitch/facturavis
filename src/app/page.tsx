@@ -25,12 +25,23 @@ export default function LandingPage() {
     "operatingSystem": "Web",
     "url": "https://facturavis.fr",
     "description": "Logiciel de gestion de cabinet, facturation Factur-X 2026 et automatisation d'avis Google pour les Ostéopathes, Chiropracteurs, Psychologues, Psychothérapeutes, Diététiciens, Kinésiologues et tous les praticiens libéraux.",
-    "offers": {
-      "@type": "Offer",
-      "price": "19.00",
-      "priceCurrency": "EUR",
-      "priceValidUntil": "2026-12-31",
-    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Gratuit",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "Réception factures fournisseurs, Plateforme Agréée DGFiP, export FEC",
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro",
+        "price": "19.00",
+        "priceCurrency": "EUR",
+        "priceValidUntil": "2026-12-31",
+        "description": "Facturation patients Factur-X, avis Google automatiques, dossiers patients, dashboard",
+      },
+    ],
   };
 
   const jsonLdWebsite = {
@@ -253,6 +264,12 @@ export default function LandingPage() {
             <p className="text-[#7a6a5f] text-lg font-medium max-w-3xl mx-auto">
               Vous avez reçu le courrier de la DGFiP ? Même exonéré de TVA, vous devez pouvoir recevoir les factures de vos fournisseurs au format électronique. En vous inscrivant sur FacturAvis, c&apos;est automatique. Aucune démarche sur impots.gouv.fr.
             </p>
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <div className="flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full border border-green-200 text-xs font-bold text-green-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Connecté à une Plateforme Agréée certifiée par la DGFiP
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -416,63 +433,100 @@ export default function LandingPage() {
       {/* --- CONTACT FORM (Client Component) --- */}
       <ContactForm />
 
-      {/* --- COMPARATIF PRIX --- */}
+      {/* --- PRICING FREEMIUM --- */}
       <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
-              Tout inclus. <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">Sans surprise.</span>
+              Commencez gratuitement. <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">Évoluez quand vous êtes prêt.</span>
             </h2>
-            <p className="text-[#7a6a5f] text-lg font-medium">Un seul abonnement, toutes les fonctionnalités. Comparez.</p>
+            <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
+              La réception de factures fournisseurs est gratuite. Pour toujours. Ajoutez la facturation patients et les avis Google quand vous le souhaitez.
+            </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 border-[#f0e6de]">
-                  <th className="text-left py-4 px-4 text-[#7a6a5f] font-bold">Fonctionnalité</th>
-                  <th className="py-4 px-4 text-center">
-                    <div className="bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white px-4 py-2 rounded-xl font-black text-base inline-block">
-                      FacturAvis<br/><span className="text-lg">19€</span><span className="text-xs font-medium">/mois</span>
-                    </div>
-                  </th>
-                  <th className="py-4 px-4 text-center text-[#7a6a5f] font-bold">
-                    <div className="text-xs">Logiciels<br/>concurrents</div>
-                    <div className="text-base font-black text-gray-400">29-49€</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {[
-                  { feature: 'Facturation Factur-X 2026', us: true, them: true },
-                  { feature: 'Dossiers patients sécurisés', us: true, them: true },
-                  { feature: 'Récolte automatique d\'avis Google', us: true, them: false },
-                  { feature: 'Réception factures fournisseurs (PA DGFiP)', us: true, them: false },
-                  { feature: 'Export FEC pour comptable', us: true, them: 'partial' as const },
-                  { feature: 'Multi-cabinets & multi-SIRET', us: true, them: 'partial' as const },
-                  { feature: 'Dashboard & analytics en temps réel', us: true, them: 'partial' as const },
-                  { feature: 'Import CSV patients', us: true, them: false },
-                ].map((row, i) => (
-                  <tr key={i} className="hover:bg-[#fcfaf8] transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-[#3e2f25]">{row.feature}</td>
-                    <td className="py-3.5 px-4 text-center text-lg">
-                      {row.us ? '✅' : '❌'}
-                    </td>
-                    <td className="py-3.5 px-4 text-center text-lg">
-                      {row.them === true ? '✅' : row.them === 'partial' ? '⚠️' : '❌'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* FREE PLAN */}
+            <div className="bg-white p-8 md:p-10 rounded-[32px] border-2 border-gray-200 relative">
+              <div className="inline-block bg-green-100 text-green-700 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Gratuit</div>
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-5xl font-black text-[#3e2f25]">0€</span>
+                <span className="text-[#7a6a5f] font-bold">/mois</span>
+              </div>
+              <p className="text-sm text-[#7a6a5f] font-medium mb-6">Conforme à la réforme sept. 2026</p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Réception factures fournisseurs
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Plateforme Agréée DGFiP incluse
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Classement par catégorie
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Export FEC pour comptable
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Prévisualisation PDF
+                </li>
+              </ul>
+              <Link href="/inscription" className="w-full flex items-center justify-center bg-[#3e2f25] text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition-all">
+                S'inscrire gratuitement
+              </Link>
+              <p className="text-[10px] text-center text-[#7a6a5f] mt-3 font-bold">Sans carte bancaire • Pour toujours</p>
+            </div>
+
+            {/* PRO PLAN */}
+            <div className="bg-gradient-to-b from-[#fdf2e9] to-white p-8 md:p-10 rounded-[32px] border-2 border-[#a9825a] relative shadow-xl shadow-[#a9825a]/10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#a9825a] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full">Le plus populaire</div>
+              <div className="inline-block bg-[#a9825a]/10 text-[#a9825a] text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Pro</div>
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-5xl font-black text-[#3e2f25]">19€</span>
+                <span className="text-[#7a6a5f] font-bold">/mois</span>
+              </div>
+              <p className="text-sm text-[#7a6a5f] font-medium mb-6">Tout-en-un pour votre cabinet</p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-2 text-sm font-bold text-[#a9825a]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#a9825a] shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Tout le plan Gratuit +
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#a9825a] shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Facturation patients Factur-X
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#a9825a] shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Avis Google automatiques (+300%)
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#a9825a] shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Dossiers patients sécurisés
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#a9825a] shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Dashboard & analytics temps réel
+                </li>
+                <li className="flex items-center gap-2 text-sm font-medium text-[#3e2f25]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#a9825a] shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                  Multi-cabinets & relances auto
+                </li>
+              </ul>
+              <Link href="/inscription" className="w-full flex items-center justify-center bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white py-4 rounded-2xl font-black text-lg hover:opacity-90 transition-all shadow-lg shadow-[#a9825a]/20">
+                Essai gratuit 14 jours
+              </Link>
+              <p className="text-[10px] text-center text-[#7a6a5f] mt-3 font-bold">Sans carte bancaire • Annulable à tout moment</p>
+            </div>
           </div>
 
-          <div className="text-center mt-8">
-            <Link href="/inscription" className="inline-flex items-center gap-2 bg-[#3e2f25] text-white px-8 py-4 rounded-2xl font-black text-lg hover:scale-[1.02] transition-transform shadow-lg">
-              Essayer gratuitement 14 jours
-              <ArrowRight size={20} />
-            </Link>
-            <p className="text-xs text-[#7a6a5f] mt-3 font-bold">Sans carte bancaire • Annulable à tout moment</p>
+          <div className="flex items-center justify-center gap-2 mt-8 text-xs font-bold text-green-700 bg-green-50 px-4 py-2 rounded-full border border-green-200 w-fit mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Connecté à une Plateforme Agréée certifiée par la Direction Générale des Finances Publiques
           </div>
         </div>
       </section>
@@ -521,6 +575,7 @@ export default function LandingPage() {
         </Link>
 
         <footer className="mt-32 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-500 text-[10px] font-black uppercase tracking-widest max-w-7xl mx-auto">
+          <p className="text-gray-400 text-[10px] mb-4">Plateforme Agréée certifiée par la Direction Générale des Finances Publiques (DGFiP)</p>
           <p>&copy; 2026 FacturAvis — Logiciel certifié Factur-X.</p>
           <div className="flex gap-8">
             <Link href="/login" className="hover:text-white transition-colors">Accès Praticien</Link>
