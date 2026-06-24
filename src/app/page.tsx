@@ -139,6 +139,15 @@ export default function LandingPage() {
       {/* --- HERO SECTION (Client Component for animations) --- */}
       <HeroAnimations />
 
+      {/* --- HERO MOCKUP : Factures Reçues --- */}
+      <div className="-mt-8 mb-16 relative max-w-5xl mx-auto px-4 group">
+        <div className="absolute -inset-1 bg-gradient-to-b from-green-200/30 to-transparent rounded-2xl md:rounded-[2rem] blur-xl -z-10 opacity-70 group-hover:opacity-100 transition duration-500"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 h-full w-full pointer-events-none rounded-b-2xl"></div>
+        <div className="transform hover:scale-[1.01] transition-transform duration-500">
+          <MockupFacturesRecues />
+        </div>
+      </div>
+
       {/* --- COMMENT CA MARCHE --- */}
       <section className="py-12 md:py-20 bg-[#fdf2e9]/50 border-t border-[#f0e6de]">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
@@ -296,11 +305,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Mockup Factures Recues */}
+          {/* Mockup Dashboard */}
           <div className="mt-12 md:mt-16 relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-3xl blur-xl -z-10 opacity-50 group-hover:opacity-100 transition" />
             <div className="transform hover:scale-[1.01] transition-transform duration-500 rotate-0 md:-rotate-1">
-              <MockupFacturesRecues />
+              <MockupDashboard />
             </div>
             <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-b-2xl" />
           </div>

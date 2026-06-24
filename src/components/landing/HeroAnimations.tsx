@@ -55,18 +55,8 @@ export default function HeroAnimations() {
           </Link>
         </div>
 
-        {/* --- DASHBOARD IMAGE --- */}
-        <div className="relative max-w-5xl mx-auto px-4 group">
-          <div className="absolute -inset-1 bg-gradient-to-b from-[#d4b494]/30 to-transparent rounded-2xl md:rounded-[2rem] blur-xl -z-10 opacity-70 group-hover:opacity-100 transition duration-500"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 h-full w-full pointer-events-none"></div>
-          <Image
-            src="/Saas_Show.png"
-            alt="Interface FacturAvis — tableau de bord facturation et avis Google pour praticiens libéraux"
-            width={1200}
-            height={750}
-            priority
-            className="relative w-full rounded-xl md:rounded-[2rem] shadow-2xl border border-[#f0e6de] transform transition-transform duration-500 hover:scale-[1.01]"
-          />
+        {/* --- MOCKUP FACTURES RECUES (hero principal) --- */}
+        <div className="relative max-w-5xl mx-auto px-4 group" id="hero-mockup">
         </div>
 
         {/* --- BANDEAU DÉFILANT --- */}
