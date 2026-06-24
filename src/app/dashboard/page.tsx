@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import {
-  Loader2, LogOut, Settings, Users, CheckCircle, X, Inbox,
+  Loader2, LogOut, Settings, Users, CheckCircle, X, Inbox, Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePlan } from '@/hooks/usePlan';
 import type { Facture } from '@/lib/types';
 import { generateFEC, downloadFEC } from '@/lib/export-fec';
 
@@ -91,6 +92,9 @@ export default function Dashboard() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [factureToCancel, setFactureToCancel] = useState<Facture | null>(null);
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+
+  // ── Plan ──
+  const { isPro, plan, daysLeft, loading: planLoading } = usePlan();
 
   // ── Helpers ──
 
@@ -455,7 +459,20 @@ export default function Dashboard() {
         {/* EN-TETE */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">Espace Praticien</h1>
+              {plan === 'free' && (
+                <span className="text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-1 rounded-full">Plan Gratuit</span>
+              )}
+              {plan === 'trial' && (
+                <span className="text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                  Essai Pro — {daysLeft}j restants
+                </span>
+              )}
+              {(plan === 'founder' || plan === 'standard') && (
+                <span className="text-[10px] font-black uppercase tracking-wider bg-[#fdf2e9] text-[#a9825a] px-2 py-1 rounded-full">Plan Pro</span>
+              )}
+            </div>
             <p className="text-sm text-gray-500 mt-1">
               Connecté en tant que <span className="font-semibold">{therapeuteInfo?.nom}</span>
             </p>
@@ -493,88 +510,123 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* STATISTIQUES */}
-        <StatsCards
-          chiffreAffaires={chiffreAffaires}
-          caParMode={caParMode}
-          totalFactures={totalFactures}
-          avisRecoltes={avisRecoltes}
-          noteMoyenne={noteMoyenne}
-        />
+        {!isPro && (
+          <div className="space-y-6">
+            {/* Welcome + quick access to factures recues */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+              <h2 className="text-xl font-black text-gray-900 mb-2">Bienvenue sur FacturAvis</h2>
+              <p className="text-gray-500 mb-6">Votre plan gratuit vous donne accès à la réception de factures fournisseurs.</p>
+              <Link href="/dashboard/factures-recues" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors">
+                <Inbox size={20} /> Mes factures fournisseurs
+              </Link>
+            </div>
 
-        {/* GRAPHIQUES */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-700 mb-4">Chiffre d'Affaires (6 derniers mois)</h3>
-            <ChartCA factures={facturesFiltered} />
+            {/* Upgrade prompt */}
+            <div className="bg-gradient-to-r from-[#fdf2e9] to-white rounded-2xl border border-[#f0e6de] p-8">
+              <div className="flex items-start gap-4">
+                <div className="bg-[#a9825a] text-white p-3 rounded-xl shrink-0">
+                  <Sparkles size={24} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-black text-lg text-[#3e2f25] mb-1">Passez au plan Pro</h3>
+                  <p className="text-sm text-[#7a6a5f] mb-4">Facturez vos patients, récoltez des avis Google et gérez vos dossiers — tout en un.</p>
+                  <div className="flex gap-3">
+                    <Link href="/dashboard/settings" className="bg-[#a9825a] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#8b6a48] transition-colors">
+                      19€/mois — Essai gratuit
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-700 mb-4">Taux de collecte d'avis (6 derniers mois)</h3>
-            <ChartAvis factures={facturesFiltered} />
-          </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* COLONNE GAUCHE */}
-          <div className="lg:col-span-5 space-y-6">
-            <UploadForm
-              cabinets={cabinets}
-              selectedCabinetId={selectedCabinetId}
-              setSelectedCabinetId={setSelectedCabinetId}
-              file={file}
-              setFile={setFile}
-              fileInputRef={fileInputRef}
-              civilite={civilite}
-              setCivilite={setCivilite}
-              nom={nom}
-              setNom={setNom}
-              prenom={prenom}
-              setPrenom={setPrenom}
-              patientEmail={patientEmail}
-              setPatientEmail={setPatientEmail}
-              montant={montant}
-              setMontant={setMontant}
-              modeReglement={modeReglement}
-              setModeReglement={setModeReglement}
-              loading={loading}
-              handleUpload={handleUpload}
-              filteredPatients={filteredPatients}
-              selectPatient={selectPatient}
-              showDropdown={showDropdown}
-              setShowDropdown={setShowDropdown}
-              showDropdownPrenom={showDropdownPrenom}
-              setShowDropdownPrenom={setShowDropdownPrenom}
+        {isPro && (
+          <>
+            {/* STATISTIQUES */}
+            <StatsCards
+              chiffreAffaires={chiffreAffaires}
+              caParMode={caParMode}
+              totalFactures={totalFactures}
+              avisRecoltes={avisRecoltes}
+              noteMoyenne={noteMoyenne}
             />
-            <QuickInvoice factures={facturesFiltered} cabinets={cabinets} />
-          </div>
 
-          {/* COLONNE DROITE */}
-          <HistoriqueTable
-            facturesFiltrees={paginatedFactures}
-            cabinets={cabinets}
-            searchTerm={searchTerm}
-            setSearchTerm={handleSearchTermChange}
-            dateDebut={dateDebut}
-            dateFin={dateFin}
-            handleDateDebutChange={handleDateDebutChange}
-            setDateFin={handleDateFinChange}
-            setFilterToday={setFilterToday}
-            setFilterMonth={setFilterMonth}
-            clearFilters={clearFilters}
-            exportCSV={exportCSV}
-            exportFEC={exportFEC}
-            handleEditEmail={handleEditEmail}
-            handleCancelClick={handleCancelClick}
-            handleDownloadPdf={handleDownloadPdf}
-            onPreviewPdf={handlePreviewPdf}
-            showToast={showToast}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalCount={facturesFiltrees.length}
-            itemsPerPage={ITEMS_PER_PAGE}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+            {/* GRAPHIQUES */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-sm font-bold text-gray-700 mb-4">Chiffre d&apos;Affaires (6 derniers mois)</h3>
+                <ChartCA factures={facturesFiltered} />
+              </div>
+              <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-sm font-bold text-gray-700 mb-4">Taux de collecte d&apos;avis (6 derniers mois)</h3>
+                <ChartAvis factures={facturesFiltered} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* COLONNE GAUCHE */}
+              <div className="lg:col-span-5 space-y-6">
+                <UploadForm
+                  cabinets={cabinets}
+                  selectedCabinetId={selectedCabinetId}
+                  setSelectedCabinetId={setSelectedCabinetId}
+                  file={file}
+                  setFile={setFile}
+                  fileInputRef={fileInputRef}
+                  civilite={civilite}
+                  setCivilite={setCivilite}
+                  nom={nom}
+                  setNom={setNom}
+                  prenom={prenom}
+                  setPrenom={setPrenom}
+                  patientEmail={patientEmail}
+                  setPatientEmail={setPatientEmail}
+                  montant={montant}
+                  setMontant={setMontant}
+                  modeReglement={modeReglement}
+                  setModeReglement={setModeReglement}
+                  loading={loading}
+                  handleUpload={handleUpload}
+                  filteredPatients={filteredPatients}
+                  selectPatient={selectPatient}
+                  showDropdown={showDropdown}
+                  setShowDropdown={setShowDropdown}
+                  showDropdownPrenom={showDropdownPrenom}
+                  setShowDropdownPrenom={setShowDropdownPrenom}
+                />
+                <QuickInvoice factures={facturesFiltered} cabinets={cabinets} />
+              </div>
+
+              {/* COLONNE DROITE */}
+              <HistoriqueTable
+                facturesFiltrees={paginatedFactures}
+                cabinets={cabinets}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchTermChange}
+                dateDebut={dateDebut}
+                dateFin={dateFin}
+                handleDateDebutChange={handleDateDebutChange}
+                setDateFin={handleDateFinChange}
+                setFilterToday={setFilterToday}
+                setFilterMonth={setFilterMonth}
+                clearFilters={clearFilters}
+                exportCSV={exportCSV}
+                exportFEC={exportFEC}
+                handleEditEmail={handleEditEmail}
+                handleCancelClick={handleCancelClick}
+                handleDownloadPdf={handleDownloadPdf}
+                onPreviewPdf={handlePreviewPdf}
+                showToast={showToast}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={facturesFiltrees.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* MODALS */}

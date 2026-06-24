@@ -68,6 +68,7 @@ export default function InscriptionPage() {
         telephone: telephone.trim(),
         siret: siret.replace(/\s/g, ''),
         adresse_cabinet: adresseCabinet.trim(),
+        plan: 'free',
       }]);
 
       if (profileError) {

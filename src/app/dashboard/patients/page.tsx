@@ -8,6 +8,8 @@ import {
 import { useRouter } from 'next/navigation';
 import type { Patient, FactureHistorique } from '@/lib/types';
 import ImportCSV from '@/components/patients/ImportCSV';
+import { usePlan } from '@/hooks/usePlan';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 import PatientList from '@/components/patients/PatientList';
 import PatientDetail from '@/components/patients/PatientDetail';
@@ -15,6 +17,7 @@ import DeletePatientModal from '@/components/patients/DeletePatientModal';
 
 export default function PatientsAnnuaire() {
   const router = useRouter();
+  const { isPro, daysLeft, hasUsedTrial, loading: planLoading } = usePlan();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [historiqueFactures, setHistoriqueFactures] = useState<FactureHistorique[]>([]);
@@ -296,7 +299,9 @@ export default function PatientsAnnuaire() {
       return nameA.localeCompare(nameB, 'fr');
     });
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40}/></div>;
+  if (loading || planLoading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40}/></div>;
+
+  if (!isPro) return <UpgradePrompt feature="patients" trialDaysLeft={daysLeft} hasUsedTrial={hasUsedTrial} />;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 relative overflow-hidden">

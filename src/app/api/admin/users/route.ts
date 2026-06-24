@@ -121,7 +121,7 @@ export async function PUT(request: Request) {
       id, email, nom, password, titre, telephone,
       nom_cabinet, lien_google, id_cabinet,
       adresse_cabinet, siret, adeli, site_web, code_ape,
-      plan, subscription_status
+      plan, subscription_status, trial_ends_at
     } = body;
 
     // 1. Mise à jour Auth (si email ou password changent)
@@ -147,6 +147,7 @@ export async function PUT(request: Request) {
     if (site_web !== undefined) updateDbData.site_web = site_web;
     if (plan !== undefined) updateDbData.plan = plan;
     if (subscription_status !== undefined) updateDbData.subscription_status = subscription_status;
+    if (trial_ends_at !== undefined) updateDbData.trial_ends_at = trial_ends_at;
 
     if (Object.keys(updateDbData).length > 0) {
       const { error: dbError } = await supabaseAdmin.from('therapeutes').update(updateDbData).eq('id', id);

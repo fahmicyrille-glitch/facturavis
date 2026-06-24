@@ -9,6 +9,8 @@ import {
   Eye, Plus, Trash2
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePlan } from '@/hooks/usePlan';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 interface Patient {
   id: string;
@@ -40,6 +42,7 @@ function NouvelleFactureContent() {
   const searchParams = useSearchParams();
   const emailParam = searchParams.get('email');
   const idParam = searchParams.get('id'); // NOUVEAU : On récupère l'ID
+  const { isPro, daysLeft, hasUsedTrial, loading: planLoading } = usePlan();
 
   // Détermination dynamique du lien de retour
   const backLink = (idParam || emailParam) ? "/dashboard/patients" : "/dashboard";
@@ -369,11 +372,13 @@ function NouvelleFactureContent() {
                       lignes.some(l => l.nom.trim() !== '' && l.prix > 0) &&
                       cabinets.length > 0;
 
-  if (loading) return (
+  if (loading || planLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Loader2 className="animate-spin text-blue-600" size={40} />
     </div>
   );
+
+  if (!isPro) return <UpgradePrompt feature="facturation" trialDaysLeft={daysLeft} hasUsedTrial={hasUsedTrial} />;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">

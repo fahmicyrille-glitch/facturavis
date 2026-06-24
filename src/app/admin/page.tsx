@@ -312,17 +312,27 @@ export default function SuperAdmin() {
                         <td className="px-6 py-4 text-center text-lg font-black text-yellow-500">{fT.filter(f => f.note === 5).length} ⭐</td>
                         <td className="px-6 py-4 text-center">
                           <select
-                            value={t.plan || 'trial'}
+                            value={t.plan || 'free'}
                             onChange={async (e) => {
                               const newPlan = e.target.value;
                               const { data: { session: s } } = await supabase.auth.getSession();
+                              const updates: Record<string, string | null> = {
+                                id: t.id,
+                                plan: newPlan,
+                                subscription_status: newPlan === 'free' ? 'trial' : newPlan === 'trial' ? 'trial' : 'active',
+                              };
+                              if (newPlan === 'trial') {
+                                const trialEnd = new Date();
+                                trialEnd.setDate(trialEnd.getDate() + 14);
+                                updates.trial_ends_at = trialEnd.toISOString();
+                              }
                               const res = await fetch('/api/admin/users', {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s?.access_token}` },
-                                body: JSON.stringify({ id: t.id, plan: newPlan, subscription_status: newPlan === 'trial' ? 'trial' : 'active' })
+                                body: JSON.stringify(updates)
                               });
                               if (res.ok) {
-                                setTherapeutes(prev => prev.map(th => th.id === t.id ? { ...th, plan: newPlan, subscription_status: newPlan === 'trial' ? 'trial' : 'active' } : th));
+                                setTherapeutes(prev => prev.map(th => th.id === t.id ? { ...th, plan: newPlan, subscription_status: updates.subscription_status || undefined } : th));
                                 toast.success(`Plan mis à jour : ${newPlan}`);
                               } else {
                                 toast.error('Erreur lors de la mise à jour');
@@ -331,10 +341,12 @@ export default function SuperAdmin() {
                             className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border outline-none cursor-pointer ${
                               t.plan === 'founder' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                               t.plan === 'standard' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              t.plan === 'trial' ? 'bg-blue-50 text-blue-600 border-blue-200' :
                               'bg-gray-50 text-gray-600 border-gray-200'
                             }`}
                           >
-                            <option value="trial">🆓 Essai</option>
+                            <option value="free">🔓 Gratuit</option>
+                            <option value="trial">⏳ Essai 14j</option>
                             <option value="founder">⭐ Fondateur 19€</option>
                             <option value="standard">💎 Standard 29€</option>
                           </select>
