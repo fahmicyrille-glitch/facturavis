@@ -358,46 +358,89 @@ function SettingsContent() {
             <CreditCard size={22} className="text-gray-800 mr-2" />
             <h2 className="text-lg font-semibold text-gray-800">Mon Abonnement</h2>
           </div>
+
+          {/* Current plan display */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 mb-4">
             <div>
-              <p className="font-bold text-gray-900">{subscriptionPlan || 'Essai gratuit'}</p>
+              <p className="font-bold text-gray-900">
+                {subscriptionPlan === 'founder' ? 'Plan Fondateur' :
+                 subscriptionPlan === 'standard' ? 'Plan Standard' :
+                 subscriptionPlan === 'trial' ? 'Essai Pro' :
+                 'Plan Gratuit'}
+              </p>
               <p className="text-xs text-gray-500 mt-1">
                 {subscriptionStatus === 'active' ? 'Abonnement actif' :
                  subscriptionStatus === 'past_due' ? 'Paiement en retard' :
                  subscriptionStatus === 'cancelled' ? 'Abonnement annulé' :
-                 'Période d\'essai'}
+                 subscriptionPlan === 'trial' ? 'Essai en cours' :
+                 'Réception factures fournisseurs incluse'}
               </p>
             </div>
             <div className={`px-3 py-1 rounded-full text-xs font-bold ${
               subscriptionStatus === 'active' ? 'bg-green-100 text-green-700' :
               subscriptionStatus === 'past_due' ? 'bg-orange-100 text-orange-700' :
               subscriptionStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
-              'bg-blue-100 text-blue-700'
+              subscriptionPlan === 'trial' ? 'bg-blue-100 text-blue-700' :
+              'bg-gray-100 text-gray-600'
             }`}>
               {subscriptionStatus === 'active' ? 'Actif' :
                subscriptionStatus === 'past_due' ? 'En retard' :
                subscriptionStatus === 'cancelled' ? 'Annulé' :
-               'Essai'}
+               subscriptionPlan === 'trial' ? 'Essai' :
+               'Gratuit'}
             </div>
           </div>
+
+          {/* Actions based on plan */}
           {subscriptionStatus === 'active' ? (
             <button onClick={handleManageSubscription} disabled={managingSubscription}
               className="w-full flex justify-center py-3 px-4 rounded-xl text-gray-700 bg-gray-100 font-bold hover:bg-gray-200 transition-all items-center">
               {managingSubscription ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-              G&eacute;rer mon abonnement
+              Gérer mon abonnement
             </button>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <button onClick={() => handleSubscribe('founder')} disabled={subscribing}
-                className="flex flex-col items-center py-4 px-4 rounded-xl bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white font-bold hover:opacity-90 transition-all">
-                <span className="text-lg font-black">19&euro;/mois</span>
-                <span className="text-xs opacity-80">Tarif Fondateur</span>
-              </button>
-              <button onClick={() => handleSubscribe('standard')} disabled={subscribing}
-                className="flex flex-col items-center py-4 px-4 rounded-xl bg-gray-900 text-white font-bold hover:bg-black transition-all">
-                <span className="text-lg font-black">29&euro;/mois</span>
-                <span className="text-xs opacity-80">Tarif Standard</span>
-              </button>
+            <div className="space-y-3">
+              {/* Trial CTA — only if never used trial */}
+              {subscriptionPlan !== 'trial' && subscriptionPlan !== 'founder' && subscriptionPlan !== 'standard' && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession();
+                      const res = await fetch('/api/plan/start-trial', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${session?.access_token}` },
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setSubscriptionPlan('trial');
+                        setMessage({ text: 'Essai Pro activé pour 14 jours ! Rechargez la page.', type: 'success' });
+                        setTimeout(() => window.location.reload(), 1500);
+                      } else {
+                        setMessage({ text: data.error || 'Impossible d\'activer l\'essai', type: 'error' });
+                      }
+                    } catch {
+                      setMessage({ text: 'Erreur réseau', type: 'error' });
+                    }
+                  }}
+                  className="w-full flex flex-col items-center py-4 px-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold hover:opacity-90 transition-all shadow-lg shadow-green-200"
+                >
+                  <span className="text-lg font-black">Essai gratuit 14 jours</span>
+                  <span className="text-xs opacity-80">Facturation + Avis Google + Dossiers patients</span>
+                </button>
+              )}
+              {/* Paid plans */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button onClick={() => handleSubscribe('founder')} disabled={subscribing}
+                  className="flex flex-col items-center py-4 px-4 rounded-xl bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white font-bold hover:opacity-90 transition-all">
+                  <span className="text-lg font-black">19€/mois</span>
+                  <span className="text-xs opacity-80">Tarif Fondateur</span>
+                </button>
+                <button onClick={() => handleSubscribe('standard')} disabled={subscribing}
+                  className="flex flex-col items-center py-4 px-4 rounded-xl bg-gray-900 text-white font-bold hover:bg-black transition-all">
+                  <span className="text-lg font-black">29€/mois</span>
+                  <span className="text-xs opacity-80">Tarif Standard</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
