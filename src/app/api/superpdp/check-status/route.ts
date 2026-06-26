@@ -71,55 +71,50 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: profile.iopole_status, changed: false, error: 'Token indisponible' });
   }
 
-  // Helper: call /companies/me with given token
-  async function fetchCompaniesMe(tkn: string): Promise<Response> {
-    return fetch(`${SUPERPDP_API_URL}/v1.beta/companies/me`, {
+  async function fetchSession(tkn: string): Promise<Response> {
+    return fetch(`${SUPERPDP_API_URL}/v1.beta/oauth2_sessions/me`, {
       headers: { 'Authorization': `Bearer ${tkn}` },
     });
   }
 
-  // Check current status with SuperPDP
   try {
-    let meRes = await fetchCompaniesMe(accessToken);
+    let sessionRes = await fetchSession(accessToken);
 
-    // On 401/403 the token may have been revoked — try refresh once regardless of expiry
-    if ((meRes.status === 401 || meRes.status === 403) && profile.superpdp_refresh_token) {
-      console.log(`[check-status] Token rejected (${meRes.status}), attempting refresh for user ${user.id}`);
+    // On 401 the token may be expired — try refresh once
+    if (sessionRes.status === 401 && profile.superpdp_refresh_token) {
+      console.log(`[check-status] Token expired, refreshing for user ${user.id}`);
       const newToken = await refreshToken(profile.superpdp_refresh_token);
       if (newToken) {
         accessToken = newToken;
         await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
-        meRes = await fetchCompaniesMe(accessToken);
+        sessionRes = await fetchSession(accessToken);
       }
     }
 
-    if (!meRes.ok) {
-      const needsReauth = meRes.status === 401 || meRes.status === 403;
-      if (needsReauth) {
-        console.warn(`[check-status] Tokens définitivement rejetés (${meRes.status}) pour user ${user.id} — reconnexion requise`);
-      } else {
-        console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id}`);
-      }
+    if (!sessionRes.ok) {
+      const needsReauth = sessionRes.status === 401 || sessionRes.status === 403;
+      console.warn(`[check-status] /oauth2_sessions/me returned ${sessionRes.status} for user ${user.id}`);
       return NextResponse.json({ status: profile.iopole_status, changed: false, needs_reauth: needsReauth });
     }
 
-    const company = await meRes.json();
-    console.log(`[check-status] /companies/me for user ${user.id}:`, JSON.stringify(company));
+    const session = await sessionRes.json();
+    const verificationStatus: string = session.company_verification_status || '';
+    console.log(`[check-status] company_verification_status for user ${user.id}: ${verificationStatus}`);
 
-    // SuperPDP API doesn't expose portability/activation status.
-    // Keep existing status — only the cron sync can confirm active reception.
-    const newStatus = profile.iopole_status === 'active' ? 'active' : 'pending';
+    // verified = accès autorisé, portabilité confirmée
+    // needs_review = en attente d'examen (ex: portabilité depuis un autre PDP)
+    // failed = refusé
+    const newStatus = verificationStatus === 'verified' ? 'active' : 'pending';
 
     if (newStatus !== profile.iopole_status) {
       await supabaseAdmin
         .from('therapeutes')
         .update({ iopole_status: newStatus })
         .eq('id', user.id);
-
-      return NextResponse.json({ status: newStatus, changed: true });
+      return NextResponse.json({ status: newStatus, changed: true, verificationStatus });
     }
 
-    return NextResponse.json({ status: newStatus, changed: false });
+    return NextResponse.json({ status: newStatus, changed: false, verificationStatus });
   } catch (err) {
     console.error(`[check-status] Error for user ${user.id}:`, err);
     return NextResponse.json({ status: profile.iopole_status, changed: false });

@@ -72,12 +72,11 @@ export async function GET(request: Request) {
 
     const tokens = await tokenRes.json();
 
-    // Fetch company info to get name, SIREN and validation status.
-    // Default to 'pending' — safer than assuming validated when uncertain.
     let companyName = '';
     let companySiren = '';
     let companyStatus: 'active' | 'pending' = 'pending';
     try {
+      // Get company name/SIREN
       const meRes = await fetch(`${SUPERPDP_API_URL}/v1.beta/companies/me`, {
         headers: { 'Authorization': `Bearer ${tokens.access_token}` },
       });
@@ -85,8 +84,17 @@ export async function GET(request: Request) {
         const company = await meRes.json();
         companyName = company.formal_name || company.trade_name || '';
         companySiren = company.number || '';
-        // SuperPDP API doesn't expose portability/activation status.
-        // Status stays 'pending' until cron sync confirms actual invoices can be received.
+      }
+
+      // Check verification status via the dedicated session endpoint
+      const sessionRes = await fetch(`${SUPERPDP_API_URL}/v1.beta/oauth2_sessions/me`, {
+        headers: { 'Authorization': `Bearer ${tokens.access_token}` },
+      });
+      if (sessionRes.ok) {
+        const session = await sessionRes.json();
+        if (session.company_verification_status === 'verified') {
+          companyStatus = 'active';
+        }
       }
     } catch {
       // Non-blocking — keep 'pending' as safe default
