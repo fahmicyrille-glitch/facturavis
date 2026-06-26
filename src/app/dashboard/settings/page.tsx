@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Loader2, CreditCard } from 'lucide-react';
+import { ArrowLeft, Loader2, CreditCard, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import type { Cabinet, Prestation } from '@/lib/types';
 
@@ -487,14 +487,23 @@ function SettingsContent() {
           </p>
 
           {receptionStatus === 'active' ? (
-            <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <div className="p-4 bg-green-50 rounded-xl border border-green-200 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <div>
+                  <p className="font-bold text-green-800">Réception activée</p>
+                  <p className="text-xs text-green-600">Votre cabinet est conforme. Les factures de vos fournisseurs arrivent automatiquement dans votre espace.</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-green-800">Réception activée</p>
-                <p className="text-xs text-green-600">Votre cabinet est conforme. Les factures de vos fournisseurs arrivent automatiquement dans votre espace.</p>
-              </div>
+              <Link
+                href="/dashboard/factures-recues"
+                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-3 rounded-xl transition-all shadow-sm"
+              >
+                Voir mes factures reçues
+                <ArrowRight size={16} />
+              </Link>
             </div>
           ) : receptionStatus === 'pending' ? (
             <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
@@ -525,7 +534,7 @@ function SettingsContent() {
                 <div className="relative p-4 rounded-xl border-2 border-gray-200 bg-gray-50">
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black mb-2 bg-gray-300 text-white">3</div>
                   <h4 className="font-bold text-sm text-gray-400">C&apos;est tout !</h4>
-                  <p className="text-xs text-gray-600 mt-1">Vos factures arrivent automatiquement toutes les 3h</p>
+                  <p className="text-xs text-gray-600 mt-1">Vos factures arrivent automatiquement chaque jour</p>
                 </div>
               </div>
 
