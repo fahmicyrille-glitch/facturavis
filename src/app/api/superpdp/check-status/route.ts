@@ -99,7 +99,8 @@ export async function POST(request: Request) {
 
     const session = await sessionRes.json();
     const verificationStatus: string = session.company_verification_status || '';
-    console.log(`[check-status] company_verification_status for user ${user.id}: ${verificationStatus}`);
+    const userIdentityStatus: string = session.user_identity_verification_status || 'not_verified';
+    console.log(`[check-status] user=${user.id} company=${verificationStatus} identity=${userIdentityStatus}`);
 
     // verified     → active  (portabilité confirmée, accès complet)
     // needs_review → pending (portabilité en attente, examen manuel)
@@ -113,10 +114,10 @@ export async function POST(request: Request) {
         .from('therapeutes')
         .update({ iopole_status: newStatus })
         .eq('id', user.id);
-      return NextResponse.json({ status: newStatus, changed: true, verificationStatus });
+      return NextResponse.json({ status: newStatus, changed: true, verificationStatus, userIdentityStatus });
     }
 
-    return NextResponse.json({ status: newStatus, changed: false, verificationStatus });
+    return NextResponse.json({ status: newStatus, changed: false, verificationStatus, userIdentityStatus });
   } catch (err) {
     console.error(`[check-status] Error for user ${user.id}:`, err);
     return NextResponse.json({ status: profile.iopole_status, changed: false });

@@ -59,6 +59,7 @@ function SettingsContent() {
   const [subscribing, setSubscribing] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [receptionStatus, setReceptionStatus] = useState<string | null>(null);
+  const [userIdentityStatus, setUserIdentityStatus] = useState<string | null>(null);
   const [activatingReception, setActivatingReception] = useState(false);
   const [showReceptionModal, setShowReceptionModal] = useState(false);
   const [receptionNeedsReauth, setReceptionNeedsReauth] = useState(false);
@@ -123,12 +124,20 @@ function SettingsContent() {
                 setReceptionMessage({ text: 'Votre connexion à SuperPDP a expiré. Reconnectez-vous pour mettre à jour votre statut.', type: 'error' });
                 return;
               }
+              if (data.userIdentityStatus) setUserIdentityStatus(data.userIdentityStatus);
               if (!data.changed) return;
               setReceptionStatus(data.status);
               if (data.status === 'active') {
                 setReceptionMessage({ text: 'Votre compte vient d\'être validé ! La réception de factures est maintenant active.', type: 'success' });
               } else if (data.status === 'pending') {
-                setReceptionMessage({ text: 'Votre accès à la plateforme agréée est en cours de validation ou a été suspendu. Contactez le support SuperPDP si le problème persiste.', type: 'error' });
+                const identityMsg = data.userIdentityStatus === 'not_verified'
+                  ? 'Vous devez encore vérifier votre identité sur la plateforme SuperPDP.'
+                  : data.userIdentityStatus === 'needs_review'
+                  ? 'Votre pièce d\'identité est en cours d\'examen par SuperPDP (48h max).'
+                  : data.userIdentityStatus === 'failed'
+                  ? 'Votre pièce d\'identité n\'a pas pu être vérifiée. Recommencez le processus.'
+                  : 'Votre dossier est en cours d\'examen. SuperPDP vous enverra un email de confirmation.';
+                setReceptionMessage({ text: identityMsg, type: 'error' });
               }
             })
             .catch(() => { /* silencieux — on ne bloque pas le chargement */ });
@@ -654,6 +663,30 @@ function SettingsContent() {
                     className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white bg-blue-600 hover:bg-blue-700 font-bold text-sm transition-all"
                   >
                     Vérifier ma validation SuperPDP
+                  </button>
+                </div>
+              ) : userIdentityStatus && userIdentityStatus !== 'verified' ? (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
+                  {userIdentityStatus === 'not_verified' && (
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      <strong>Étape manquante :</strong> vous n&apos;avez pas encore vérifié votre identité sur SuperPDP. Cliquez sur le bouton ci-dessous pour reprendre le processus.
+                    </p>
+                  )}
+                  {userIdentityStatus === 'needs_review' && (
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      <strong>Identité en cours d&apos;examen</strong> — votre document est en cours de vérification manuelle par SuperPDP (délai usuel : 24-48h). Vous recevrez un email.
+                    </p>
+                  )}
+                  {userIdentityStatus === 'failed' && (
+                    <p className="text-xs text-red-800 leading-relaxed">
+                      <strong>Identité non acceptée</strong> — SuperPDP n&apos;a pas pu vérifier votre pièce d&apos;identité. Recommencez le processus en cliquant ci-dessous.
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setShowReceptionModal(true)}
+                    className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white bg-blue-600 hover:bg-blue-700 font-bold text-sm transition-all"
+                  >
+                    Reprendre le processus SuperPDP
                   </button>
                 </div>
               ) : (

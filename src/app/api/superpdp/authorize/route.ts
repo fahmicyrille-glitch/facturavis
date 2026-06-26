@@ -27,11 +27,21 @@ export async function GET(request: Request) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://facturavis.fr';
   const redirectUri = `${siteUrl}/api/superpdp/callback`;
 
+  const { data: profile } = await supabaseAdmin
+    .from('therapeutes')
+    .select('siret')
+    .eq('id', user.id)
+    .single();
+
+  // SIREN = 9 premiers chiffres du SIRET (14 chiffres)
+  const rawSiret = (profile?.siret || '').replace(/\s/g, '');
+  const siren = rawSiret.length >= 9 ? rawSiret.slice(0, 9) : '';
+
   await supabaseAdmin.from('therapeutes').update({
     superpdp_state: `${state}|${user.id}|${verifier}|${Date.now()}`,
   }).eq('id', user.id);
 
-  const authUrl = `${SUPERPDP_API_URL}/oauth2/authorize?` + new URLSearchParams({
+  const authParams: Record<string, string> = {
     response_type: 'code',
     client_id: SUPERPDP_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -39,7 +49,14 @@ export async function GET(request: Request) {
     scope: '',
     code_challenge: challenge,
     code_challenge_method: 'S256',
-  }).toString();
+  };
+  if (user.email) authParams.login_hint = user.email;
+  if (siren) {
+    authParams.superpdp_company_number = siren;
+    authParams.superpdp_company_number_scheme = 'fr_siren';
+  }
+
+  const authUrl = `${SUPERPDP_API_URL}/oauth2/authorize?` + new URLSearchParams(authParams).toString();
 
   return NextResponse.json({ url: authUrl });
 }

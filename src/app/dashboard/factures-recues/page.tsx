@@ -7,7 +7,7 @@ import Link from 'next/link';
 import {
   ArrowLeft, Plus, Search, Download, Edit, Trash2, X,
   Loader2, Upload, FileText, Calendar, Euro, Tag,
-  Building, CheckCircle, Filter, RefreshCw, Eye,
+  Building, CheckCircle, Filter, RefreshCw, Eye, Activity,
 } from 'lucide-react';
 import type { FactureRecue } from '@/lib/types';
 import Toast from '@/components/Toast';
@@ -152,6 +152,33 @@ export default function FacturesRecuesPage() {
     };
     init();
   }, [router]);
+
+  // ── Invoice events ──
+  type InvoiceEvent = { status_code: string; status_text: string; created_at?: string; details?: string };
+  const [eventsModal, setEventsModal] = useState<{ fournisseur: string; events: InvoiceEvent[] } | null>(null);
+  const [loadingEvents, setLoadingEvents] = useState<string | null>(null);
+
+  const handleShowEvents = async (facture: FactureRecue) => {
+    const superpdpId = facture.notes?.replace('superpdp:', '');
+    if (!superpdpId) return;
+    setLoadingEvents(facture.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/superpdp/invoice-events?id=${superpdpId}`, {
+        headers: { 'Authorization': `Bearer ${session?.access_token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEventsModal({ fournisseur: facture.fournisseur_nom, events: data.events || [] });
+      } else {
+        showToast(data.error || 'Impossible de charger les événements', 'error');
+      }
+    } catch {
+      showToast('Erreur réseau', 'error');
+    } finally {
+      setLoadingEvents(null);
+    }
+  };
 
   // ── PDF Preview ──
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -804,6 +831,16 @@ export default function FacturesRecuesPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center justify-center gap-1">
+                          {f.notes?.startsWith('superpdp:') && (
+                            <button
+                              onClick={() => handleShowEvents(f)}
+                              disabled={loadingEvents === f.id}
+                              title="Historique des événements"
+                              className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                            >
+                              {loadingEvents === f.id ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
+                            </button>
+                          )}
                           <button
                             onClick={() => handlePreview(f)}
                             title="Prévisualiser"
@@ -1152,6 +1189,53 @@ export default function FacturesRecuesPage() {
               </button>
             </div>
             <iframe src={previewUrl} className="flex-1 w-full" title="Prévisualisation facture" />
+          </div>
+        </div>
+      )}
+
+      {/* ── Events Modal ── */}
+      {eventsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center">
+                  <Activity size={18} className="text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">Historique de la facture</p>
+                  <p className="text-xs text-gray-500 truncate max-w-[200px]">{eventsModal.fournisseur}</p>
+                </div>
+              </div>
+              <button onClick={() => setEventsModal(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5">
+              {eventsModal.events.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-6">Aucun événement disponible.</p>
+              ) : (
+                <ol className="relative border-l border-gray-200 space-y-4 ml-3">
+                  {eventsModal.events.map((ev, i) => (
+                    <li key={i} className="ml-4">
+                      <span className="absolute -left-1.5 mt-1 w-3 h-3 rounded-full bg-purple-500 border-2 border-white" />
+                      <p className="text-sm font-semibold text-gray-800">{ev.status_text || ev.status_code}</p>
+                      {ev.status_code && ev.status_text && (
+                        <p className="text-xs text-gray-400 font-mono">{ev.status_code}</p>
+                      )}
+                      {ev.created_at && (
+                        <p className="text-xs text-gray-400">
+                          {new Date(ev.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </p>
+                      )}
+                      {ev.details && (
+                        <p className="text-xs text-gray-500 mt-1 bg-gray-50 rounded p-2">{ev.details}</p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
           </div>
         </div>
       )}
