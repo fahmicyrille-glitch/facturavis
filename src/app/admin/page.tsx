@@ -446,6 +446,51 @@ export default function SuperAdmin() {
               </form>
             </div>
 
+            {/* SYNC CONFIG */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-4 bg-blue-50 border-b border-blue-100">
+                <h2 className="font-bold text-blue-700 text-xs uppercase tracking-widest flex items-center gap-2"><Activity size={16}/> Sync automatique</h2>
+              </div>
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-tight">Intervalle de synchronisation</label>
+                  <select
+                    className="w-full border rounded-lg py-2 px-3 text-sm bg-gray-50 outline-none font-medium"
+                    defaultValue="3"
+                    onChange={(e) => {
+                      toast.success(`Intervalle changé à ${e.target.value}h — Modifiez vercel.json : "0 */${e.target.value} * * *"`);
+                    }}
+                  >
+                    <option value="1">Toutes les heures</option>
+                    <option value="3">Toutes les 3 heures (défaut)</option>
+                    <option value="6">Toutes les 6 heures</option>
+                    <option value="12">Toutes les 12 heures</option>
+                    <option value="24">Une fois par jour</option>
+                  </select>
+                  <p className="text-[10px] text-gray-400 mt-1">Modifie le cron dans vercel.json pour appliquer. Route : /api/cron/sync-factures</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    toast.loading('Synchronisation en cours...');
+                    const res = await fetch('/api/cron/sync-factures', {
+                      headers: { 'Authorization': `Bearer ${process.env.CRON_SECRET || session?.access_token}` },
+                    });
+                    const result = await res.json();
+                    toast.dismiss();
+                    if (res.ok) {
+                      toast.success(result.message || 'Sync terminée');
+                    } else {
+                      toast.error(result.error || 'Erreur sync');
+                    }
+                  }}
+                  className="w-full bg-blue-600 py-2 rounded-lg text-white font-bold text-[10px] tracking-widest hover:bg-blue-700 transition-all flex justify-center items-center gap-2 shadow-lg shadow-blue-50"
+                >
+                  FORCER UNE SYNC MAINTENANT
+                </button>
+              </div>
+            </div>
+
             {/* TEST SAV */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 bg-purple-50 border-b border-purple-100">

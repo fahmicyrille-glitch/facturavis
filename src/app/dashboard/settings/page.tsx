@@ -483,37 +483,52 @@ function SettingsContent() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <p className="text-sm text-blue-800 font-medium mb-2">En activant ce service, vous :</p>
-                <ul className="text-xs text-blue-700 space-y-1.5">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-blue-500">✓</span>
-                    Désignez votre plateforme agréée auprès de la DGFiP (aucune démarche sur impots.gouv.fr)
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-blue-500">✓</span>
-                    Recevez automatiquement les factures de vos fournisseurs dans FacturAvis
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-blue-500">✓</span>
-                    Êtes 100% conforme à la réforme du 1er septembre 2026
-                  </li>
-                </ul>
+            <div className="space-y-5">
+              {/* Wizard 3 étapes */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className={`relative p-4 rounded-xl border-2 transition-all ${siret ? 'border-green-300 bg-green-50' : 'border-blue-300 bg-blue-50 ring-2 ring-blue-200'}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black mb-2 ${siret ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>
+                    {siret ? '✓' : '1'}
+                  </div>
+                  <h4 className={`font-bold text-sm ${siret ? 'text-green-800' : 'text-blue-800'}`}>Renseigner votre SIRET</h4>
+                  <p className="text-xs text-gray-600 mt-1">Ajoutez votre SIRET dans votre profil ci-dessous</p>
+                </div>
+                <div className={`relative p-4 rounded-xl border-2 transition-all ${siret ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black mb-2 ${siret ? 'bg-blue-500 text-white' : 'bg-gray-300 text-white'}`}>2</div>
+                  <h4 className={`font-bold text-sm ${siret ? 'text-blue-800' : 'text-gray-400'}`}>Activer la réception</h4>
+                  <p className="text-xs text-gray-600 mt-1">Un clic suffit pour vous connecter à la plateforme agréée</p>
+                </div>
+                <div className="relative p-4 rounded-xl border-2 border-gray-200 bg-gray-50">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black mb-2 bg-gray-300 text-white">3</div>
+                  <h4 className="font-bold text-sm text-gray-400">C&apos;est tout !</h4>
+                  <p className="text-xs text-gray-600 mt-1">Vos factures arrivent automatiquement toutes les 3h</p>
+                </div>
               </div>
+
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-3">
+                <span className="text-xl mt-0.5">⏰</span>
+                <div>
+                  <p className="text-sm font-bold text-amber-800">Obligatoire dès le 1er septembre 2026</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Tous les professionnels doivent pouvoir recevoir des factures électroniques. Activez maintenant en 30 secondes.</p>
+                </div>
+              </div>
+
               <button
                 onClick={handleActivateReception}
                 disabled={activatingReception || !siret}
-                className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 font-bold hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 transition-all shadow-md"
+                className="w-full flex justify-center items-center py-4 px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 font-bold text-base hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 transition-all shadow-lg shadow-green-200"
               >
                 {activatingReception ? (
-                  <><Loader2 className="animate-spin mr-2" size={18} /> Activation en cours...</>
+                  <><Loader2 className="animate-spin mr-2" size={18} /> Connexion à la plateforme...</>
                 ) : (
-                  'Activer la réception de factures électroniques'
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Activer la réception — Gratuit, 30 secondes
+                  </>
                 )}
               </button>
               {!siret && (
-                <p className="text-xs text-red-500 text-center">Renseignez votre SIRET dans le profil ci-dessous pour activer ce service.</p>
+                <p className="text-xs text-red-500 text-center font-medium">Complétez l&apos;étape 1 : renseignez votre SIRET dans le profil ci-dessous.</p>
               )}
               {receptionMessage && (
                 <div className={`mt-4 p-4 rounded-xl flex items-start gap-3 ${

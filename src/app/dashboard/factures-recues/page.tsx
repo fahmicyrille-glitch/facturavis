@@ -12,6 +12,7 @@ import {
 import type { FactureRecue } from '@/lib/types';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
+import ChartDepenses from '@/components/factures-recues/ChartDepenses';
 
 const CATEGORIES = [
   'Materiel medical',
@@ -529,6 +530,49 @@ export default function FacturesRecuesPage() {
             <p className="text-lg font-bold text-gray-900 truncate">{categoriePlusFrequente}</p>
           </div>
         </div>
+
+        {/* ── Dashboard dépenses + Archivage ── */}
+        {factures.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Répartition des dépenses par catégorie</h3>
+              <ChartDepenses factures={facturesFiltrees} />
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200 p-5 flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-emerald-900 text-sm">Archivage sécurisé 10 ans</h4>
+                    <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
+                      Vos factures sont conservées de manière sécurisée pendant 10 ans, conformément aux obligations légales françaises (art. L123-22 du Code de commerce).
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5 flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                    <RefreshCw size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-blue-900 text-sm">Synchronisation automatique</h4>
+                    <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                      Vos factures fournisseurs sont récupérées automatiquement toutes les 3 heures via la plateforme agréée.
+                    </p>
+                    {receptionActive && (
+                      <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                        <CheckCircle size={10} /> Réception active
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Filters bar ── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
