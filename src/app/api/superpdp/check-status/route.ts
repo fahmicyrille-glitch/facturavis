@@ -5,7 +5,6 @@ const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.t
 const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID_PUBLIC || process.env.SUPERPDP_CLIENT_ID || '';
 const SUPERPDP_CLIENT_SECRET = process.env.SUPERPDP_CLIENT_SECRET_PUBLIC || '';
 
-const ACTIVE_STATUSES = ['validated', 'active', 'approved', 'enabled', 'valide', 'validé'];
 
 async function refreshToken(refreshToken: string): Promise<string | null> {
   try {
@@ -105,20 +104,17 @@ export async function POST(request: Request) {
     }
 
     const company = await meRes.json();
+    console.log(`[check-status] /companies/me for user ${user.id}:`, JSON.stringify(company));
 
-    // Log full response to understand SuperPDP's field names
-    console.log(`[check-status] /companies/me response for user ${user.id}:`, JSON.stringify(company));
+    // SuperPDP doesn't expose KYB/portability status in their API.
+    // The only reliable proof that invoice reception works is calling the invoices endpoint.
+    // If portability is still pending (e.g. user was already with Pennylane), this returns non-200.
+    const invoicesRes = await fetch(`${SUPERPDP_API_URL}/v1.beta/invoices?direction=in&per_page=1`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    console.log(`[check-status] /invoices probe for user ${user.id}: ${invoicesRes.status}`);
 
-    const rawStatus: string = (
-      company.status || company.validation_status || company.kyb_status ||
-      company.validation || company.state || ''
-    ).toLowerCase();
-
-    const REJECTED_STATUSES = ['rejected', 'suspended', 'blocked', 'disabled', 'cancelled', 'refusé', 'suspendu'];
-    const isRejected = REJECTED_STATUSES.includes(rawStatus);
-    // SuperPDP doesn't expose KYB status in their API — if the company exists with a name, consider it active
-    const hasCompanyData = !!(company.formal_name || company.trade_name || company.number);
-    const newStatus = (!isRejected && (ACTIVE_STATUSES.includes(rawStatus) || hasCompanyData)) ? 'active' : 'pending';
+    const newStatus = invoicesRes.ok ? 'active' : 'pending';
 
     if (newStatus !== profile.iopole_status) {
       await supabaseAdmin

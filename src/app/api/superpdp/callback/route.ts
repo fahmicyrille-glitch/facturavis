@@ -85,14 +85,12 @@ export async function GET(request: Request) {
         const company = await meRes.json();
         companyName = company.formal_name || company.trade_name || '';
         companySiren = company.number || '';
-        const rawStatus: string = (
-          company.status || company.validation_status || company.kyb_status || ''
-        ).toLowerCase();
-        const REJECTED_STATUSES = ['rejected', 'suspended', 'blocked', 'disabled', 'cancelled', 'refusé', 'suspendu'];
-        const hasCompanyData = !!(company.formal_name || company.trade_name || company.number);
-        if (!REJECTED_STATUSES.includes(rawStatus) && (
-          ['validated', 'active', 'approved', 'enabled', 'valide', 'validé'].includes(rawStatus) || hasCompanyData
-        )) {
+        // SuperPDP doesn't expose KYB/portability status in their API.
+        // Probe the invoices endpoint — 200 means reception is operational.
+        const invoicesProbe = await fetch(`${SUPERPDP_API_URL}/v1.beta/invoices?direction=in&per_page=1`, {
+          headers: { 'Authorization': `Bearer ${tokens.access_token}` },
+        });
+        if (invoicesProbe.ok) {
           companyStatus = 'active';
         }
       }
