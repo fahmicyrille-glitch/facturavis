@@ -116,7 +116,7 @@ export async function GET(request: Request) {
                 <span style="font-size: 14px; color: #a9825a;">${titre}</span><br><br>
                 <span style="font-size: 13px; color: #7a6a5f;">
                   ${tel}
-                  ✉️ <a href="mailto:${safeEmail}" style="color: #7a6a5f; text-decoration: none;">${safeEmail}</a>
+                  ✉️ ${safeEmail}
                 </span>
               </p>
 

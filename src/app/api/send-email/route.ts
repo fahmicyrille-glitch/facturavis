@@ -113,7 +113,7 @@ export async function POST(request: Request) {
               <span style="font-size: 14px; color: #a9825a;">${safeTitre}</span><br><br>
               <span style="font-size: 13px; color: #7a6a5f;">
                 ${safeTel}
-                ✉️ <a href="mailto:${safeEmailTherapeute}" style="color: #7a6a5f; text-decoration: none;">${safeEmailTherapeute}</a>
+                ✉️ ${safeEmailTherapeute}
               </span>
             </p>
 
