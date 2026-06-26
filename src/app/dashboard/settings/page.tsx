@@ -608,14 +608,32 @@ function SettingsContent() {
               )}
             </div>
           ) : receptionStatus === 'pending' ? (
-            <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
-              <div className="bg-amber-100 p-2 rounded-lg">
-                <Loader2 size={20} className="text-amber-600 animate-spin" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <div className="bg-amber-100 p-2 rounded-lg shrink-0">
+                  <Loader2 size={20} className="text-amber-600 animate-spin" />
+                </div>
+                <div>
+                  <p className="font-bold text-amber-800">Validation en cours côté SuperPDP</p>
+                  <p className="text-xs text-amber-600">Votre dossier est en cours d&apos;examen par la plateforme agréée.</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-amber-800">Validation en cours côté SuperPDP</p>
-                <p className="text-xs text-amber-600">Votre dossier est en cours d&apos;examen par la plateforme agréée. Aucune action requise de votre part — cette page se mettra à jour automatiquement une fois votre compte validé.</p>
-              </div>
+              {receptionNeedsReauth ? (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
+                  <p className="text-sm font-bold text-blue-800">Une fois votre dossier validé par SuperPDP</p>
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    Revenez ici et cliquez sur ce bouton pour synchroniser votre statut. Votre réception de factures sera activée automatiquement.
+                  </p>
+                  <button
+                    onClick={() => setShowReceptionModal(true)}
+                    className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white bg-blue-600 hover:bg-blue-700 font-bold text-sm transition-all"
+                  >
+                    Vérifier ma validation SuperPDP
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-amber-600 text-center">Cette page se met à jour automatiquement une fois votre compte validé.</p>
+              )}
             </div>
           ) : (
             <div className="space-y-5">

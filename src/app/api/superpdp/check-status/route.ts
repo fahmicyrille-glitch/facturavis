@@ -95,10 +95,13 @@ export async function POST(request: Request) {
     }
 
     if (!meRes.ok) {
-      console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id} (after refresh attempt)`);
-      // Tokens definitively rejected — user must re-authenticate
       const needsReauth = meRes.status === 401 || meRes.status === 403;
-      return NextResponse.json({ status: profile.iopole_status, changed: false, needs_reauth: needsReauth, debug: { httpStatus: meRes.status } });
+      if (needsReauth) {
+        console.warn(`[check-status] Tokens définitivement rejetés (${meRes.status}) pour user ${user.id} — reconnexion requise`);
+      } else {
+        console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id}`);
+      }
+      return NextResponse.json({ status: profile.iopole_status, changed: false, needs_reauth: needsReauth });
     }
 
     const company = await meRes.json();
