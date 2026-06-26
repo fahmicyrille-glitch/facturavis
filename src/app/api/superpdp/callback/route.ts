@@ -5,7 +5,7 @@ const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.t
 const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID_PUBLIC || process.env.SUPERPDP_CLIENT_ID || '';
 const SUPERPDP_CLIENT_SECRET = process.env.SUPERPDP_CLIENT_SECRET_PUBLIC || '';
 
-const STATE_MAX_AGE_MS = 10 * 60 * 1000;
+const STATE_MAX_AGE_MS = 30 * 60 * 1000;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

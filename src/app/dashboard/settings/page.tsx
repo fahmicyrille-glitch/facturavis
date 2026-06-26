@@ -19,6 +19,7 @@ function SettingsContent() {
   const searchParams = useSearchParams();
   const forcedId = searchParams.get('as');
   const receptionResult = searchParams.get('reception');
+  const receptionReason = searchParams.get('reason');
 
   // Profile state
   const [nom, setNom] = useState('');
@@ -160,14 +161,20 @@ function SettingsContent() {
     }
     if (receptionResult === 'success') {
       setReceptionStatus('active');
+      setReceptionNeedsReauth(false);
       setReceptionMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
     } else if (receptionResult === 'pending') {
       setReceptionStatus('pending');
+      setReceptionNeedsReauth(false);
       setReceptionMessage({ text: 'Dossier soumis ! La plateforme agréée vérifie votre identité et votre SIRET. Vous recevrez un email de confirmation dès la validation — aucune action supplémentaire n\'est requise de votre part.', type: 'info' });
     } else if (receptionResult === 'error') {
-      setReceptionMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
+      if (receptionReason === 'state_expired') {
+        setReceptionMessage({ text: 'La session a expiré pendant le processus (plus de 30 min). Cliquez à nouveau sur « Vérifier ma validation SuperPDP » pour recommencer.', type: 'error' });
+      } else {
+        setReceptionMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
+      }
     }
-  }, [receptionResult]);
+  }, [receptionResult, receptionReason]);
 
   // Écoute le message envoyé par la fenêtre popup lorsqu'elle se termine.
   useEffect(() => {
@@ -177,10 +184,12 @@ function SettingsContent() {
       setShowReceptionModal(false);
       if (event.data.result === 'success') {
         setReceptionStatus('active');
+        setReceptionNeedsReauth(false);
         setReceptionMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
       } else if (event.data.result === 'pending') {
         setReceptionStatus('pending');
-        setReceptionMessage({ text: "Dossier soumis ! La plateforme agréée vérifie votre identité et votre SIRET. Vous recevrez un email de confirmation dès la validation.", type: 'info' });
+        setReceptionNeedsReauth(false);
+        setReceptionMessage({ text: "Connexion renouvelée. Votre dossier est toujours en cours de validation — SuperPDP vous enverra un email dès la confirmation.", type: 'info' });
       } else {
         setReceptionMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
       }
