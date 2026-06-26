@@ -13,13 +13,18 @@ interface ComptableReportModalProps {
   sending: boolean;
 }
 
+function toLocalISO(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function getDefaultDates() {
   const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
-    debut: firstDay.toISOString().split('T')[0],
-    fin: lastDay.toISOString().split('T')[0],
+    debut: toLocalISO(new Date(now.getFullYear(), now.getMonth(), 1)),
+    fin: toLocalISO(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
   };
 }
 
@@ -29,8 +34,8 @@ const SHORTCUTS = [
     getDates: () => {
       const now = new Date();
       return {
-        debut: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
-        fin: new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0],
+        debut: toLocalISO(new Date(now.getFullYear(), now.getMonth(), 1)),
+        fin: toLocalISO(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
       };
     },
   },
@@ -39,8 +44,8 @@ const SHORTCUTS = [
     getDates: () => {
       const now = new Date();
       return {
-        debut: new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0],
-        fin: new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0],
+        debut: toLocalISO(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
+        fin: toLocalISO(new Date(now.getFullYear(), now.getMonth(), 0)),
       };
     },
   },
@@ -50,8 +55,8 @@ const SHORTCUTS = [
       const now = new Date();
       const q = Math.floor(now.getMonth() / 3);
       return {
-        debut: new Date(now.getFullYear(), q * 3, 1).toISOString().split('T')[0],
-        fin: new Date(now.getFullYear(), q * 3 + 3, 0).toISOString().split('T')[0],
+        debut: toLocalISO(new Date(now.getFullYear(), q * 3, 1)),
+        fin: toLocalISO(new Date(now.getFullYear(), q * 3 + 3, 0)),
       };
     },
   },
@@ -63,8 +68,8 @@ const SHORTCUTS = [
       const prevQ = q === 0 ? 3 : q - 1;
       const year = q === 0 ? now.getFullYear() - 1 : now.getFullYear();
       return {
-        debut: new Date(year, prevQ * 3, 1).toISOString().split('T')[0],
-        fin: new Date(year, prevQ * 3 + 3, 0).toISOString().split('T')[0],
+        debut: toLocalISO(new Date(year, prevQ * 3, 1)),
+        fin: toLocalISO(new Date(year, prevQ * 3 + 3, 0)),
       };
     },
   },
