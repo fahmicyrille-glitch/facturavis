@@ -108,7 +108,7 @@ export default function ReceptionActivationModal({
             <span className="text-lg shrink-0">☑️</span>
             <p className="text-xs text-orange-800 leading-relaxed">
               <strong>Étape 5 — Autorisation :</strong> à la dernière étape, vous verrez une case à cocher
-              « Autoriser FacturAvis à gérer mon compte Super PDP ».{' '}
+              « Autoriser Cyrille-Kyrollès Fahmi à gérer mon compte Super PDP ».{' '}
               <strong>Cochez-la impérativement</strong> pour que la réception automatique fonctionne.
             </p>
           </div>
