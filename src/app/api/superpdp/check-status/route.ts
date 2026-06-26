@@ -54,20 +54,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: profile.iopole_status, changed: false });
   }
 
-  // Refresh token if expired
   let accessToken: string = profile.superpdp_access_token || '';
   const expiresAt = profile.superpdp_token_expires_at
     ? new Date(profile.superpdp_token_expires_at).getTime()
     : 0;
 
+  // Pre-emptive refresh if token is near expiry
   if ((!accessToken || Date.now() > expiresAt - 60_000) && profile.superpdp_refresh_token) {
     const newToken = await refreshToken(profile.superpdp_refresh_token);
     if (newToken) {
       accessToken = newToken;
-      await supabaseAdmin
-        .from('therapeutes')
-        .update({ superpdp_access_token: newToken })
-        .eq('id', user.id);
+      await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
     }
   }
 
@@ -75,14 +72,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: profile.iopole_status, changed: false, error: 'Token indisponible' });
   }
 
+  // Helper: call /companies/me with given token
+  async function fetchCompaniesMe(tkn: string): Promise<Response> {
+    return fetch(`${SUPERPDP_API_URL}/v1.beta/companies/me`, {
+      headers: { 'Authorization': `Bearer ${tkn}` },
+    });
+  }
+
   // Check current status with SuperPDP
   try {
-    const meRes = await fetch(`${SUPERPDP_API_URL}/v1.beta/companies/me`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
+    let meRes = await fetchCompaniesMe(accessToken);
+
+    // On 401/403 the token may have been revoked — try refresh once regardless of expiry
+    if ((meRes.status === 401 || meRes.status === 403) && profile.superpdp_refresh_token) {
+      console.log(`[check-status] Token rejected (${meRes.status}), attempting refresh for user ${user.id}`);
+      const newToken = await refreshToken(profile.superpdp_refresh_token);
+      if (newToken) {
+        accessToken = newToken;
+        await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
+        meRes = await fetchCompaniesMe(accessToken);
+      }
+    }
 
     if (!meRes.ok) {
-      console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id}`);
+      console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id} (after refresh attempt)`);
       return NextResponse.json({ status: profile.iopole_status, changed: false, debug: { httpStatus: meRes.status } });
     }
 
