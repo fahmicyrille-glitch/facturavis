@@ -96,7 +96,9 @@ export async function POST(request: Request) {
 
     if (!meRes.ok) {
       console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id} (after refresh attempt)`);
-      return NextResponse.json({ status: profile.iopole_status, changed: false, debug: { httpStatus: meRes.status } });
+      // Tokens definitively rejected — user must re-authenticate
+      const needsReauth = meRes.status === 401 || meRes.status === 403;
+      return NextResponse.json({ status: profile.iopole_status, changed: false, needs_reauth: needsReauth, debug: { httpStatus: meRes.status } });
     }
 
     const company = await meRes.json();

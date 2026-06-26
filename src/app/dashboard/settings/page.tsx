@@ -59,6 +59,7 @@ function SettingsContent() {
   const [receptionStatus, setReceptionStatus] = useState<string | null>(null);
   const [activatingReception, setActivatingReception] = useState(false);
   const [showReceptionModal, setShowReceptionModal] = useState(false);
+  const [receptionNeedsReauth, setReceptionNeedsReauth] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
 
   // Global loading state
@@ -114,6 +115,11 @@ function SettingsContent() {
           })
             .then(r => r.json())
             .then(data => {
+              if (data.needs_reauth) {
+                setReceptionNeedsReauth(true);
+                setReceptionMessage({ text: 'Votre connexion à SuperPDP a expiré. Reconnectez-vous pour mettre à jour votre statut.', type: 'error' });
+                return;
+              }
               if (!data.changed) return;
               setReceptionStatus(data.status);
               if (data.status === 'active') {
@@ -569,23 +575,37 @@ function SettingsContent() {
           </p>
 
           {receptionStatus === 'active' ? (
-            <div className="p-4 bg-green-50 rounded-xl border border-green-200 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <div className="space-y-3">
+              <div className="p-4 bg-green-50 rounded-xl border border-green-200 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-green-800">Réception activée</p>
+                    <p className="text-xs text-green-600">Votre cabinet est conforme. Les factures de vos fournisseurs arrivent automatiquement dans votre espace.</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-green-800">Réception activée</p>
-                  <p className="text-xs text-green-600">Votre cabinet est conforme. Les factures de vos fournisseurs arrivent automatiquement dans votre espace.</p>
-                </div>
+                <Link
+                  href="/dashboard/factures-recues"
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-3 rounded-xl transition-all shadow-sm"
+                >
+                  Voir mes factures reçues
+                  <ArrowRight size={16} />
+                </Link>
               </div>
-              <Link
-                href="/dashboard/factures-recues"
-                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-3 rounded-xl transition-all shadow-sm"
-              >
-                Voir mes factures reçues
-                <ArrowRight size={16} />
-              </Link>
+              {receptionNeedsReauth && (
+                <div className="p-4 bg-red-50 rounded-xl border border-red-200 space-y-3">
+                  <p className="text-sm font-bold text-red-800">Connexion SuperPDP expirée</p>
+                  <p className="text-xs text-red-600">Votre session a expiré. Reconnectez-vous pour vérifier votre statut et continuer à recevoir des factures.</p>
+                  <button
+                    onClick={() => setShowReceptionModal(true)}
+                    className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white bg-red-600 hover:bg-red-700 font-bold text-sm transition-all"
+                  >
+                    Reconnecter SuperPDP
+                  </button>
+                </div>
+              )}
             </div>
           ) : receptionStatus === 'pending' ? (
             <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">

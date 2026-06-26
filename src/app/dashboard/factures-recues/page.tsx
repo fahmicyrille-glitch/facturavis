@@ -124,6 +124,10 @@ export default function FacturesRecuesPage() {
           })
             .then(r => r.json())
             .then(data => {
+              if (data.needs_reauth) {
+                showToast('Connexion SuperPDP expirée — reconnectez-vous dans les Paramètres.', 'error');
+                return;
+              }
               if (!data.changed) return;
               if (data.status === 'active') {
                 setReceptionPending(false);
