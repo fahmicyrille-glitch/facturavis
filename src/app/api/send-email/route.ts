@@ -29,16 +29,16 @@ export async function POST(request: Request) {
       logoUrlTherapeute
     } = await request.json();
 
-    // Validation du lien facture : doit être une URL du domaine interne (hostname comparison pour éviter le bypass)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://facturavis.fr';
+    // Validation du lien facture : doit pointer vers notre domaine (apex, www ou sous-domaine)
     let lienUrl: URL;
     try {
       lienUrl = new URL(lienFacture);
     } catch {
       return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
     }
-    const normalize = (h: string) => h.replace(/^www\./, '');
-    if (!['http:', 'https:'].includes(lienUrl.protocol) || normalize(lienUrl.hostname) !== normalize(new URL(siteUrl).hostname)) {
+    const host = lienUrl.hostname.toLowerCase();
+    const isOwnDomain = host === 'facturavis.fr' || host.endsWith('.facturavis.fr') || host === 'localhost';
+    if (!['http:', 'https:'].includes(lienUrl.protocol) || !isOwnDomain) {
       return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
     }
 
