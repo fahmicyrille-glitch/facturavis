@@ -106,15 +106,9 @@ export async function POST(request: Request) {
     const company = await meRes.json();
     console.log(`[check-status] /companies/me for user ${user.id}:`, JSON.stringify(company));
 
-    // SuperPDP doesn't expose KYB/portability status in their API.
-    // The only reliable proof that invoice reception works is calling the invoices endpoint.
-    // If portability is still pending (e.g. user was already with Pennylane), this returns non-200.
-    const invoicesRes = await fetch(`${SUPERPDP_API_URL}/v1.beta/invoices?direction=in&per_page=1`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
-    console.log(`[check-status] /invoices probe for user ${user.id}: ${invoicesRes.status}`);
-
-    const newStatus = invoicesRes.ok ? 'active' : 'pending';
+    // SuperPDP API doesn't expose portability/activation status.
+    // Keep existing status — only the cron sync can confirm active reception.
+    const newStatus = profile.iopole_status === 'active' ? 'active' : 'pending';
 
     if (newStatus !== profile.iopole_status) {
       await supabaseAdmin

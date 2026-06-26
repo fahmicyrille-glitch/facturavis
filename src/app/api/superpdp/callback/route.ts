@@ -85,14 +85,8 @@ export async function GET(request: Request) {
         const company = await meRes.json();
         companyName = company.formal_name || company.trade_name || '';
         companySiren = company.number || '';
-        // SuperPDP doesn't expose KYB/portability status in their API.
-        // Probe the invoices endpoint — 200 means reception is operational.
-        const invoicesProbe = await fetch(`${SUPERPDP_API_URL}/v1.beta/invoices?direction=in&per_page=1`, {
-          headers: { 'Authorization': `Bearer ${tokens.access_token}` },
-        });
-        if (invoicesProbe.ok) {
-          companyStatus = 'active';
-        }
+        // SuperPDP API doesn't expose portability/activation status.
+        // Status stays 'pending' until cron sync confirms actual invoices can be received.
       }
     } catch {
       // Non-blocking — keep 'pending' as safe default
