@@ -316,6 +316,127 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* --- RAPPORT COMPTABLE --- */}
+      <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 md:gap-16">
+
+          {/* Texte */}
+          <div className="flex-1 space-y-6">
+            <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-amber-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+              Nouveau — Rapport comptable
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] leading-tight tracking-tighter">
+              Votre comptable reçoit<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">tout en un clic.</span>
+            </h2>
+            <p className="text-[#7a6a5f] text-lg font-medium leading-relaxed">
+              Sélectionnez une période, saisissez l&apos;email de votre comptable, appuyez sur <strong className="text-[#3e2f25]">Envoyer</strong>. Il reçoit un email professionnel avec toutes vos factures fournisseurs — CSV récapitulatif et PDFs inclus dans un ZIP prêt à importer.
+            </p>
+            <ul className="space-y-4 pt-2">
+              <li className="flex items-start gap-3">
+                <div className="mt-0.5 bg-amber-100 p-1 rounded-full shrink-0"><CheckCircle2 size={16} className="text-amber-600" /></div>
+                <p className="text-[#3e2f25] text-sm font-bold">Période en 1 clic : <span className="font-medium text-[#7a6a5f]">ce mois, mois dernier, ce trimestre, trimestre précédent — ou dates libres.</span></p>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-0.5 bg-amber-100 p-1 rounded-full shrink-0"><CheckCircle2 size={16} className="text-amber-600" /></div>
+                <p className="text-[#3e2f25] text-sm font-bold">ZIP automatique : <span className="font-medium text-[#7a6a5f]">CSV compatible Excel + tous les PDFs de vos factures, classés et nommés proprement.</span></p>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-0.5 bg-amber-100 p-1 rounded-full shrink-0"><CheckCircle2 size={16} className="text-amber-600" /></div>
+                <p className="text-[#3e2f25] text-sm font-bold">Email sauvegardé : <span className="font-medium text-[#7a6a5f]">enregistrez l&apos;adresse de votre comptable une fois dans les paramètres, elle est pré-remplie à chaque envoi.</span></p>
+              </li>
+            </ul>
+            <Link
+              href="/inscription"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-7 py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-amber-200 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              Essayer gratuitement
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </Link>
+          </div>
+
+          {/* Mockup email comptable */}
+          <div className="flex-1 w-full max-w-md mx-auto lg:mx-0">
+            <div className="relative">
+              <div className="absolute -inset-3 bg-gradient-to-br from-amber-200/40 to-orange-200/40 rounded-[32px] blur-2xl -z-10" />
+              <div className="bg-white rounded-[24px] border border-[#f0e6de] shadow-2xl overflow-hidden">
+
+                {/* Email header bar */}
+                <div className="bg-gray-50 border-b border-gray-100 px-5 py-3 flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                    <div className="w-3 h-3 rounded-full bg-amber-400" />
+                    <div className="w-3 h-3 rounded-full bg-green-400" />
+                  </div>
+                  <div className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-1 text-xs text-gray-400 truncate">
+                    📧 comptable@votre-cabinet.fr
+                  </div>
+                </div>
+
+                {/* Email subject */}
+                <div className="px-5 py-3 border-b border-gray-100">
+                  <p className="text-xs text-gray-400 mb-0.5">Objet</p>
+                  <p className="text-sm font-bold text-gray-800 truncate">Rapport fournisseurs — Dr. Marie Dupont — janv. au mars 2026</p>
+                </div>
+
+                {/* Email body */}
+                <div className="p-5 space-y-4">
+                  {/* Header email */}
+                  <div className="bg-gradient-to-r from-[#3e2f25] to-[#a9825a] rounded-xl p-4">
+                    <p className="text-[10px] text-white/60 uppercase tracking-widest font-bold">FacturAvis</p>
+                    <p className="text-white font-black text-base mt-1">Rapport factures fournisseurs</p>
+                    <p className="text-white/80 text-xs mt-0.5">Dr. Marie Dupont · 1 janv. — 31 mars 2026</p>
+                  </div>
+
+                  {/* Totaux */}
+                  <div className="bg-[#fdf2e9] rounded-xl p-3 flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] text-[#a9825a] font-bold uppercase tracking-wide">Total</p>
+                      <p className="text-xl font-black text-[#3e2f25]">1 850,00 €</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-[#a9825a] font-bold uppercase tracking-wide">Factures</p>
+                      <p className="text-xl font-black text-[#3e2f25]">11</p>
+                    </div>
+                  </div>
+
+                  {/* Tableau mini */}
+                  <div className="space-y-1.5">
+                    {[
+                      { date: '15/01', nom: 'EDF Électricité', cat: 'Énergie', montant: '120,00 €' },
+                      { date: '20/01', nom: 'Orange Mobile', cat: 'Télécom', montant: '45,00 €' },
+                      { date: '01/02', nom: 'Loyer Cabinet', cat: 'Loyer', montant: '850,00 €' },
+                      { date: '10/03', nom: 'Formation CPF', cat: 'Formation', montant: '490,00 €' },
+                    ].map((row, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs py-1.5 border-b border-gray-50 last:border-0">
+                        <span className="text-gray-400 w-10 shrink-0">{row.date}</span>
+                        <span className="text-gray-700 font-semibold flex-1 truncate">{row.nom}</span>
+                        <span className="text-gray-400 hidden sm:block w-16 text-right shrink-0">{row.cat}</span>
+                        <span className="text-[#3e2f25] font-black w-16 text-right shrink-0">{row.montant}</span>
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-gray-400 text-center pt-1">+ 7 autres factures dans le ZIP</p>
+                  </div>
+
+                  {/* Pièce jointe */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-center gap-3">
+                    <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-blue-800 truncate">factures_fournisseurs_2026-01-01_au_2026-03-31.zip</p>
+                      <p className="text-[10px] text-blue-600">CSV + 11 PDFs · prêt à importer</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* --- REFORME 2026 --- */}
       <section id="reforme" className="py-16 md:py-24 bg-white border-y border-[#f0e6de] px-4 md:px-6 relative overflow-hidden">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
