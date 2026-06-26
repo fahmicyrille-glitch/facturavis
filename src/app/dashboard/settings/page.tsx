@@ -111,7 +111,7 @@ function SettingsContent() {
         setTrialEndsAt(profileData.trial_ends_at || null);
 
         // Always check SuperPDP status to catch activations and deactivations
-        if (currentIopoleStatus === 'pending' || currentIopoleStatus === 'active') {
+        if (currentIopoleStatus === 'pending' || currentIopoleStatus === 'active' || currentIopoleStatus === 'failed') {
           fetch('/api/superpdp/check-status', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${session.access_token}` },
@@ -659,6 +659,24 @@ function SettingsContent() {
               ) : (
                 <p className="text-xs text-amber-600 text-center">SuperPDP vous enverra un email de confirmation — cette page se mettra à jour automatiquement.</p>
               )}
+            </div>
+          ) : receptionStatus === 'failed' ? (
+            <div className="p-4 bg-red-50 rounded-xl border border-red-200 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-red-100 p-2 rounded-lg shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
+                <div>
+                  <p className="font-bold text-red-800">Demande refusée par SuperPDP</p>
+                  <p className="text-xs text-red-600">SuperPDP n&apos;a pas pu vérifier votre autorisation sur cette entreprise. Vous pouvez recommencer le processus.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReceptionModal(true)}
+                className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white bg-red-600 hover:bg-red-700 font-bold text-sm transition-all"
+              >
+                Recommencer l&apos;activation
+              </button>
             </div>
           ) : (
             <div className="space-y-5">

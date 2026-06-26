@@ -101,10 +101,12 @@ export async function POST(request: Request) {
     const verificationStatus: string = session.company_verification_status || '';
     console.log(`[check-status] company_verification_status for user ${user.id}: ${verificationStatus}`);
 
-    // verified = accès autorisé, portabilité confirmée
-    // needs_review = en attente d'examen (ex: portabilité depuis un autre PDP)
-    // failed = refusé
-    const newStatus = verificationStatus === 'verified' ? 'active' : 'pending';
+    // verified     → active  (portabilité confirmée, accès complet)
+    // needs_review → pending (portabilité en attente, examen manuel)
+    // failed       → failed  (refusé par SuperPDP — doit recommencer)
+    const newStatus = verificationStatus === 'verified' ? 'active'
+      : verificationStatus === 'failed' ? 'failed'
+      : 'pending';
 
     if (newStatus !== profile.iopole_status) {
       await supabaseAdmin
