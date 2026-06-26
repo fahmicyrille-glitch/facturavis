@@ -109,23 +109,32 @@ export default function FacturesRecuesPage() {
         setReceptionActive(true);
       } else {
         const { data: profile } = await supabase.from('therapeutes').select('iopole_status').eq('id', uid).single();
-        if (profile?.iopole_status === 'active') {
+        const iopoleStatus = profile?.iopole_status;
+        if (iopoleStatus === 'active') {
           setReceptionActive(true);
-        } else if (profile?.iopole_status === 'pending') {
+        } else if (iopoleStatus === 'pending') {
           setReceptionPending(true);
-          // Auto-check if validation has been completed since last visit
+        }
+
+        // Always check SuperPDP status to catch activations and deactivations
+        if (iopoleStatus === 'active' || iopoleStatus === 'pending') {
           fetch('/api/superpdp/check-status', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${session.access_token}` },
           })
             .then(r => r.json())
             .then(data => {
-              if (data.changed && data.status === 'active') {
+              if (!data.changed) return;
+              if (data.status === 'active') {
                 setReceptionPending(false);
                 setReceptionActive(true);
+              } else if (data.status === 'pending') {
+                setReceptionActive(false);
+                setReceptionPending(true);
+                showToast('Votre accès à la plateforme agréée a été suspendu ou est en cours de validation. Vérifiez dans les paramètres.', 'error');
               }
             })
-            .catch(() => { /* silencieux */ });
+            .catch(() => { /* silencieux — on ne bloque pas le chargement */ });
         }
       }
 

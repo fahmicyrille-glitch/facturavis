@@ -106,20 +106,23 @@ function SettingsContent() {
         setReceptionStatus(currentIopoleStatus);
         setTrialEndsAt(profileData.trial_ends_at || null);
 
-        // Auto-check SuperPDP validation status when account is still pending
-        if (currentIopoleStatus === 'pending') {
+        // Always check SuperPDP status to catch activations and deactivations
+        if (currentIopoleStatus === 'pending' || currentIopoleStatus === 'active') {
           fetch('/api/superpdp/check-status', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${session.access_token}` },
           })
             .then(r => r.json())
             .then(data => {
-              if (data.changed && data.status === 'active') {
-                setReceptionStatus('active');
+              if (!data.changed) return;
+              setReceptionStatus(data.status);
+              if (data.status === 'active') {
                 setReceptionMessage({ text: 'Votre compte vient d\'être validé ! La réception de factures est maintenant active.', type: 'success' });
+              } else if (data.status === 'pending') {
+                setReceptionMessage({ text: 'Votre accès à la plateforme agréée est en cours de validation ou a été suspendu. Contactez le support SuperPDP si le problème persiste.', type: 'error' });
               }
             })
-            .catch(() => { /* silencieux */ });
+            .catch(() => { /* silencieux — on ne bloque pas le chargement */ });
         }
       }
 

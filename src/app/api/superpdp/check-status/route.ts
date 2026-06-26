@@ -49,11 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Profil introuvable' }, { status: 404 });
   }
 
-  // Only check if still pending
-  if (profile.iopole_status === 'active') {
-    return NextResponse.json({ status: 'active', changed: false });
-  }
-
+  // No SuperPDP tokens stored — nothing to check
   if (!profile.superpdp_access_token && !profile.superpdp_refresh_token) {
     return NextResponse.json({ status: profile.iopole_status, changed: false });
   }
