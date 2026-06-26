@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Lock, Mail, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, FileCheck, Eye, EyeOff, MailCheck } from 'lucide-react';
 import Link from 'next/link';
 
-export default function Home() {
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,8 @@ export default function Home() {
   const [resetSent, setResetSent] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const emailConfirmed = searchParams.get('confirmed') === 'true';
 
   useEffect(() => {
     const checkUser = async () => {
@@ -100,6 +102,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#fcfaf8] flex flex-col justify-center items-center p-4 font-sans text-[#3e2f25]">
+
+      {/* BANDEAU EMAIL CONFIRMÉ */}
+      {emailConfirmed && (
+        <div className="mb-6 w-full max-w-md bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+          <CheckCircle size={20} className="text-green-500 shrink-0" />
+          <div>
+            <p className="font-bold text-green-800 text-sm">Email confirmé !</p>
+            <p className="text-green-700 text-xs">Votre compte est activé. Connectez-vous ci-dessous.</p>
+          </div>
+        </div>
+      )}
 
       {/* RETOUR ACCUEIL */}
       <div className="mb-6">
@@ -297,5 +310,13 @@ export default function Home() {
         <Lock size={12}/> Sécurisé par Supabase Encryption
       </p>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }
