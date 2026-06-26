@@ -29,9 +29,15 @@ export async function POST(request: Request) {
       logoUrlTherapeute
     } = await request.json();
 
-    // Validation du lien facture : doit être une URL interne
+    // Validation du lien facture : doit être une URL du domaine interne (hostname comparison pour éviter le bypass)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://facturavis.fr';
-    if (!lienFacture || !lienFacture.startsWith(siteUrl)) {
+    let lienUrl: URL;
+    try {
+      lienUrl = new URL(lienFacture);
+    } catch {
+      return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
+    }
+    if (!['http:', 'https:'].includes(lienUrl.protocol) || lienUrl.hostname !== new URL(siteUrl).hostname) {
       return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
     }
 

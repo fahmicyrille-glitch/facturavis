@@ -62,7 +62,7 @@ export async function GET(request: Request) {
         ? `<img src="${therapeute.logo_url}" alt="${safeNom}" width="120" style="display: block; margin: 0 auto; max-height: 90px; object-fit: contain;" />`
         : safeNom;
 
-      await resend.emails.send({
+      const { error: sendError } = await resend.emails.send({
         from: `${safeNom} <facture@facturavis.fr>`,
         replyTo: therapeute.email || 'noreply@facturavis.fr',
         to: facture.patient_email,
@@ -130,12 +130,15 @@ export async function GET(request: Request) {
         `
       });
 
-      await supabaseAdmin
-        .from('factures')
-        .update({ statut_email: 'Relancé' })
-        .eq('id', facture.id);
-
-      envoisReussis++;
+      if (!sendError) {
+        await supabaseAdmin
+          .from('factures')
+          .update({ statut_email: 'Relancé' })
+          .eq('id', facture.id);
+        envoisReussis++;
+      } else {
+        console.error(`Relance échouée pour facture ${facture.id}:`, sendError);
+      }
     }
 
     return NextResponse.json({ message: `Succès : ${envoisReussis} relance(s) automatique(s) envoyée(s).` });

@@ -254,9 +254,15 @@ function SettingsContent() {
         body: JSON.stringify({ plan }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (error) { console.error(error); }
-    finally { setSubscribing(false); }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showMessage("Impossible d'accéder au paiement. Réessayez.", 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      showMessage("Erreur réseau. Réessayez.", 'error');
+    } finally { setSubscribing(false); }
   };
 
   const handleManageSubscription = async () => {
@@ -268,9 +274,15 @@ function SettingsContent() {
         headers: { 'Authorization': `Bearer ${session?.access_token}` },
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (error) { console.error(error); }
-    finally { setManagingSubscription(false); }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showMessage("Impossible d'accéder au portail. Réessayez.", 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      showMessage("Erreur réseau. Réessayez.", 'error');
+    } finally { setManagingSubscription(false); }
   };
 
   // --- PROFILE SAVE ---

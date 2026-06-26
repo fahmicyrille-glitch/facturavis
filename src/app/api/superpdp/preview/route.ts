@@ -19,8 +19,8 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const invoiceId = url.searchParams.get('id');
-  if (!invoiceId) {
-    return new NextResponse('ID manquant', { status: 400 });
+  if (!invoiceId || !/^\d+$/.test(invoiceId)) {
+    return new NextResponse('ID invalide', { status: 400 });
   }
 
   try {

@@ -352,7 +352,7 @@ function NouvelleFactureContent() {
       if (insertError || !dbData) throw new Error('Erreur lors de l\'enregistrement de la facture');
 
       const { data: { session: emailSession } } = await supabase.auth.getSession();
-      await fetch('/api/send-email', {
+      const emailRes = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -371,7 +371,11 @@ function NouvelleFactureContent() {
         }),
       });
 
-      setMessage({ text: `Facture n°${numFactureSeq} envoyée avec succès !`, type: 'success' });
+      if (emailRes.ok) {
+        setMessage({ text: `Facture n°${numFactureSeq} envoyée avec succès !`, type: 'success' });
+      } else {
+        setMessage({ text: `Facture n°${numFactureSeq} créée, mais l'envoi de l'email a échoué. Réessayez.`, type: 'error' });
+      }
 
       setTimeout(() => router.push(backLink), 2000);
 

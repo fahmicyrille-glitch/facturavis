@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -13,32 +13,26 @@ export default function AutoLogout() {
   // Astuce : remplace le 90 par 30 si tu veux renforcer la sécurité médicale
   const INACTIVITY_TIME = 90 * 60 * 1000;
 
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     timeoutRef.current = setTimeout(async () => {
-      // Le temps est écoulé : on déconnecte et on renvoie à l'accueil
       await supabase.auth.signOut();
       router.push('/');
     }, INACTIVITY_TIME);
-  };
+  }, [router]);
 
   useEffect(() => {
-    // 👁️ La liste des actions qui prouvent que l'utilisateur est devant son écran
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
 
-    // On écoute ces actions
     events.forEach(event => window.addEventListener(event, resetTimer));
-
-    // On lance le chrono une première fois
     resetTimer();
 
-    // Nettoyage quand on quitte la page
     return () => {
       events.forEach(event => window.removeEventListener(event, resetTimer));
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, []);
+  }, [resetTimer]);
 
   return null;
 }

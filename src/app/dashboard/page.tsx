@@ -256,7 +256,7 @@ export default function Dashboard() {
       showToast("Facture créée et prête à être envoyée !", "success");
 
       const { data: { session: emailSession } } = await supabase.auth.getSession();
-      await fetch('/api/send-email', {
+      const emailRes = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${emailSession?.access_token}` },
         body: JSON.stringify({
@@ -266,6 +266,9 @@ export default function Dashboard() {
           logoUrlTherapeute: therapeuteInfo.logo_url, cabinetNom: currentCabinet?.nom
         }),
       });
+      if (!emailRes.ok) {
+        showToast("Facture créée, mais l'envoi de l'email a échoué. Réessayez depuis l'historique.", "error");
+      }
 
       setFile(null); setPatientEmail(''); setNom(''); setPrenom(''); setMontant(''); setModeReglement('CB');
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -299,7 +302,7 @@ export default function Dashboard() {
       const currentCabinet = cabinets.find(c => c.id === factureToEdit.cabinet_id);
 
       const { data: { session: resendSession } } = await supabase.auth.getSession();
-      await fetch('/api/send-email', {
+      const resendRes = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendSession?.access_token}` },
         body: JSON.stringify({
@@ -309,7 +312,11 @@ export default function Dashboard() {
           logoUrlTherapeute: therapeuteInfo?.logo_url, cabinetNom: currentCabinet?.nom
         }),
       });
-      showToast("L'email a été mis à jour et la facture renvoyée !", "success");
+      if (resendRes.ok) {
+        showToast("L'email a été mis à jour et la facture renvoyée !", "success");
+      } else {
+        showToast("Email mis à jour, mais l'envoi a échoué. Réessayez.", "error");
+      }
       setIsEditEmailModalOpen(false);
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'email :", error);

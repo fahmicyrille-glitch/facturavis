@@ -93,8 +93,11 @@ export default function InscriptionPage() {
       });
 
       if (!profileRes.ok) {
-        const err = await profileRes.json();
+        const err = await profileRes.json().catch(() => ({}));
         console.error('Profile setup error:', err);
+        setError('Erreur lors de la création de votre profil. Réessayez ou contactez le support.');
+        setLoading(false);
+        return;
       }
 
       // 4. Show success screen (user must confirm email before logging in)
