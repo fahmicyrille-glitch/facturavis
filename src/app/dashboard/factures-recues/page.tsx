@@ -113,6 +113,19 @@ export default function FacturesRecuesPage() {
           setReceptionActive(true);
         } else if (profile?.iopole_status === 'pending') {
           setReceptionPending(true);
+          // Auto-check if validation has been completed since last visit
+          fetch('/api/superpdp/check-status', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.changed && data.status === 'active') {
+                setReceptionPending(false);
+                setReceptionActive(true);
+              }
+            })
+            .catch(() => { /* silencieux */ });
         }
       }
 

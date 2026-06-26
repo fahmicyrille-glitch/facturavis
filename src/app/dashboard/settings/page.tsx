@@ -102,8 +102,25 @@ function SettingsContent() {
         setSignatureUrl(profileData.signature_url || '');
         setSubscriptionPlan(profileData.plan || null);
         setSubscriptionStatus(profileData.subscription_status || null);
-        setReceptionStatus(profileData.iopole_status || null);
+        const currentIopoleStatus = profileData.iopole_status || null;
+        setReceptionStatus(currentIopoleStatus);
         setTrialEndsAt(profileData.trial_ends_at || null);
+
+        // Auto-check SuperPDP validation status when account is still pending
+        if (currentIopoleStatus === 'pending') {
+          fetch('/api/superpdp/check-status', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.changed && data.status === 'active') {
+                setReceptionStatus('active');
+                setReceptionMessage({ text: 'Votre compte vient d\'être validé ! La réception de factures est maintenant active.', type: 'success' });
+              }
+            })
+            .catch(() => { /* silencieux */ });
+        }
       }
 
       const { data: cabinetsData, error: cabError } = await supabase
