@@ -56,6 +56,7 @@ function SettingsContent() {
   // Subscription state
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [founderSlots, setFounderSlots] = useState<{ taken: number; max: number; remaining: number } | null>(null);
   const [subscribing, setSubscribing] = useState(false);
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [receptionStatus, setReceptionStatus] = useState<string | null>(null);
@@ -107,6 +108,12 @@ function SettingsContent() {
         setSignatureUrl(profileData.signature_url || '');
         setSubscriptionPlan(profileData.plan || null);
         setSubscriptionStatus(profileData.subscription_status || null);
+
+        // Toujours charger les places Fondateur (utile si pas encore abonné)
+        fetch('/api/plan/founder-slots')
+          .then(r => r.json())
+          .then(data => setFounderSlots(data))
+          .catch(() => {});
         const currentIopoleStatus = profileData.iopole_status || null;
         setReceptionStatus(currentIopoleStatus);
         setTrialEndsAt(profileData.trial_ends_at || null);
@@ -580,13 +587,34 @@ function SettingsContent() {
               )}
               {/* Paid plans */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button onClick={() => handleSubscribe('founder')} disabled={subscribing}
-                  className="flex flex-col items-center py-4 px-4 rounded-xl bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white font-bold hover:opacity-90 transition-all">
-                  <span className="text-lg font-black">19€/mois</span>
-                  <span className="text-xs opacity-80">Tarif Fondateur</span>
-                </button>
+                {founderSlots && founderSlots.remaining === 0 ? (
+                  <div className="flex flex-col items-center py-4 px-4 rounded-xl bg-gray-200 text-gray-400 font-bold cursor-not-allowed relative overflow-hidden">
+                    <span className="absolute top-1.5 right-2 text-[10px] font-black uppercase bg-gray-400 text-white px-2 py-0.5 rounded-full">Complet</span>
+                    <span className="text-lg font-black line-through">19€/mois</span>
+                    <span className="text-xs opacity-70">Tarif Fondateur</span>
+                  </div>
+                ) : (
+                  <button onClick={() => handleSubscribe('founder')} disabled={subscribing}
+                    className="flex flex-col items-center py-4 px-4 rounded-xl bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white font-bold hover:opacity-90 transition-all relative overflow-hidden">
+                    {founderSlots && founderSlots.remaining <= 10 && (
+                      <span className="absolute top-1.5 right-2 text-[10px] font-black uppercase bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse">
+                        {founderSlots.remaining} restante{founderSlots.remaining > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {founderSlots && founderSlots.remaining > 10 && (
+                      <span className="absolute top-1.5 right-2 text-[10px] font-black uppercase bg-white/20 text-white px-2 py-0.5 rounded-full">
+                        {founderSlots.remaining}/{founderSlots.max}
+                      </span>
+                    )}
+                    <span className="text-lg font-black">19€/mois</span>
+                    <span className="text-xs opacity-80">Tarif Fondateur</span>
+                  </button>
+                )}
                 <button onClick={() => handleSubscribe('standard')} disabled={subscribing}
-                  className="flex flex-col items-center py-4 px-4 rounded-xl bg-gray-900 text-white font-bold hover:bg-black transition-all">
+                  className={`flex flex-col items-center py-4 px-4 rounded-xl font-bold transition-all ${founderSlots?.remaining === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:opacity-90 shadow-lg shadow-blue-200 ring-2 ring-blue-400' : 'bg-gray-900 text-white hover:bg-black'}`}>
+                  {founderSlots?.remaining === 0 && (
+                    <span className="text-[10px] font-black uppercase bg-white/20 px-2 py-0.5 rounded-full mb-1">Meilleure offre</span>
+                  )}
                   <span className="text-lg font-black">29€/mois</span>
                   <span className="text-xs opacity-80">Tarif Standard</span>
                 </button>
