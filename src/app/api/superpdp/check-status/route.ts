@@ -5,7 +5,7 @@ const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.t
 const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID_PUBLIC || process.env.SUPERPDP_CLIENT_ID || '';
 const SUPERPDP_CLIENT_SECRET = process.env.SUPERPDP_CLIENT_SECRET_PUBLIC || '';
 
-const ACTIVE_STATUSES = ['validated', 'active', 'approved', 'enabled'];
+const ACTIVE_STATUSES = ['validated', 'active', 'approved', 'enabled', 'valide', 'validé'];
 
 async function refreshToken(refreshToken: string): Promise<string | null> {
   try {

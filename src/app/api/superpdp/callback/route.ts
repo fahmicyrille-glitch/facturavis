@@ -88,7 +88,7 @@ export async function GET(request: Request) {
         const rawStatus: string = (
           company.status || company.validation_status || company.kyb_status || ''
         ).toLowerCase();
-        if (['validated', 'active', 'approved', 'enabled'].includes(rawStatus)) {
+        if (['validated', 'active', 'approved', 'enabled', 'valide', 'validé'].includes(rawStatus)) {
           companyStatus = 'active';
         }
       }
