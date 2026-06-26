@@ -647,24 +647,24 @@ export default function FacturesRecuesPage() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5 flex-1">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-                    <RefreshCw size={20} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-blue-900 text-sm">Synchronisation automatique</h4>
-                    <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                      Vos factures fournisseurs sont récupérées automatiquement chaque jour via la plateforme agréée. Vous pouvez aussi déclencher une synchronisation manuelle à tout moment.
-                    </p>
-                    {receptionActive && (
+              {receptionActive && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5 flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                      <RefreshCw size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-blue-900 text-sm">Synchronisation automatique</h4>
+                      <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                        Vos factures fournisseurs sont récupérées automatiquement chaque jour via la plateforme agréée. Vous pouvez aussi déclencher une synchronisation manuelle à tout moment.
+                      </p>
                       <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
                         <CheckCircle size={10} /> Réception active
                       </span>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
