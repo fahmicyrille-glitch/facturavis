@@ -47,9 +47,13 @@ export default function InscriptionPage() {
 
     try {
       // 1. Create auth account
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://facturavis.fr';
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${siteUrl}/login`,
+        },
       });
 
       if (authError) {
