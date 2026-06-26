@@ -39,9 +39,9 @@ export default function PrestationsSection({
   deletingPrestaId, onDeletePrestation,
 }: PrestationsSectionProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8">
       <div className="flex items-center mb-6 border-b pb-4">
-        <ListPlus size={22} className="text-gray-800 mr-2" />
+        <ListPlus size={22} className="text-gray-800 mr-2 shrink-0" />
         <h2 className="text-lg font-semibold text-gray-800">Actes & Tarifs par defaut</h2>
       </div>
       <p className="text-sm text-gray-500 mb-6">
@@ -85,15 +85,17 @@ export default function PrestationsSection({
         ))}
       </div>
 
-      <form onSubmit={onAddPrestation} className="flex gap-3 mt-4">
-        <input type="text" required placeholder="Ex: Consultation Osteopathie Adulte" className="flex-[3] border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newPrestaNom} onChange={(e) => setNewPrestaNom(e.target.value)} />
-        <div className="relative flex-[1] min-w-[100px]">
-          <input type="number" step="0.01" required placeholder="Prix" className="w-full border border-gray-300 rounded-lg py-2 pl-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newPrestaPrix} onChange={(e) => setNewPrestaPrix(e.target.value)} />
-          <span className="absolute right-3 top-2 text-gray-400 font-medium">&euro;</span>
+      <form onSubmit={onAddPrestation} className="flex flex-col sm:flex-row gap-3 mt-4">
+        <input type="text" required placeholder="Ex: Consultation Osteopathie Adulte" className="flex-[3] min-w-0 w-full border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newPrestaNom} onChange={(e) => setNewPrestaNom(e.target.value)} />
+        <div className="flex gap-3">
+          <div className="relative flex-1 sm:flex-none sm:w-28">
+            <input type="number" step="0.01" required placeholder="Prix" className="w-full border border-gray-300 rounded-lg py-2 pl-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newPrestaPrix} onChange={(e) => setNewPrestaPrix(e.target.value)} />
+            <span className="absolute right-3 top-2 text-gray-400 font-medium">&euro;</span>
+          </div>
+          <button type="submit" disabled={addingPresta} className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg font-bold transition-all flex items-center justify-center min-w-[110px] whitespace-nowrap shrink-0">
+            {addingPresta ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} className="mr-1" /> Ajouter</>}
+          </button>
         </div>
-        <button type="submit" disabled={addingPresta} className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg font-bold transition-all flex items-center justify-center min-w-[110px]">
-          {addingPresta ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} className="mr-1" /> Ajouter</>}
-        </button>
       </form>
     </div>
   );

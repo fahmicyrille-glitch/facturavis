@@ -77,9 +77,9 @@ export default function ReceptionActivationModal({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-800">Votre avis de situation INSEE</p>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs text-gray-500 leading-relaxed break-words">
                     Document gratuit, à télécharger sur{' '}
-                    <a href="https://avis-situation-sirene.insee.fr" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline">avis-situation-sirene.insee.fr</a>.
+                    <a href="https://avis-situation-sirene.insee.fr" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline break-all">avis-situation-sirene.insee.fr</a>.
                     Si votre entreprise est en « droit d&apos;opposition », identifiez-vous via <strong>FranceConnect</strong> pour l&apos;obtenir.
                   </p>
                 </div>

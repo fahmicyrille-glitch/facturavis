@@ -40,7 +40,7 @@ export default function CabinetsSection({
   deletingId, onDeleteCabinet,
 }: CabinetsSectionProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8">
       <h2 className="text-lg font-semibold text-gray-800 mb-6 border-b pb-4">Lieux de consultation</h2>
       <div className="space-y-4 mb-8">
         {cabinets.map((cab) => (
@@ -57,14 +57,14 @@ export default function CabinetsSection({
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-gray-800 flex items-center"><MapPin size={16} className="mr-2 text-blue-500" /> {cab.nom}</div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-bold text-gray-800 flex items-center"><MapPin size={16} className="mr-2 text-blue-500 shrink-0" /> {cab.nom}</div>
                   <div className="text-xs text-blue-500 flex items-center mt-1 truncate max-w-[200px] sm:max-w-md">
-                    <LinkIcon size={12} className="mr-1" /> {cab.lien_avis_google}
+                    <LinkIcon size={12} className="mr-1 shrink-0" /> {cab.lien_avis_google}
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   <button onClick={() => onStartEdit(cab)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                     <Edit2 size={18} />
                   </button>

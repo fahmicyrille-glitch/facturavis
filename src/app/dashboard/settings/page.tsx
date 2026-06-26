@@ -466,7 +466,7 @@ function SettingsContent() {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <ConfirmDialog
         isOpen={!!cabinetToDelete}
         title="Supprimer ce lieu"
@@ -491,7 +491,7 @@ function SettingsContent() {
         </div>
 
         {/* SUBSCRIPTION SECTION */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8">
           <div className="flex items-center mb-6 border-b pb-4">
             <CreditCard size={22} className="text-gray-800 mr-2" />
             <h2 className="text-lg font-semibold text-gray-800">Mon Abonnement</h2>
@@ -587,7 +587,7 @@ function SettingsContent() {
         </div>
 
         {/* RÉCEPTION FACTURES ÉLECTRONIQUES */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8">
           <div className="flex items-center mb-6 border-b pb-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800 mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <h2 className="text-lg font-semibold text-gray-800">Réception Factures Électroniques</h2>

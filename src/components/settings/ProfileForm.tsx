@@ -56,9 +56,9 @@ export default function ProfileForm({
   message,
 }: ProfileFormProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8">
       <div className="flex items-center mb-6 border-b pb-4">
-        <Building size={22} className="text-gray-800 mr-2" />
+        <Building size={22} className="text-gray-800 mr-2 shrink-0" />
         <h2 className="text-lg font-semibold text-gray-800">Profil & Infos Legales (Facturation)</h2>
       </div>
 
