@@ -1,19 +1,34 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function verifySupabaseSignature(body: string, signature: string, secret: string): boolean {
+  // secret format: v1,whsec_<base64>
+  const base64Secret = secret.replace(/^v1,whsec_/, '');
+  const secretBytes = Buffer.from(base64Secret, 'base64');
+  const computed = `v1=${createHmac('sha256', secretBytes).update(body).digest('hex')}`;
+  try {
+    return timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
   const hookSecret = process.env.SUPABASE_HOOK_SECRET;
+  const body = await request.text();
+
   if (hookSecret) {
-    const auth = request.headers.get('authorization');
-    if (auth !== `Bearer ${hookSecret}`) {
-      return new NextResponse('Non autorisé', { status: 401 });
+    const signature = request.headers.get('x-supabase-signature') || '';
+    if (!verifySupabaseSignature(body, signature, hookSecret)) {
+      return new NextResponse('Signature invalide', { status: 401 });
     }
   }
 
   try {
-    const payload = await request.json();
+    const payload = JSON.parse(body);
     const email = payload?.user?.email;
     const tokenHash = payload?.email_data?.token_hash;
     const actionType = payload?.email_data?.email_action_type || 'signup';
@@ -27,13 +42,13 @@ export async function POST(request: Request) {
 
     let subject = 'Confirmez votre inscription — FacturAvis';
     let heading = 'Confirmez votre email';
-    let body = "Merci de vous être inscrit sur <strong>FacturAvis</strong>. Cliquez sur le bouton ci-dessous pour confirmer votre adresse email et accéder à votre espace.";
+    let body2 = "Merci de vous être inscrit sur <strong>FacturAvis</strong>. Cliquez sur le bouton ci-dessous pour confirmer votre adresse email et accéder à votre espace.";
     let btnLabel = 'Confirmer mon email';
 
     if (actionType === 'recovery') {
       subject = 'Réinitialisation de votre mot de passe — FacturAvis';
       heading = 'Réinitialiser votre mot de passe';
-      body = 'Vous avez demandé une réinitialisation de mot de passe. Cliquez sur le bouton ci-dessous. Ce lien expire dans 1 heure.';
+      body2 = 'Vous avez demandé une réinitialisation de mot de passe. Cliquez sur le bouton ci-dessous. Ce lien expire dans 1 heure.';
       btnLabel = 'Réinitialiser mon mot de passe';
     }
 
@@ -56,7 +71,7 @@ export async function POST(request: Request) {
             </div>
 
             <h1 style="font-size:22px;font-weight:800;color:#3e2f25;margin:0 0 16px;">${heading}</h1>
-            <p style="font-size:15px;line-height:1.6;color:#5a4a40;margin:0 0 28px;">${body}</p>
+            <p style="font-size:15px;line-height:1.6;color:#5a4a40;margin:0 0 28px;">${body2}</p>
 
             <div style="text-align:center;margin:32px 0;">
               <a href="${confirmUrl}"
