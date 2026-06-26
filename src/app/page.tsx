@@ -297,11 +297,11 @@ export default function LandingPage() {
               <p className="text-sm text-[#7a6a5f]">Les factures de votre comptable, loyer, télécom, matériel... arrivent automatiquement dans votre espace.</p>
             </div>
             <div className="bg-white p-8 rounded-3xl border border-green-100 shadow-sm text-center">
-              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <Cloud size={32} />
+              <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               </div>
-              <h3 className="font-black text-lg mb-2 text-[#3e2f25]">Export FEC en 1 clic</h3>
-              <p className="text-sm text-[#7a6a5f]">Factures émises + reçues, exportées au format FEC légal pour votre comptable. Fini les soirées à trier des papiers.</p>
+              <h3 className="font-black text-lg mb-2 text-[#3e2f25]">Envoi au comptable en 1 clic</h3>
+              <p className="text-sm text-[#7a6a5f]">Sélectionnez une période, cliquez Envoyer. Votre comptable reçoit un ZIP avec toutes vos factures fournisseurs — CSV + PDFs.</p>
             </div>
           </div>
 
