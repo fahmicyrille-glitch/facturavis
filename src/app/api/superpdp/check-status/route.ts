@@ -114,7 +114,11 @@ export async function POST(request: Request) {
       company.validation || company.state || ''
     ).toLowerCase();
 
-    const newStatus = ACTIVE_STATUSES.includes(rawStatus) ? 'active' : 'pending';
+    const REJECTED_STATUSES = ['rejected', 'suspended', 'blocked', 'disabled', 'cancelled', 'refusé', 'suspendu'];
+    const isRejected = REJECTED_STATUSES.includes(rawStatus);
+    // SuperPDP doesn't expose KYB status in their API — if the company exists with a name, consider it active
+    const hasCompanyData = !!(company.formal_name || company.trade_name || company.number);
+    const newStatus = (!isRejected && (ACTIVE_STATUSES.includes(rawStatus) || hasCompanyData)) ? 'active' : 'pending';
 
     if (newStatus !== profile.iopole_status) {
       await supabaseAdmin

@@ -88,7 +88,11 @@ export async function GET(request: Request) {
         const rawStatus: string = (
           company.status || company.validation_status || company.kyb_status || ''
         ).toLowerCase();
-        if (['validated', 'active', 'approved', 'enabled', 'valide', 'validé'].includes(rawStatus)) {
+        const REJECTED_STATUSES = ['rejected', 'suspended', 'blocked', 'disabled', 'cancelled', 'refusé', 'suspendu'];
+        const hasCompanyData = !!(company.formal_name || company.trade_name || company.number);
+        if (!REJECTED_STATUSES.includes(rawStatus) && (
+          ['validated', 'active', 'approved', 'enabled', 'valide', 'validé'].includes(rawStatus) || hasCompanyData
+        )) {
           companyStatus = 'active';
         }
       }
