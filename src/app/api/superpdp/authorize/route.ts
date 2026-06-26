@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   const redirectUri = `${siteUrl}/api/superpdp/callback`;
 
   await supabaseAdmin.from('therapeutes').update({
-    superpdp_state: `${state}|${user.id}|${verifier}`,
+    superpdp_state: `${state}|${user.id}|${verifier}|${Date.now()}`,
   }).eq('id', user.id);
 
   const authUrl = `${SUPERPDP_API_URL}/oauth2/authorize?` + new URLSearchParams({

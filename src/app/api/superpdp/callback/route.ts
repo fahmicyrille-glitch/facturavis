@@ -5,6 +5,8 @@ const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.t
 const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID_PUBLIC || process.env.SUPERPDP_CLIENT_ID || '';
 const SUPERPDP_CLIENT_SECRET = process.env.SUPERPDP_CLIENT_SECRET_PUBLIC || '';
 
+const STATE_MAX_AGE_MS = 10 * 60 * 1000;
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
@@ -34,6 +36,17 @@ export async function GET(request: Request) {
   const stateParts = match.superpdp_state!.split('|');
   const userId = stateParts[1];
   const codeVerifier = stateParts[2] || '';
+  const issuedAt = Number(stateParts[3] || 0);
+
+  // Nullify le state au plus tôt : single-use, peu importe l'issue ensuite.
+  await supabaseAdmin
+    .from('therapeutes')
+    .update({ superpdp_state: null })
+    .eq('id', userId);
+
+  if (!issuedAt || Date.now() - issuedAt > STATE_MAX_AGE_MS) {
+    return NextResponse.redirect(`${siteUrl}/dashboard/settings?reception=error&reason=state_expired`);
+  }
 
   try {
     // Exchange code for tokens
@@ -78,7 +91,6 @@ export async function GET(request: Request) {
     // Store tokens and activate
     await supabaseAdmin.from('therapeutes').update({
       iopole_status: 'active',
-      superpdp_state: null,
       superpdp_access_token: tokens.access_token,
       superpdp_refresh_token: tokens.refresh_token || null,
       superpdp_token_expires_at: tokens.expires_in

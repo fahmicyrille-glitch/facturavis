@@ -40,6 +40,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'PDF base64 requis' }, { status: 400 });
     }
 
+    // 10 Mo binaire ≈ 13.4 Mo base64 ; on coupe court avant l'appel IA.
+    const MAX_BASE64_LENGTH = 14_000_000;
+    if (pdfBase64.length > MAX_BASE64_LENGTH) {
+      return NextResponse.json(
+        { error: 'PDF trop volumineux (max 10 Mo)', success: false },
+        { status: 413 }
+      );
+    }
+
     const client = new Anthropic();
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',

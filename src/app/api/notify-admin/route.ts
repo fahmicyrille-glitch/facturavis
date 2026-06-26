@@ -1,21 +1,19 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/supabase-admin';
+import { rateLimit, getClientIp, isAllowedOrigin } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    // Vérification basique d'origine (Referer/Origin)
-    const origin = request.headers.get('origin') || request.headers.get('referer') || '';
-    const allowedOrigins = [
-      'https://facturavis.fr',
-      'https://www.facturavis.fr',
-      process.env.NEXT_PUBLIC_SITE_URL,
-    ].filter(Boolean);
-    const isAllowedOrigin = allowedOrigins.some(allowed => origin.startsWith(allowed!)) || origin.startsWith('http://localhost');
-    if (!isAllowedOrigin) {
+    if (!isAllowedOrigin(request)) {
       return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 });
+    }
+
+    const ip = getClientIp(request);
+    if (!rateLimit(`notify-admin:${ip}`, 3, 10 * 60_000)) {
+      return NextResponse.json({ error: 'Trop de tentatives' }, { status: 429 });
     }
 
     const body = await request.json();

@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/supabase-admin';
+import { rateLimit, getClientIp, isAllowedOrigin } from '@/lib/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 });
+    }
+
+    const ip = getClientIp(request);
+    if (!rateLimit(`contact:${ip}`, 5, 10 * 60_000)) {
+      return NextResponse.json({ error: 'Trop de messages envoyés. Réessayez plus tard.' }, { status: 429 });
+    }
+
     const body = await request.json();
     const { name, email, phone, message, website } = body;
 
