@@ -103,6 +103,15 @@ export default function ReceptionActivationModal({
               <strong> FranceConnect</strong>, la validation est souvent automatique et vous n&apos;avez aucun document à téléverser.
             </p>
           </div>
+
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-start gap-3">
+            <span className="text-lg shrink-0">☑️</span>
+            <p className="text-xs text-orange-800 leading-relaxed">
+              <strong>Étape 5 — Autorisation :</strong> à la dernière étape, vous verrez une case à cocher
+              « Autoriser FacturAvis à gérer mon compte Super PDP ».{' '}
+              <strong>Cochez-la impérativement</strong> pour que la réception automatique fonctionne.
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
