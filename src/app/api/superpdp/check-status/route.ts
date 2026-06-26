@@ -122,10 +122,10 @@ export async function POST(request: Request) {
         .update({ iopole_status: newStatus })
         .eq('id', user.id);
 
-      return NextResponse.json({ status: newStatus, changed: true, debug: { rawStatus, companyKeys: Object.keys(company) } });
+      return NextResponse.json({ status: newStatus, changed: true });
     }
 
-    return NextResponse.json({ status: newStatus, changed: false, debug: { rawStatus, companyKeys: Object.keys(company) } });
+    return NextResponse.json({ status: newStatus, changed: false });
   } catch (err) {
     console.error(`[check-status] Error for user ${user.id}:`, err);
     return NextResponse.json({ status: profile.iopole_status, changed: false });
