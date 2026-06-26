@@ -28,6 +28,7 @@ interface Therapeute {
   plan?: string;
   subscription_status?: string;
   iopole_status?: string;
+  email_confirmed?: boolean;
 }
 
 interface Facture {
@@ -328,9 +329,14 @@ export default function SuperAdmin() {
                         <td className="px-6 py-4">
                           <div className="font-bold text-gray-900">{t.nom}</div>
                           <div className="text-[10px] text-gray-400">{t.email}</div>
-                          <div className="flex gap-2 mt-1">
+                          <div className="flex gap-2 mt-1 flex-wrap">
                             {t.siret && <span className="text-[8px] bg-blue-50 text-blue-600 px-1 rounded font-bold uppercase">SIRET: {t.siret}</span>}
                             {t.code_ape && <span className="text-[8px] bg-gray-100 text-gray-600 px-1 rounded font-bold uppercase">APE: {t.code_ape}</span>}
+                            {t.email_confirmed === false && (
+                              <span className="text-[8px] bg-orange-100 text-orange-700 px-1 rounded font-bold uppercase" title="L'utilisateur n'a pas encore confirmé son email">
+                                ✉️ EMAIL NON CONFIRMÉ
+                              </span>
+                            )}
                             {t.iopole_status && (
                               <button
                                 title="Cliquer pour changer le statut réception"

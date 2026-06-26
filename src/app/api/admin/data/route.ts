@@ -24,7 +24,16 @@ export async function GET(request: Request) {
 
     if (tError || fError) throw new Error(tError?.message || fError?.message);
 
-    return NextResponse.json({ therapeutes, factures });
+    // Récupère les statuts de confirmation email depuis Supabase Auth
+    const { data: { users: authUsers } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    const confirmedMap = new Map(authUsers.map(u => [u.id, !!u.email_confirmed_at]));
+
+    const therapeutesWithConfirm = (therapeutes || []).map(t => ({
+      ...t,
+      email_confirmed: confirmedMap.get(t.id) ?? true,
+    }));
+
+    return NextResponse.json({ therapeutes: therapeutesWithConfirm, factures });
   } catch (error: any) {
     console.error("Erreur Admin Data:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
