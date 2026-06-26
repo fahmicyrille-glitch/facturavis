@@ -10,7 +10,9 @@ export async function POST(request: Request) {
 
   if (hookSecret) {
     try {
-      const wh = new Webhook(hookSecret);
+      // Supabase envoie "v1,whsec_<base64>" — standardwebhooks attend juste "whsec_<base64>"
+      const secret = hookSecret.startsWith('v1,') ? hookSecret.slice(3) : hookSecret;
+      const wh = new Webhook(secret);
       const headers: Record<string, string> = {};
       request.headers.forEach((v, k) => { headers[k] = v; });
       wh.verify(body, headers);
