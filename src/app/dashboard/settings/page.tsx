@@ -653,16 +653,15 @@ function SettingsContent() {
               </div>
               {receptionNeedsReauth ? (
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
-                  <p className="text-sm font-bold text-blue-800">Une fois votre dossier validé par SuperPDP</p>
+                  <p className="text-sm font-bold text-blue-800">Session SuperPDP expirée</p>
                   <p className="text-xs text-blue-700 leading-relaxed">
-                    SuperPDP vous enverra un <strong>email de confirmation</strong> quand votre dossier sera validé.
-                    Revenez ensuite sur cette page et cliquez sur le bouton ci-dessous pour activer votre réception.
+                    Votre connexion à SuperPDP a expiré. Reconnectez-vous pour mettre à jour votre statut — si votre dossier a été validé entre-temps, la réception s&apos;activera automatiquement.
                   </p>
                   <button
                     onClick={() => setShowReceptionModal(true)}
                     className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white bg-blue-600 hover:bg-blue-700 font-bold text-sm transition-all"
                   >
-                    Vérifier ma validation SuperPDP
+                    Reconnecter à SuperPDP
                   </button>
                 </div>
               ) : userIdentityStatus && userIdentityStatus !== 'verified' ? (
