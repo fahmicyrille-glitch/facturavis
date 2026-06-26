@@ -130,11 +130,11 @@ export default function LandingPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
-      {/* --- COUNTDOWN BANNER --- */}
-      <CountdownBanner />
-
-      {/* --- NAVBAR (Client Component) --- */}
-      <Navbar />
+      {/* --- STICKY HEADER : bannière + navbar collent ensemble --- */}
+      <div className="sticky top-0 z-50">
+        <CountdownBanner />
+        <Navbar />
+      </div>
 
       {/* --- HERO SECTION (Client Component for animations) --- */}
       <HeroAnimations />

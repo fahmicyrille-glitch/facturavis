@@ -20,7 +20,7 @@ export default function Navbar() {
   }, [pathname]);
 
   return (
-    <nav className="sticky top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#f0e6de]">
+    <nav className="bg-white/80 backdrop-blur-md border-b border-[#f0e6de]">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 max-w-7xl mx-auto">
         <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2 md:gap-3 group">
           <div className="relative">
