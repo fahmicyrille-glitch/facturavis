@@ -190,17 +190,8 @@ function SettingsContent() {
     setActivatingReception(true);
     setReceptionMessage(null);
 
-    // On ouvre tout de suite une fenêtre popup centrée (avant l'await) pour éviter
-    // qu'elle soit bloquée par le navigateur. On y injectera l'URL une fois récupérée.
-    const width = 520;
-    const height = 720;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    const popup = window.open(
-      'about:blank',
-      'facturavis-reception',
-      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no`
-    );
+    // Ouvre un nouvel onglet avant l'await pour éviter le blocage navigateur.
+    const popup = window.open('about:blank', '_blank');
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
