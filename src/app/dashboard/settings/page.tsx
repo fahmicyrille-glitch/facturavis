@@ -11,6 +11,7 @@ import ProfileForm from '@/components/settings/ProfileForm';
 import PrestationsSection from '@/components/settings/PrestationsSection';
 import CabinetsSection from '@/components/settings/CabinetsSection';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import ReceptionActivationModal from '@/components/settings/ReceptionActivationModal';
 
 function SettingsContent() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -57,6 +58,7 @@ function SettingsContent() {
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [receptionStatus, setReceptionStatus] = useState<string | null>(null);
   const [activatingReception, setActivatingReception] = useState(false);
+  const [showReceptionModal, setShowReceptionModal] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
 
   // Global loading state
@@ -120,13 +122,46 @@ function SettingsContent() {
   }, [router, forcedId]);
 
   useEffect(() => {
+    if (!receptionResult) return;
+    // Si la page se charge à l'intérieur de la fenêtre popup ouverte par FacturAvis,
+    // on prévient la fenêtre parente du résultat puis on ferme automatiquement le popup.
+    if (typeof window !== 'undefined' && window.opener && window.opener !== window) {
+      try {
+        window.opener.postMessage({ source: 'facturavis-reception', result: receptionResult }, window.location.origin);
+      } catch { /* cross-origin: ignoré */ }
+      window.close();
+      return;
+    }
     if (receptionResult === 'success') {
       setReceptionStatus('active');
       setReceptionMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
+    } else if (receptionResult === 'pending') {
+      setReceptionStatus('pending');
+      setReceptionMessage({ text: 'Dossier soumis ! La plateforme agréée vérifie votre identité et votre SIRET. Vous recevrez un email de confirmation dès la validation — aucune action supplémentaire n\'est requise de votre part.', type: 'info' });
     } else if (receptionResult === 'error') {
       setReceptionMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
     }
   }, [receptionResult]);
+
+  // Écoute le message envoyé par la fenêtre popup lorsqu'elle se termine.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.source !== 'facturavis-reception') return;
+      setShowReceptionModal(false);
+      if (event.data.result === 'success') {
+        setReceptionStatus('active');
+        setReceptionMessage({ text: 'Réception de factures activée avec succès ! Vos fournisseurs peuvent maintenant vous envoyer des factures électroniques.', type: 'success' });
+      } else if (event.data.result === 'pending') {
+        setReceptionStatus('pending');
+        setReceptionMessage({ text: "Dossier soumis ! La plateforme agréée vérifie votre identité et votre SIRET. Vous recevrez un email de confirmation dès la validation.", type: 'info' });
+      } else {
+        setReceptionMessage({ text: "L'activation n'a pas pu être finalisée. Réessayez ou contactez le support.", type: 'error' });
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
 
   // --- SUBSCRIPTION ---
   const [receptionMessage, setReceptionMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -134,6 +169,19 @@ function SettingsContent() {
   const handleActivateReception = async () => {
     setActivatingReception(true);
     setReceptionMessage(null);
+
+    // On ouvre tout de suite une fenêtre popup centrée (avant l'await) pour éviter
+    // qu'elle soit bloquée par le navigateur. On y injectera l'URL une fois récupérée.
+    const width = 520;
+    const height = 720;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    const popup = window.open(
+      'about:blank',
+      'facturavis-reception',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no`
+    );
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/superpdp/authorize', {
@@ -141,11 +189,27 @@ function SettingsContent() {
       });
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url;
+        if (popup && !popup.closed) {
+          popup.location.href = data.url;
+          popup.focus();
+          // Surveille la fermeture de la fenêtre popup pour rafraîchir le statut.
+          const timer = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(timer);
+              setShowReceptionModal(false);
+            }
+          }, 700);
+        } else {
+          // Popup bloqué par le navigateur : on bascule sur un nouvel onglet.
+          window.open(data.url, '_blank', 'noopener,noreferrer');
+          setShowReceptionModal(false);
+        }
       } else {
+        if (popup && !popup.closed) popup.close();
         setReceptionMessage({ text: 'Impossible de lancer l\'activation. Réessayez.', type: 'error' });
       }
     } catch {
+      if (popup && !popup.closed) popup.close();
       setReceptionMessage({ text: 'Impossible de joindre le service. Réessayez.', type: 'error' });
     } finally {
       setActivatingReception(false);
@@ -372,6 +436,13 @@ function SettingsContent() {
         onConfirm={confirmDeleteCabinet}
         onClose={() => deletingId !== cabinetToDelete?.id && setCabinetToDelete(null)}
       />
+      <ReceptionActivationModal
+        isOpen={showReceptionModal}
+        onClose={() => !activatingReception && setShowReceptionModal(false)}
+        onLaunch={handleActivateReception}
+        launching={activatingReception}
+        siret={siret}
+      />
       <div className="max-w-3xl mx-auto space-y-6 pb-20">
         <div className="flex items-center mb-4">
           <Link href="/dashboard" className="mr-4 p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition"><ArrowLeft size={20} className="text-gray-600" /></Link>
@@ -547,18 +618,19 @@ function SettingsContent() {
               </div>
 
               <button
-                onClick={handleActivateReception}
-                disabled={activatingReception || !siret}
+                onClick={() => setShowReceptionModal(true)}
+                disabled={!siret}
                 className="w-full flex justify-center items-center py-4 px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 font-bold text-base hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 transition-all shadow-lg shadow-green-200"
               >
-                {activatingReception ? (
-                  <><Loader2 className="animate-spin mr-2" size={18} /> Connexion à la plateforme...</>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Activer la réception — Gratuit, 30 secondes
-                  </>
-                )}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Activer la réception — Gratuit, 30 secondes
+              </button>
+              <button
+                onClick={() => setShowReceptionModal(true)}
+                className="w-full flex justify-center items-center gap-1.5 text-sm font-semibold text-green-700 hover:text-green-800 hover:underline"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Besoin d&apos;aide pour valider votre profil ?
               </button>
               {!siret && (
                 <p className="text-xs text-red-500 text-center font-medium">Complétez l&apos;étape 1 : renseignez votre SIRET dans le profil ci-dessous.</p>

@@ -49,6 +49,7 @@ export default function FacturesRecuesPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [receptionActive, setReceptionActive] = useState(false);
+  const [receptionPending, setReceptionPending] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   // ── Confirm modal ──
@@ -108,8 +109,10 @@ export default function FacturesRecuesPage() {
         setReceptionActive(true);
       } else {
         const { data: profile } = await supabase.from('therapeutes').select('iopole_status').eq('id', uid).single();
-        if (profile?.iopole_status === 'active' || profile?.iopole_status === 'pending') {
+        if (profile?.iopole_status === 'active') {
           setReceptionActive(true);
+        } else if (profile?.iopole_status === 'pending') {
+          setReceptionPending(true);
         }
       }
 
@@ -445,7 +448,7 @@ export default function FacturesRecuesPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {!receptionActive && (
+            {!receptionActive && !receptionPending && (
               <Link
                 href="/dashboard/settings"
                 className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:opacity-90 text-sm font-bold"
@@ -453,6 +456,12 @@ export default function FacturesRecuesPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 Activer la réception automatique
               </Link>
+            )}
+            {receptionPending && (
+              <span className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2.5 rounded-lg text-sm font-medium">
+                <Loader2 size={15} className="animate-spin shrink-0" />
+                En cours de validation
+              </span>
             )}
             {receptionActive && (
               <div className="flex items-center gap-0">
@@ -530,6 +539,24 @@ export default function FacturesRecuesPage() {
             <p className="text-lg font-bold text-gray-900 truncate">{categoriePlusFrequente}</p>
           </div>
         </div>
+
+        {/* ── Bannière validation en cours ── */}
+        {receptionPending && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+              <Loader2 size={20} className="text-amber-600 animate-spin" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-amber-900">Votre compte est en cours de validation</p>
+              <p className="text-sm text-amber-700 mt-1 leading-relaxed">
+                La plateforme agréée vérifie votre dossier (identité + SIRET). Vous recevrez un email de confirmation lorsque la validation sera finalisée — la synchronisation automatique démarrera alors.
+              </p>
+              <p className="text-xs text-amber-600 mt-2">
+                En attendant, vous pouvez ajouter des factures manuellement via le bouton ci-dessus.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── Dashboard dépenses + Archivage ── */}
         {factures.length > 0 && (

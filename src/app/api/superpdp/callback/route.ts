@@ -72,9 +72,11 @@ export async function GET(request: Request) {
 
     const tokens = await tokenRes.json();
 
-    // Verify which company is linked by calling /companies/me
+    // Fetch company info to get name, SIREN and validation status.
+    // Default to 'pending' — safer than assuming validated when uncertain.
     let companyName = '';
     let companySiren = '';
+    let companyStatus: 'active' | 'pending' = 'pending';
     try {
       const meRes = await fetch(`${SUPERPDP_API_URL}/v1.beta/companies/me`, {
         headers: { 'Authorization': `Bearer ${tokens.access_token}` },
@@ -83,14 +85,20 @@ export async function GET(request: Request) {
         const company = await meRes.json();
         companyName = company.formal_name || company.trade_name || '';
         companySiren = company.number || '';
+        const rawStatus: string = (
+          company.status || company.validation_status || company.kyb_status || ''
+        ).toLowerCase();
+        if (['validated', 'active', 'approved', 'enabled'].includes(rawStatus)) {
+          companyStatus = 'active';
+        }
       }
     } catch {
-      // Non-blocking
+      // Non-blocking — keep 'pending' as safe default
     }
 
-    // Store tokens and activate
+    // Store tokens and update status
     await supabaseAdmin.from('therapeutes').update({
-      iopole_status: 'active',
+      iopole_status: companyStatus,
       superpdp_access_token: tokens.access_token,
       superpdp_refresh_token: tokens.refresh_token || null,
       superpdp_token_expires_at: tokens.expires_in
@@ -100,6 +108,9 @@ export async function GET(request: Request) {
       superpdp_company_siren: companySiren || null,
     }).eq('id', userId);
 
+    if (companyStatus === 'pending') {
+      return NextResponse.redirect(`${siteUrl}/dashboard/settings?reception=pending`);
+    }
     return NextResponse.redirect(`${siteUrl}/dashboard/settings?reception=success`);
   } catch (err) {
     console.error('Callback error:', err);

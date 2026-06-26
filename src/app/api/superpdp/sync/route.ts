@@ -18,6 +18,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Super PDP non configuré' }, { status: 503 });
   }
 
+  // Block sync if company is still being validated by SuperPDP
+  const { data: profile } = await supabaseAdmin
+    .from('therapeutes')
+    .select('iopole_status')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.iopole_status === 'pending') {
+    return NextResponse.json({
+      error: 'Votre compte est en cours de validation par la plateforme agréée. La synchronisation sera disponible une fois votre dossier validé.',
+      status: 'pending',
+    }, { status: 422 });
+  }
+
+  if (profile?.iopole_status !== 'active') {
+    return NextResponse.json({ error: 'Réception non activée' }, { status: 403 });
+  }
+
   try {
     const result = await listInvoiceIds('in');
 
