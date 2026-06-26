@@ -13,6 +13,7 @@ export default function ImportCSV({ userId, onImportComplete }: ImportCSVProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ success: number; errors: number; duplicates: number } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,6 +22,7 @@ export default function ImportCSV({ userId, onImportComplete }: ImportCSVProps) 
 
     setImporting(true);
     setResult(null);
+    setErrorMessage(null);
 
     try {
       const text = await file.text();
@@ -39,7 +41,7 @@ export default function ImportCSV({ userId, onImportComplete }: ImportCSVProps) 
       const adresseIdx = header.findIndex(h => h.includes('adresse') || h.includes('address'));
 
       if (nomIdx === -1 || emailIdx === -1) {
-        alert("Le fichier doit contenir au minimum les colonnes 'nom' et 'email'.");
+        setErrorMessage("Le fichier doit contenir au minimum les colonnes 'nom' et 'email'.");
         setImporting(false);
         return;
       }
@@ -127,7 +129,7 @@ export default function ImportCSV({ userId, onImportComplete }: ImportCSVProps) 
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <FileText size={20} className="text-blue-500" /> Importer des patients
           </h3>
-          <button onClick={() => { setIsOpen(false); setResult(null); }} className="p-2 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => { setIsOpen(false); setResult(null); setErrorMessage(null); }} className="p-2 hover:bg-gray-100 rounded-lg">
             <X size={18} className="text-gray-400" />
           </button>
         </div>
@@ -161,6 +163,13 @@ export default function ImportCSV({ userId, onImportComplete }: ImportCSVProps) 
           </label>
         </div>
 
+        {errorMessage && (
+          <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-100 p-3 rounded-lg">
+            <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         {result && (
           <div className="space-y-2">
             {result.success > 0 && (
@@ -182,7 +191,7 @@ export default function ImportCSV({ userId, onImportComplete }: ImportCSVProps) 
         )}
 
         <button
-          onClick={() => { setIsOpen(false); setResult(null); }}
+          onClick={() => { setIsOpen(false); setResult(null); setErrorMessage(null); }}
           className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold transition-all"
         >
           Fermer

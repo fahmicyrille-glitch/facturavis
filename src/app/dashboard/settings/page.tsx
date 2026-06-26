@@ -10,6 +10,7 @@ import type { Cabinet, Prestation } from '@/lib/types';
 import ProfileForm from '@/components/settings/ProfileForm';
 import PrestationsSection from '@/components/settings/PrestationsSection';
 import CabinetsSection from '@/components/settings/CabinetsSection';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 function SettingsContent() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -67,6 +68,12 @@ function SettingsContent() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingSig, setUploadingSig] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [cabinetToDelete, setCabinetToDelete] = useState<Cabinet | null>(null);
+
+  const showMessage = (text: string, type: 'success' | 'error') => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -224,7 +231,7 @@ function SettingsContent() {
       setLogoUrl(data.publicUrl);
       await supabase.from('therapeutes').update({ logo_url: data.publicUrl }).eq('id', userId);
     } catch (error: any) {
-      alert("Erreur lors de l'envoi : " + (error.message || "Fichier invalide"));
+      showMessage("Erreur lors de l'envoi : " + (error.message || "Fichier invalide"), 'error');
     } finally { setUploadingLogo(false); }
   };
 
@@ -247,7 +254,7 @@ function SettingsContent() {
       setSignatureUrl(data.publicUrl);
       await supabase.from('therapeutes').update({ signature_url: data.publicUrl }).eq('id', userId);
     } catch (error: any) {
-      alert("Erreur lors de l'envoi de la signature : " + (error.message || "Fichier invalide"));
+      showMessage("Erreur lors de l'envoi de la signature : " + (error.message || "Fichier invalide"), 'error');
     } finally { setUploadingSig(false); }
   };
 
@@ -269,7 +276,7 @@ function SettingsContent() {
     if (!error && data) {
       setPrestations([...prestations, data]);
       setNewPrestaNom(''); setNewPrestaPrix('');
-    } else if (error) { alert("Erreur lors de l'ajout : " + error.message); }
+    } else if (error) { showMessage("Erreur lors de l'ajout : " + error.message, 'error'); }
     setAddingPresta(false);
   };
 
@@ -283,7 +290,7 @@ function SettingsContent() {
     if (!error) {
       setPrestations(prestations.map(p => p.id === id ? { ...p, nom: editPrestaNom.trim(), prix: prixParsed } : p));
       setEditingPrestaId(null);
-    } else { alert("Erreur lors de la modification : " + error.message); }
+    } else { showMessage("Erreur lors de la modification : " + error.message, 'error'); }
     setUpdatingPresta(false);
   };
 
@@ -291,7 +298,7 @@ function SettingsContent() {
     setDeletingPrestaId(id);
     const { error } = await supabase.from('prestations').delete().eq('id', id).eq('user_id', userId!);
     if (!error) { setPrestations(prestations.filter(p => p.id !== id)); }
-    else { alert("Impossible de supprimer cette prestation."); }
+    else { showMessage("Impossible de supprimer cette prestation.", 'error'); }
     setDeletingPrestaId(null);
   };
 
@@ -306,7 +313,7 @@ function SettingsContent() {
     if (!error && data) {
       setCabinets([...cabinets, data]);
       setNewCabinetNom(''); setNewCabinetLink('');
-    } else if (error) { alert("Erreur lors de l'ajout : " + error.message); }
+    } else if (error) { showMessage("Erreur lors de l'ajout : " + error.message, 'error'); }
     setAddingCabinet(false);
   };
 
@@ -331,23 +338,40 @@ function SettingsContent() {
       setCabinets(cabinets.map(c => c.id === id_du_cabinet ? { ...c, nom: cleanNom, lien_avis_google: cleanLink } : c));
       setEditingCabinetId(null);
     } catch (error: any) {
-      alert("Erreur : " + (error.message || "Accès refusé"));
+      showMessage("Erreur : " + (error.message || "Accès refusé"), 'error');
     } finally { setUpdatingCabinet(false); }
   };
 
-  const handleDeleteCabinet = async (id: string) => {
-    if (!window.confirm("Supprimer ce lieu de consultation ?")) return;
+  const handleDeleteCabinet = (id: string) => {
+    const cabinet = cabinets.find(c => c.id === id);
+    if (cabinet) setCabinetToDelete(cabinet);
+  };
+
+  const confirmDeleteCabinet = async () => {
+    if (!cabinetToDelete) return;
+    const id = cabinetToDelete.id;
     setDeletingId(id);
     const { error } = await supabase.from('cabinets').delete().eq('id', id).eq('therapeute_id', userId!);
     if (!error) { setCabinets(cabinets.filter(c => c.id !== id)); }
-    else { alert("Impossible de supprimer ce lieu."); }
+    else { showMessage("Impossible de supprimer ce lieu.", 'error'); }
     setDeletingId(null);
+    setCabinetToDelete(null);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <ConfirmDialog
+        isOpen={!!cabinetToDelete}
+        title="Supprimer ce lieu"
+        description={cabinetToDelete ? `Le lieu de consultation « ${cabinetToDelete.nom} » sera retiré de votre profil.` : ''}
+        confirmLabel="Oui, supprimer"
+        cancelLabel="Annuler"
+        loading={!!deletingId && deletingId === cabinetToDelete?.id}
+        onConfirm={confirmDeleteCabinet}
+        onClose={() => deletingId !== cabinetToDelete?.id && setCabinetToDelete(null)}
+      />
       <div className="max-w-3xl mx-auto space-y-6 pb-20">
         <div className="flex items-center mb-4">
           <Link href="/dashboard" className="mr-4 p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition"><ArrowLeft size={20} className="text-gray-600" /></Link>

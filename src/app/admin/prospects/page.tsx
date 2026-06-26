@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Loader2, Users, Mail, Phone, Calendar, ArrowLeft, Stethoscope, Filter, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Prospect {
   id: string;
@@ -30,6 +31,8 @@ export default function ProspectsAdminPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [filterStatut, setFilterStatut] = useState<string>('all');
+  const [prospectToDelete, setProspectToDelete] = useState<Prospect | null>(null);
+  const [deletingProspect, setDeletingProspect] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -69,18 +72,23 @@ export default function ProspectsAdminPage() {
     setUpdatingId(null);
   };
 
-  const handleDeleteProspect = async (prospect: Prospect) => {
-    if (!confirm(`Supprimer définitivement ${prospect.prenom} ${prospect.nom} ?`)) return;
-    setUpdatingId(prospect.id);
+  const handleDeleteProspect = (prospect: Prospect) => {
+    setProspectToDelete(prospect);
+  };
+
+  const confirmDeleteProspect = async () => {
+    if (!prospectToDelete) return;
+    setDeletingProspect(true);
     const { error } = await supabase
       .from('prospects')
       .delete()
-      .eq('id', prospect.id);
+      .eq('id', prospectToDelete.id);
 
     if (!error) {
-      setProspects(prev => prev.filter(p => p.id !== prospect.id));
+      setProspects(prev => prev.filter(p => p.id !== prospectToDelete.id));
     }
-    setUpdatingId(null);
+    setDeletingProspect(false);
+    setProspectToDelete(null);
   };
 
   const filteredProspects = filterStatut === 'all'
@@ -100,6 +108,16 @@ export default function ProspectsAdminPage() {
 
   return (
     <div className="min-h-screen bg-[#fcfaf8] p-4 sm:p-8 text-[#3e2f25] font-sans selection:bg-[#a9825a] selection:text-white">
+      <ConfirmDialog
+        isOpen={!!prospectToDelete}
+        title="Supprimer ce prospect"
+        description={prospectToDelete ? `${prospectToDelete.prenom} ${prospectToDelete.nom} sera définitivement retiré de la liste des membres fondateurs.` : ''}
+        confirmLabel="Oui, supprimer"
+        cancelLabel="Annuler"
+        loading={deletingProspect}
+        onConfirm={confirmDeleteProspect}
+        onClose={() => !deletingProspect && setProspectToDelete(null)}
+      />
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* EN-TETE */}

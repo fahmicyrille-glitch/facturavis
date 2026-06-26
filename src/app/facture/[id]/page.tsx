@@ -104,7 +104,7 @@ export default function PagePatient() {
         window.URL.revokeObjectURL(url);
 
       } catch (err) {
-        alert("Erreur lors du téléchargement.");
+        setError("Erreur lors du téléchargement de la facture.");
         setShowModal(false);
       } finally {
         setIsDownloading(false);

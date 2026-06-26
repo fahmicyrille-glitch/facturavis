@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Therapeute {
   id: string;
@@ -65,6 +66,10 @@ export default function SuperAdmin() {
   const [testEmail, setTestEmail] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
+
+  // États suppression praticien
+  const [userToDelete, setUserToDelete] = useState<{ id: string; nom: string } | null>(null);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   const router = useRouter();
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -170,18 +175,28 @@ export default function SuperAdmin() {
     } finally { setIsSaving(false); }
   };
 
-  const handleDeleteUser = async (id: string, nom: string) => {
-    if (!confirm(`⚠️ Supprimer DÉFINITIVEMENT le compte de ${nom} ?`)) return;
+  const handleDeleteUser = (id: string, nom: string) => {
+    setUserToDelete({ id, nom });
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeletingUser(true);
     const { data: { session } } = await supabase.auth.getSession();
     try {
-      const res = await fetch(`/api/admin/users?id=${id}`, {
+      const res = await fetch(`/api/admin/users?id=${userToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
       if (!res.ok) throw new Error(await res.text());
-      setTherapeutes(therapeutes.filter(t => t.id !== id));
+      setTherapeutes(therapeutes.filter(t => t.id !== userToDelete.id));
       toast.success('Supprimé avec succès');
-    } catch (error: any) { toast.error(error.message); }
+      setUserToDelete(null);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setDeletingUser(false);
+    }
   };
 
   const handleTestEmail = async (e: React.FormEvent) => {
@@ -221,6 +236,16 @@ export default function SuperAdmin() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <Toaster position="top-right" />
+      <ConfirmDialog
+        isOpen={!!userToDelete}
+        title="Supprimer définitivement"
+        description={userToDelete ? `Le compte de ${userToDelete.nom} et toutes ses données seront définitivement effacés. Cette action est irréversible.` : ''}
+        confirmLabel="Oui, supprimer"
+        cancelLabel="Annuler"
+        loading={deletingUser}
+        onConfirm={confirmDeleteUser}
+        onClose={() => !deletingUser && setUserToDelete(null)}
+      />
       <div className="max-w-[1400px] mx-auto space-y-6">
 
         {/* HEADER */}
@@ -365,7 +390,19 @@ export default function SuperAdmin() {
                         <td className="px-6 py-4 text-right flex justify-end gap-1">
                           <button onClick={() => window.open(`/dashboard/settings?as=${t.id}`, '_blank')} className="text-gray-400 p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Gérer les cabinets/logo"><Settings size={16} /></button>
                           <button onClick={() => handleEditClick(t)} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg" title="Modifier infos"><Edit size={16} /></button>
-                          <button onClick={() => handleDeleteUser(t.id, t.nom)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg">🗑️</button>
+                          {t.email?.toLowerCase().trim() === adminEmail?.toLowerCase().trim() ? (
+                            <button
+                              disabled
+                              title="Le super admin ne peut pas être supprimé"
+                              className="text-gray-300 p-2 rounded-lg cursor-not-allowed"
+                            >🛡️</button>
+                          ) : (
+                            <button
+                              onClick={() => handleDeleteUser(t.id, t.nom)}
+                              className="text-red-400 p-2 hover:bg-red-50 rounded-lg"
+                              title="Supprimer ce praticien"
+                            >🗑️</button>
+                          )}
                         </td>
                       </tr>
                     );

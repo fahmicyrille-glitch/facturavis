@@ -85,6 +85,19 @@ export async function DELETE(request: Request) {
     const targetUserId = url.searchParams.get('id');
     if (!targetUserId) return new NextResponse('ID manquant', { status: 400 });
 
+    // Garde-fou : on n'autorise jamais la suppression du super admin
+    const { data: targetProfile } = await supabaseAdmin
+      .from('therapeutes')
+      .select('email')
+      .eq('id', targetUserId)
+      .single();
+    if (targetProfile && checkIsAdmin(targetProfile.email)) {
+      return NextResponse.json(
+        { error: 'Le compte super admin ne peut pas être supprimé.' },
+        { status: 403 }
+      );
+    }
+
     // 1. Supprimer les fichiers Storage (factures PDF)
     const { data: factures } = await supabaseAdmin.from('factures').select('fichier_path').eq('therapeute_id', targetUserId);
     if (factures && factures.length > 0) {
