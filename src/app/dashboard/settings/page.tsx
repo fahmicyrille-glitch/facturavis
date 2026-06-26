@@ -593,8 +593,8 @@ function SettingsContent() {
                 <Loader2 size={20} className="text-amber-600 animate-spin" />
               </div>
               <div>
-                <p className="font-bold text-amber-800">Vérification en cours</p>
-                <p className="text-xs text-amber-600">Consultez votre email pour valider votre identité et signer le mandat. Une fois validé, la réception sera activée automatiquement.</p>
+                <p className="font-bold text-amber-800">Validation en cours côté SuperPDP</p>
+                <p className="text-xs text-amber-600">Votre dossier est en cours d&apos;examen par la plateforme agréée. Aucune action requise de votre part — cette page se mettra à jour automatiquement une fois votre compte validé.</p>
               </div>
             </div>
           ) : (
