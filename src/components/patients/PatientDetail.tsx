@@ -63,6 +63,12 @@ export default function PatientDetail({
   // Debounced auto-save for consultation notes
   const consultationSaveRef = useRef<Record<string, NodeJS.Timeout>>({});
 
+  // Scroll container : remonte en haut quand on change de patient
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedPatient?.id]);
+
   // Fetch consultations and attachments when patient changes
   useEffect(() => {
     if (!selectedPatient || selectedPatient.id === 'temp-new-patient') {
@@ -313,7 +319,7 @@ export default function PatientDetail({
   const isDraft = selectedPatient.id === 'temp-new-patient';
 
   return (
-    <div className="lg:col-span-8 overflow-y-auto pb-20 custom-scrollbar bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
+    <div ref={scrollRef} className="lg:col-span-8 overflow-y-auto pb-20 custom-scrollbar bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8">
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row justify-between gap-4">
