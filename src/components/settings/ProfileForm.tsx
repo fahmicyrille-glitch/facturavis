@@ -23,6 +23,8 @@ interface ProfileFormProps {
   setAdeli: (v: string) => void;
   siteWeb: string;
   setSiteWeb: (v: string) => void;
+  comptableEmail: string;
+  setComptableEmail: (v: string) => void;
   logoUrl: string;
   signatureUrl: string;
   uploadingLogo: boolean;
@@ -45,6 +47,7 @@ export default function ProfileForm({
   codeApe, setCodeApe,
   adeli, setAdeli,
   siteWeb, setSiteWeb,
+  comptableEmail, setComptableEmail,
   logoUrl, signatureUrl,
   uploadingLogo, uploadingSig,
   onLogoUpload, onDeleteLogo,
@@ -160,6 +163,21 @@ export default function ProfileForm({
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Site Web (Optionnel)</label>
             <input type="url" placeholder="https://..." className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={siteWeb} onChange={(e) => setSiteWeb(e.target.value)} />
+          </div>
+
+          <div className="md:col-span-2 pt-2 border-t border-gray-100">
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Email comptable (Optionnel)
+            </label>
+            <input
+              type="email"
+              placeholder="comptable@cabinet.fr"
+              className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-amber-500/20"
+              value={comptableEmail}
+              onChange={(e) => setComptableEmail(e.target.value)}
+            />
+            <p className="text-xs text-gray-400 mt-1">Pré-rempli automatiquement lors de l&apos;envoi du rapport comptable.</p>
           </div>
         </div>
 

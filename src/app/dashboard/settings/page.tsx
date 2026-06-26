@@ -31,6 +31,7 @@ function SettingsContent() {
   const [codeApe, setCodeApe] = useState('');
   const [adeli, setAdeli] = useState('');
   const [siteWeb, setSiteWeb] = useState('');
+  const [comptableEmail, setComptableEmail] = useState('');
   const [signatureUrl, setSignatureUrl] = useState('');
 
   // Cabinets state
@@ -101,6 +102,7 @@ function SettingsContent() {
         setCodeApe(profileData.code_ape || '');
         setAdeli(profileData.adeli || '');
         setSiteWeb(profileData.site_web || '');
+        setComptableEmail(profileData.comptable_email || '');
         setSignatureUrl(profileData.signature_url || '');
         setSubscriptionPlan(profileData.plan || null);
         setSubscriptionStatus(profileData.subscription_status || null);
@@ -293,7 +295,8 @@ function SettingsContent() {
         nom: nom.trim(), titre: titre.trim(), telephone: telephone.trim(),
         logo_url: logoUrl, adresse_cabinet: adresseCabinet.trim(),
         siret: cleanSiret, code_ape: codeApe.trim().toUpperCase(),
-        adeli: cleanAdeli, site_web: siteWeb.trim(), signature_url: signatureUrl
+        adeli: cleanAdeli, site_web: siteWeb.trim(), signature_url: signatureUrl,
+        comptable_email: comptableEmail.trim() || null,
       })
       .eq('id', userId);
     setSaving(false);
@@ -720,6 +723,7 @@ function SettingsContent() {
           codeApe={codeApe} setCodeApe={setCodeApe}
           adeli={adeli} setAdeli={setAdeli}
           siteWeb={siteWeb} setSiteWeb={setSiteWeb}
+          comptableEmail={comptableEmail} setComptableEmail={setComptableEmail}
           logoUrl={logoUrl} signatureUrl={signatureUrl}
           uploadingLogo={uploadingLogo} uploadingSig={uploadingSig}
           onLogoUpload={handleLogoUpload} onDeleteLogo={handleDeleteLogo}

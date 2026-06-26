@@ -13,6 +13,7 @@ import type { FactureRecue } from '@/lib/types';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import ChartDepenses from '@/components/factures-recues/ChartDepenses';
+import ComptableReportModal from '@/components/factures-recues/ComptableReportModal';
 
 const CATEGORIES = [
   'Materiel medical',
@@ -51,6 +52,9 @@ export default function FacturesRecuesPage() {
   const [receptionActive, setReceptionActive] = useState(false);
   const [receptionPending, setReceptionPending] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [comptableEmail, setComptableEmail] = useState('');
+  const [showComptableModal, setShowComptableModal] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
 
   // ── Confirm modal ──
   const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
@@ -108,7 +112,8 @@ export default function FacturesRecuesPage() {
         setIsAdmin(true);
         setReceptionActive(true);
       } else {
-        const { data: profile } = await supabase.from('therapeutes').select('iopole_status').eq('id', uid).single();
+        const { data: profile } = await supabase.from('therapeutes').select('iopole_status, comptable_email').eq('id', uid).single();
+        if (profile?.comptable_email) setComptableEmail(profile.comptable_email);
         const iopoleStatus = profile?.iopole_status;
         if (iopoleStatus === 'active') {
           setReceptionActive(true);
@@ -201,6 +206,33 @@ export default function FacturesRecuesPage() {
       showToast('Impossible de contacter la plateforme', 'error');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  // ── Rapport comptable ──
+  const handleSendReport = async (dateDebut: string, dateFin: string, emailComptable: string) => {
+    setSendingReport(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/comptable/send-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ dateDebut, dateFin, emailComptable }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowComptableModal(false);
+        showToast(`Rapport envoyé à ${emailComptable} — ${data.count} facture${data.count > 1 ? 's' : ''}, ${data.total.toFixed(2)} €`, 'success');
+      } else {
+        showToast(data.error || 'Erreur lors de l\'envoi', 'error');
+      }
+    } catch {
+      showToast('Erreur réseau', 'error');
+    } finally {
+      setSendingReport(false);
     }
   };
 
@@ -515,6 +547,16 @@ export default function FacturesRecuesPage() {
                   </button>
                 )}
               </div>
+            )}
+            {factures.length > 0 && (
+              <button
+                onClick={() => setShowComptableModal(true)}
+                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg shadow-sm transition-colors text-sm font-medium"
+                title="Envoyer le rapport des factures fournisseurs à votre comptable"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Comptable
+              </button>
             )}
             <button
               onClick={() => setIsUploadOpen(true)}
@@ -1064,6 +1106,16 @@ export default function FacturesRecuesPage() {
           </div>
         </div>
       )}
+
+      {/* ── Rapport Comptable Modal ── */}
+      <ComptableReportModal
+        isOpen={showComptableModal}
+        onClose={() => setShowComptableModal(false)}
+        factures={factures}
+        comptableEmail={comptableEmail}
+        onSend={handleSendReport}
+        sending={sendingReport}
+      />
 
       {/* ── Confirm Modal ── */}
       {confirmModal && (
