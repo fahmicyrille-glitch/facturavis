@@ -560,7 +560,7 @@ export default function FacturesRecuesPage() {
                   <div>
                     <h4 className="font-bold text-blue-900 text-sm">Synchronisation automatique</h4>
                     <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                      Vos factures fournisseurs sont récupérées automatiquement toutes les 3 heures via la plateforme agréée.
+                      Vos factures fournisseurs sont récupérées automatiquement chaque jour via la plateforme agréée. Vous pouvez aussi déclencher une synchronisation manuelle à tout moment.
                     </p>
                     {receptionActive && (
                       <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">

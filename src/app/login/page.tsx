@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Lock, Mail, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, FileCheck, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Lock, Mail, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, FileCheck, Eye, EyeOff, MailCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -12,6 +12,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [confirmationResent, setConfirmationResent] = useState(false);
 
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -32,6 +35,8 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setNeedsEmailConfirmation(false);
+    setConfirmationResent(false);
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -39,11 +44,35 @@ export default function Home() {
     });
 
     if (error) {
-      setError('Email ou mot de passe incorrect.');
+      const code = (error as { code?: string }).code;
+      const msg = error.message?.toLowerCase() || '';
+      if (code === 'email_not_confirmed' || msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        setNeedsEmailConfirmation(true);
+      } else {
+        setError('Email ou mot de passe incorrect.');
+      }
       setLoading(false);
     } else {
       router.push('/dashboard');
     }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) return;
+    setResendingConfirmation(true);
+    setError(null);
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) {
+      const msg = error.message?.toLowerCase() || '';
+      if (error.status === 429 || msg.includes('rate limit') || msg.includes('too many')) {
+        setError("Par sécurité, veuillez patienter 60 secondes avant de redemander un email.");
+      } else {
+        setError("Impossible de renvoyer l'email pour le moment.");
+      }
+    } else {
+      setConfirmationResent(true);
+    }
+    setResendingConfirmation(false);
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -175,7 +204,7 @@ export default function Home() {
               <div>
                 <div className="flex justify-between items-center mb-2 ml-1">
                   <label className="block text-xs font-black uppercase tracking-wider text-[#3e2f25]">Mot de passe</label>
-                  <button type="button" onClick={() => setIsResetMode(true)} className="text-[10px] font-black uppercase tracking-widest text-[#a9825a] hover:text-[#8b6a48] focus:outline-none transition-colors">
+                  <button type="button" onClick={() => { setIsResetMode(true); setNeedsEmailConfirmation(false); setError(null); }} className="text-[10px] font-black uppercase tracking-widest text-[#a9825a] hover:text-[#8b6a48] focus:outline-none transition-colors">
                     Oublié ?
                   </button>
                 </div>
@@ -200,6 +229,40 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+
+              {needsEmailConfirmation && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex items-start gap-2.5">
+                    <div className="bg-amber-100 text-amber-700 p-1.5 rounded-lg shrink-0">
+                      <MailCheck size={16} />
+                    </div>
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-black text-amber-900 mb-1">Email en attente de confirmation</p>
+                      <p className="text-amber-800 font-medium">
+                        Vous devez d'abord valider votre adresse <strong className="font-black">{email}</strong> en cliquant sur le lien reçu par email.
+                      </p>
+                      <p className="text-amber-700 font-medium mt-1.5">
+                        Pensez à vérifier vos <strong className="font-black">spams</strong> ou courriers indésirables.
+                      </p>
+                    </div>
+                  </div>
+                  {confirmationResent ? (
+                    <div className="flex items-center gap-2 text-[11px] text-green-700 bg-green-50 border border-green-100 px-3 py-2 rounded-lg font-bold">
+                      <CheckCircle size={12} /> Nouvel email envoyé à {email}.
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendConfirmation}
+                      disabled={resendingConfirmation}
+                      className="w-full text-xs font-black bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 py-2.5 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {resendingConfirmation ? <Loader2 className="animate-spin" size={14} /> : <Mail size={14} />}
+                      {resendingConfirmation ? 'Envoi en cours…' : "Renvoyer l'email de confirmation"}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {error && (
                   <div className="text-red-600 text-xs bg-red-50 p-3 rounded-xl flex items-center border border-red-100 font-bold">
