@@ -622,7 +622,8 @@ function SettingsContent() {
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
                   <p className="text-sm font-bold text-blue-800">Une fois votre dossier validé par SuperPDP</p>
                   <p className="text-xs text-blue-700 leading-relaxed">
-                    Revenez ici et cliquez sur ce bouton pour synchroniser votre statut. Votre réception de factures sera activée automatiquement.
+                    SuperPDP vous enverra un <strong>email de confirmation</strong> quand votre dossier sera validé.
+                    Revenez ensuite sur cette page et cliquez sur le bouton ci-dessous pour activer votre réception.
                   </p>
                   <button
                     onClick={() => setShowReceptionModal(true)}
@@ -632,7 +633,7 @@ function SettingsContent() {
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-amber-600 text-center">Cette page se met à jour automatiquement une fois votre compte validé.</p>
+                <p className="text-xs text-amber-600 text-center">SuperPDP vous enverra un email de confirmation — cette page se mettra à jour automatiquement.</p>
               )}
             </div>
           ) : (
