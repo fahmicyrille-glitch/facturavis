@@ -498,8 +498,8 @@ function SettingsContent() {
           </div>
 
           {/* Current plan display */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 mb-4">
-            <div>
+          <div className="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 mb-4">
+            <div className="min-w-0">
               <p className="font-bold text-gray-900">
                 {subscriptionPlan === 'founder' ? 'Plan Fondateur' :
                  subscriptionPlan === 'standard' ? 'Plan Standard' :
@@ -517,7 +517,7 @@ function SettingsContent() {
                  'Réception factures fournisseurs incluse'}
               </p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+            <div className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
               subscriptionStatus === 'active' ? 'bg-green-100 text-green-700' :
               subscriptionStatus === 'past_due' ? 'bg-orange-100 text-orange-700' :
               subscriptionStatus === 'cancelled' ? 'bg-red-100 text-red-700' :

@@ -485,23 +485,23 @@ export default function Dashboard() {
               Connecté en tant que <span className="font-semibold">{therapeuteInfo?.nom}</span>
             </p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto">
             {isAdmin && (
-              <Link href="/admin" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-white bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg shadow-sm transition-colors">
-                <Settings size={16} className="mr-2" /> Admin
+              <Link href="/admin" className="min-w-0 flex items-center justify-center text-sm text-white bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+                <Settings size={16} className="mr-2 shrink-0" /> Admin
               </Link>
             )}
-            <Link href="/dashboard/factures-recues" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
-              <Inbox size={16} className="mr-2" /> Factures Reçues
+            <Link href="/dashboard/factures-recues" className="min-w-0 flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+              <Inbox size={16} className="mr-2 shrink-0" /> Factures Reçues
             </Link>
-            <Link href="/dashboard/patients" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
-              <Users size={16} className="mr-2" /> Fiches Patients
+            <Link href="/dashboard/patients" className="min-w-0 flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+              <Users size={16} className="mr-2 shrink-0" /> Fiches Patients
             </Link>
-            <Link href="/dashboard/settings" className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
-              <Settings size={16} className="mr-2" /> Paramètres
+            <Link href="/dashboard/settings" className="min-w-0 flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+              <Settings size={16} className="mr-2 shrink-0" /> Paramètres
             </Link>
-            <button onClick={handleLogout} className="flex-1 sm:flex-none flex items-center justify-center text-sm text-gray-500 hover:text-red-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
-              <LogOut size={16} className="mr-2" /> Deconnexion
+            <button onClick={handleLogout} className="min-w-0 flex items-center justify-center text-sm text-gray-500 hover:text-red-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+              <LogOut size={16} className="mr-2 shrink-0" /> Deconnexion
             </button>
           </div>
           {cabinets.length > 1 && (

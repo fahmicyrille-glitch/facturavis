@@ -372,28 +372,28 @@ export default function PatientsAnnuaire() {
         isDraft={selectedPatient?.id === 'temp-new-patient'}
       />
 
-      <div className="max-w-[1500px] w-[96%] mx-auto flex flex-col h-[calc(100vh-60px)] md:h-[calc(100vh-100px)]">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <button onClick={handleGoBack} className="p-2.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition group">
+      <div className="max-w-[1500px] w-[96%] mx-auto flex flex-col lg:h-[calc(100vh-100px)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4 min-w-0">
+            <button onClick={handleGoBack} className="p-2.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition group shrink-0">
               <ArrowLeft size={20} className="text-gray-600 group-hover:-translate-x-1 transition-transform" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dossiers Patients</h1>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight truncate">Dossiers Patients</h1>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Annuaire et suivi thérapeutique</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {userId && (
               <ImportCSV userId={userId} onImportComplete={fetchPatients} />
             )}
-            <button onClick={handleCreatePatient} className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm font-bold">
+            <button onClick={handleCreatePatient} className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm font-bold flex-1 sm:flex-none">
               <UserPlus size={18}/> Nouveau Patient
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 lg:overflow-hidden">
           <PatientList
             patients={filtered}
             selectedPatientId={selectedPatient?.id || null}

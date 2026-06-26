@@ -505,11 +505,11 @@ export default function FacturesRecuesPage() {
               <p className="text-sm text-gray-500 mt-0.5">Conformite reforme sept. 2026</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {!receptionActive && !receptionPending && (
               <Link
                 href="/dashboard/settings"
-                className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:opacity-90 text-sm font-bold"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:opacity-90 text-sm font-bold"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 Activer la réception automatique
