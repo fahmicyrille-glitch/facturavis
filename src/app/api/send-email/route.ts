@@ -37,7 +37,8 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
     }
-    if (!['http:', 'https:'].includes(lienUrl.protocol) || lienUrl.hostname !== new URL(siteUrl).hostname) {
+    const normalize = (h: string) => h.replace(/^www\./, '');
+    if (!['http:', 'https:'].includes(lienUrl.protocol) || normalize(lienUrl.hostname) !== normalize(new URL(siteUrl).hostname)) {
       return NextResponse.json({ error: 'Lien facture invalide' }, { status: 400 });
     }
 
