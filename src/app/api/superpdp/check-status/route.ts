@@ -82,12 +82,18 @@ export async function POST(request: Request) {
     });
 
     if (!meRes.ok) {
-      return NextResponse.json({ status: profile.iopole_status, changed: false });
+      console.error(`[check-status] /companies/me returned ${meRes.status} for user ${user.id}`);
+      return NextResponse.json({ status: profile.iopole_status, changed: false, debug: { httpStatus: meRes.status } });
     }
 
     const company = await meRes.json();
+
+    // Log full response to understand SuperPDP's field names
+    console.log(`[check-status] /companies/me response for user ${user.id}:`, JSON.stringify(company));
+
     const rawStatus: string = (
-      company.status || company.validation_status || company.kyb_status || ''
+      company.status || company.validation_status || company.kyb_status ||
+      company.validation || company.state || ''
     ).toLowerCase();
 
     const newStatus = ACTIVE_STATUSES.includes(rawStatus) ? 'active' : 'pending';
@@ -98,11 +104,12 @@ export async function POST(request: Request) {
         .update({ iopole_status: newStatus })
         .eq('id', user.id);
 
-      return NextResponse.json({ status: newStatus, changed: true });
+      return NextResponse.json({ status: newStatus, changed: true, debug: { rawStatus, companyKeys: Object.keys(company) } });
     }
 
-    return NextResponse.json({ status: newStatus, changed: false });
-  } catch {
+    return NextResponse.json({ status: newStatus, changed: false, debug: { rawStatus, companyKeys: Object.keys(company) } });
+  } catch (err) {
+    console.error(`[check-status] Error for user ${user.id}:`, err);
     return NextResponse.json({ status: profile.iopole_status, changed: false });
   }
 }

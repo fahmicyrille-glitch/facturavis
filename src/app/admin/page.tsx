@@ -27,6 +27,7 @@ interface Therapeute {
   created_at: string;
   plan?: string;
   subscription_status?: string;
+  iopole_status?: string;
 }
 
 interface Facture {
@@ -330,6 +331,31 @@ export default function SuperAdmin() {
                           <div className="flex gap-2 mt-1">
                             {t.siret && <span className="text-[8px] bg-blue-50 text-blue-600 px-1 rounded font-bold uppercase">SIRET: {t.siret}</span>}
                             {t.code_ape && <span className="text-[8px] bg-gray-100 text-gray-600 px-1 rounded font-bold uppercase">APE: {t.code_ape}</span>}
+                            {t.iopole_status && (
+                              <button
+                                title="Cliquer pour changer le statut réception"
+                                onClick={async () => {
+                                  const next = t.iopole_status === 'active' ? 'pending' : t.iopole_status === 'pending' ? null : 'active';
+                                  const { data: { session: s } } = await supabase.auth.getSession();
+                                  const res = await fetch('/api/admin/users', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s?.access_token}` },
+                                    body: JSON.stringify({ id: t.id, iopole_status: next }),
+                                  });
+                                  if (res.ok) {
+                                    setTherapeutes(prev => prev.map(th => th.id === t.id ? { ...th, iopole_status: next ?? undefined } : th));
+                                    toast.success(`Réception → ${next ?? 'null'}`);
+                                  } else { toast.error('Erreur'); }
+                                }}
+                                className={`text-[8px] px-1 rounded font-bold uppercase cursor-pointer ${
+                                  t.iopole_status === 'active' ? 'bg-green-100 text-green-700' :
+                                  t.iopole_status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-gray-100 text-gray-500'
+                                }`}
+                              >
+                                PA: {t.iopole_status}
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center font-bold">{fT.length}</td>
