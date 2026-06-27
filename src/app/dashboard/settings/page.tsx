@@ -616,8 +616,10 @@ function SettingsContent() {
                     )}
                   </button>
                 )}
-                <button onClick={() => handleSubscribe('standard')} disabled={subscribing}
-                  className={`flex flex-col items-center py-4 px-4 rounded-xl font-bold transition-all ${founderSlots?.remaining === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:opacity-90 shadow-lg shadow-blue-200 ring-2 ring-blue-400' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}>
+                <button
+                  onClick={() => founderSlots?.remaining === 0 && handleSubscribe('standard')}
+                  disabled={subscribing || (founderSlots !== null && founderSlots.remaining > 0)}
+                  className={`flex flex-col items-center py-4 px-4 rounded-xl font-bold transition-all ${founderSlots?.remaining === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:opacity-90 shadow-lg shadow-blue-200 ring-2 ring-blue-400' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
                   {founderSlots?.remaining === 0 && (
                     <span className="text-[10px] font-black uppercase bg-white/20 px-2 py-0.5 rounded-full mb-1">Meilleure offre</span>
                   )}
