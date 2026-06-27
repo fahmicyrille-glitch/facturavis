@@ -595,28 +595,34 @@ function SettingsContent() {
                   </div>
                 ) : (
                   <button onClick={() => handleSubscribe('founder')} disabled={subscribing}
-                    className="flex flex-col items-center py-4 px-4 rounded-xl bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white font-bold hover:opacity-90 transition-all relative overflow-hidden">
-                    {founderSlots && founderSlots.remaining <= 10 && (
-                      <span className="absolute top-1.5 right-2 text-[10px] font-black uppercase bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse">
-                        {founderSlots.remaining} restante{founderSlots.remaining > 1 ? 's' : ''}
-                      </span>
-                    )}
-                    {founderSlots && founderSlots.remaining > 10 && (
-                      <span className="absolute top-1.5 right-2 text-[10px] font-black uppercase bg-white/20 text-white px-2 py-0.5 rounded-full">
-                        {founderSlots.remaining}/{founderSlots.max}
-                      </span>
-                    )}
+                    className="flex flex-col items-center py-3 px-4 rounded-xl bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white font-bold hover:opacity-90 transition-all gap-1">
                     <span className="text-lg font-black">19€/mois</span>
                     <span className="text-xs opacity-80">Tarif Fondateur</span>
+                    {founderSlots && (
+                      <div className="w-full mt-1.5">
+                        <div className="flex justify-between text-[10px] font-bold mb-1 opacity-90">
+                          <span className={founderSlots.remaining <= 10 ? 'text-red-200 animate-pulse' : ''}>
+                            {founderSlots.remaining} place{founderSlots.remaining > 1 ? 's' : ''} restante{founderSlots.remaining > 1 ? 's' : ''}
+                          </span>
+                          <span className="opacity-70">{founderSlots.taken}/{founderSlots.max}</span>
+                        </div>
+                        <div className="w-full bg-white/20 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all ${founderSlots.remaining <= 10 ? 'bg-red-300' : 'bg-white/70'}`}
+                            style={{ width: `${(founderSlots.taken / founderSlots.max) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </button>
                 )}
                 <button onClick={() => handleSubscribe('standard')} disabled={subscribing}
-                  className={`flex flex-col items-center py-4 px-4 rounded-xl font-bold transition-all ${founderSlots?.remaining === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:opacity-90 shadow-lg shadow-blue-200 ring-2 ring-blue-400' : 'bg-gray-900 text-white hover:bg-black'}`}>
+                  className={`flex flex-col items-center py-4 px-4 rounded-xl font-bold transition-all ${founderSlots?.remaining === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:opacity-90 shadow-lg shadow-blue-200 ring-2 ring-blue-400' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}>
                   {founderSlots?.remaining === 0 && (
                     <span className="text-[10px] font-black uppercase bg-white/20 px-2 py-0.5 rounded-full mb-1">Meilleure offre</span>
                   )}
                   <span className="text-lg font-black">29€/mois</span>
-                  <span className="text-xs opacity-80">Tarif Standard</span>
+                  <span className="text-xs opacity-70">Tarif Standard</span>
                 </button>
               </div>
             </div>
