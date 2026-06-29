@@ -4,29 +4,29 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Factures reçues', value: '7', icon: Inbox, color: 'bg-green-50 text-green-600' },
-  { label: 'Total', value: '3 681 €', icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
-  { label: 'Ce mois', value: '7', icon: Calendar, color: 'bg-teal-50 text-teal-600' },
+  { label: 'Factures reçues', value: '5', icon: Inbox, color: 'bg-green-50 text-green-600' },
+  { label: 'Total', value: '4 747 €', icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
+  { label: 'Ce mois', value: '5', icon: Calendar, color: 'bg-teal-50 text-teal-600' },
 ];
 
 const factures = [
   {
-    company: 'AE PNEU',
+    company: 'Châtillon Médical',
     siret: '412 874 201',
     date: '18 juin 2026',
-    amount: '900,00 €',
-    category: 'Véhicule',
+    amount: '340,00 €',
+    category: 'Matériel médical',
     categoryColor: 'bg-blue-100 text-blue-700',
     status: 'Traitée',
     statusColor: 'bg-green-100 text-green-700',
   },
   {
-    company: 'BOUKTAB & FILS',
+    company: 'Formation Ostéo Pro',
     siret: '538 192 047',
     date: '15 juin 2026',
-    amount: '464,00 €',
-    category: 'Autre',
-    categoryColor: 'bg-gray-100 text-gray-600',
+    amount: '890,00 €',
+    category: 'Formation',
+    categoryColor: 'bg-indigo-100 text-indigo-700',
     status: 'Traitée',
     statusColor: 'bg-green-100 text-green-700',
   },
@@ -47,8 +47,18 @@ const factures = [
     amount: '2 129,50 €',
     category: 'Comptable',
     categoryColor: 'bg-purple-100 text-purple-700',
-    status: 'En attente',
-    statusColor: 'bg-orange-100 text-orange-700',
+    status: 'Traitée',
+    statusColor: 'bg-green-100 text-green-700',
+  },
+  {
+    company: 'Loyer Cabinet Santé',
+    siret: '334 571 089',
+    date: '01 juin 2026',
+    amount: '1 200,00 €',
+    category: 'Loyer',
+    categoryColor: 'bg-orange-100 text-orange-700',
+    status: 'Traitée',
+    statusColor: 'bg-green-100 text-green-700',
   },
 ];
 
