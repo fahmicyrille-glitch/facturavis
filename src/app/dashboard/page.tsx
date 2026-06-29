@@ -538,10 +538,11 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <h3 className="font-black text-lg text-[#3e2f25] mb-1">Passez au plan Pro</h3>
                   <p className="text-sm text-[#7a6a5f] mb-4">Facturez vos patients, récoltez des avis Google et gérez vos dossiers — tout en un.</p>
-                  <div className="flex gap-3">
-                    <Link href="/dashboard/settings" className="bg-[#a9825a] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#8b6a48] transition-colors">
+                  <div className="flex flex-col gap-1">
+                    <Link href="/dashboard/settings" className="self-start bg-[#a9825a] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#8b6a48] transition-colors">
                       19€/mois — Essai gratuit
                     </Link>
+                    <p className="text-xs text-[#a9825a] font-medium">Sans saisie de CB</p>
                   </div>
                 </div>
               </div>

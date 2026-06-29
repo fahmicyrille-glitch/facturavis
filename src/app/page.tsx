@@ -50,6 +50,11 @@ export default function LandingPage() {
     "name": "FacturAvis",
     "url": "https://facturavis.fr",
     "description": "Logiciel de facturation Factur-X et d'automatisation d'avis Google pour praticiens libéraux.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://facturavis.fr/?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
     "publisher": {
       "@type": "Organization",
       "name": "FacturAvis",
@@ -59,6 +64,24 @@ export default function LandingPage() {
         "url": "https://facturavis.fr/logo/logo.png",
       },
     },
+  };
+
+  const jsonLdOrganization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "FacturAvis",
+    "url": "https://facturavis.fr",
+    "logo": "https://facturavis.fr/logo/logo.png",
+    "description": "Logiciel SaaS de facturation Factur-X, d'automatisation d'avis Google et de réception de factures fournisseurs via Plateforme Agréée DGFiP pour praticiens libéraux en France.",
+    "foundingDate": "2025",
+    "areaServed": { "@type": "Country", "name": "France" },
+    "knowsAbout": [
+      "Facturation électronique Factur-X",
+      "Réforme facturation septembre 2026",
+      "Plateforme Agréée DGFiP",
+      "Avis Google praticiens libéraux",
+      "Logiciel ostéopathe psychologue chiropracteur",
+    ],
   };
 
   const jsonLdFaq = {
@@ -121,6 +144,38 @@ export default function LandingPage() {
           "text": "À partir de septembre 2026, tous les professionnels doivent pouvoir recevoir les factures de leurs fournisseurs au format électronique. FacturAvis est connecté à une Plateforme Agréée qui reçoit automatiquement ces factures pour vous : comptable, loyer, télécom, matériel médical... Tout arrive dans votre espace sans manipulation.",
         },
       },
+      {
+        "@type": "Question",
+        "name": "Quel est le prix de FacturAvis ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La réception de factures fournisseurs est totalement gratuite, sans limite dans le temps et sans carte bancaire. Le plan Pro à 19€/mois débloque la facturation patients Factur-X, l'automatisation des avis Google, les dossiers patients et le dashboard analytique.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "FacturAvis fonctionne-t-il pour les ostéopathes ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui, FacturAvis est conçu pour les ostéopathes. Il génère automatiquement les notes d'honoraires conformes aux exigences des mutuelles, avec numéro ADELI, mentions légales obligatoires et format Factur-X. En bonus, chaque patient qui télécharge sa facture est invité à laisser un avis Google Maps.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "FacturAvis fonctionne-t-il pour les psychologues ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui. Les factures générées pour les psychologues et psychothérapeutes incluent les mentions légales propres à la profession (numéro ADELI, titre exact). La réforme 2026 oblige à pouvoir recevoir les factures fournisseurs, même en exercice libéral non soumis à TVA. FacturAvis vous met en conformité gratuitement.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Comment envoyer mes factures à mon comptable avec FacturAvis ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Dans la section 'Factures reçues', sélectionnez une période (ce mois, trimestre, ou dates libres), saisissez l'email de votre comptable et cliquez Envoyer. Il reçoit automatiquement un email avec un fichier ZIP contenant le CSV récapitulatif et tous les PDFs. L'email est sauvegardé pour les envois suivants.",
+        },
+      },
     ],
   };
 
@@ -128,6 +183,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#fcfaf8] text-[#3e2f25] font-sans selection:bg-[#a9825a] selection:text-white overflow-x-clip scroll-smooth">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
       {/* --- STICKY HEADER : bannière + navbar collent ensemble --- */}
