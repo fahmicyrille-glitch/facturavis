@@ -260,13 +260,14 @@ export default function FondateurPage() {
                       <p className="text-[10px] md:text-xs text-[#7a6a5f] font-bold mb-4 uppercase tracking-widest">Freemium + Pro Fondateur</p>
 
                       <div className="space-y-3 mb-4">
-                        <div className="flex items-center gap-3 bg-green-50 p-3 rounded-2xl border border-green-100">
+                        <Link href="/inscription" className="flex items-center gap-3 bg-green-50 hover:bg-green-100 p-3 rounded-2xl border border-green-100 hover:border-green-300 transition-all group cursor-pointer">
                           <span className="text-2xl font-black text-green-700">0€</span>
-                          <div>
+                          <div className="flex-1">
                             <p className="text-xs font-black text-green-800">Réception fournisseurs</p>
                             <p className="text-[10px] text-green-600 font-medium">Gratuit pour toujours — Conforme sept. 2026</p>
                           </div>
-                        </div>
+                          <ArrowRight size={14} className="text-green-600 group-hover:translate-x-1 transition-transform shrink-0" />
+                        </Link>
                         <div className="flex items-baseline gap-3 md:gap-4 bg-[#fdf2e9] p-4 rounded-2xl border border-[#f0e6de]/50 shadow-inner">
                           <span className="text-5xl md:text-6xl font-black text-[#a9825a]">19€</span>
                           <div>
