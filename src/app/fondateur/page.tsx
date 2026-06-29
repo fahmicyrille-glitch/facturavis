@@ -4,13 +4,10 @@ import { useState, useEffect } from 'react';
 import {
   ArrowRight, Loader2, ShieldCheck,
   Cloud, Lock, Sparkles, Check, User, Mail, Phone, Stethoscope, AlertCircle, Star, Quote,
-  Inbox, BarChart3
+  Inbox, BarChart3, Eye, EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { trackConversion } from '@/lib/gtag';
 
 function getRelativeTime(dateStr: string): string {
   const now = new Date();
@@ -31,10 +28,11 @@ function getRelativeTime(dateStr: string): string {
 }
 
 export default function FondateurPage() {
-  const router = useRouter();
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [telephone, setTelephone] = useState('');
   const [profession, setProfession] = useState('');
 
@@ -90,6 +88,10 @@ export default function FondateurPage() {
       setErrorMsg("Veuillez renseigner une adresse email valide.");
       return;
     }
+    if (!password || password.length < 8) {
+      setErrorMsg("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
     if (!telephone.trim() || telephone.length < 10) {
       setErrorMsg("Veuillez renseigner un numéro de téléphone valide.");
       return;
@@ -103,28 +105,25 @@ export default function FondateurPage() {
     setErrorMsg('');
 
     try {
-      const { error: dbError } = await supabase
-        .from('prospects')
-        .insert([{ nom, prenom, email, telephone, profession }]);
-
-      if (dbError) throw dbError;
-
-      const emailResponse = await fetch('/api/notify-admin', {
+      const res = await fetch('/api/fondateur/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom, prenom, email, telephone, profession }),
+        body: JSON.stringify({ nom, prenom, email, password, telephone, profession }),
       });
 
-      if (!emailResponse.ok) {
-        console.error("L'email de notification a échoué.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Une erreur est survenue. Veuillez réessayer.");
+        return;
       }
 
-      trackConversion('/fondateur');
-      router.push('/merci');
+      // Redirection vers Stripe Checkout
+      window.location.href = data.url;
 
     } catch (error) {
       console.error(error);
-      setErrorMsg("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
+      setErrorMsg("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -329,6 +328,17 @@ export default function FondateurPage() {
                       </div>
 
                       <div className="space-y-1.5 text-left group">
+                          <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Mot de passe</label>
+                          <div className="relative">
+                            <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
+                            <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => { setPassword(e.target.value); setErrorMsg(''); }} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-11 pr-11 text-sm font-bold text-gray-800 focus:bg-white focus:border-[#a9825a] focus:ring-2 focus:ring-[#a9825a]/20 focus:-translate-y-0.5 outline-none transition-all duration-300 shadow-sm hover:shadow-md" placeholder="8 caractères minimum" />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                      </div>
+
+                      <div className="space-y-1.5 text-left group">
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#7a6a5f] ml-1">Téléphone Mobile</label>
                           <div className="relative">
                             <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#a9825a] transition-colors z-10" />
@@ -355,13 +365,13 @@ export default function FondateurPage() {
 
                       <button type="submit" disabled={loading} className="w-full mt-8 bg-gradient-to-r from-[#3e2f25] to-[#2a1f18] hover:from-black hover:to-[#1a120d] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-2xl transition-all flex items-center justify-center shadow-[0_10px_20px_-10px_rgba(62,47,37,0.5)] hover:shadow-[0_15px_30px_-10px_rgba(169,130,90,0.6)] hover:-translate-y-1 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden ring-4 ring-transparent hover:ring-[#a9825a]/20">
                           <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                          {loading ? <Loader2 size={24} className="animate-spin relative z-10" /> : <><span className="relative z-10">Verrouiller mon tarif à vie</span> <ArrowRight size={20} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" /></>}
+                          {loading ? <Loader2 size={24} className="animate-spin relative z-10" /> : <><span className="relative z-10">Payer 19€/mois et accéder</span> <ArrowRight size={20} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" /></>}
                       </button>
 
                       <p className="text-[10px] text-center text-[#7a6a5f] font-bold uppercase tracking-widest pt-3 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3">
-                          <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-green-500"/> 14 jours d'essai gratuit</span>
+                          <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-green-500"/> Paiement sécurisé Stripe</span>
                           <span className="hidden sm:inline-block w-1 h-1 bg-[#d4b494] rounded-full"></span>
-                          <span className="flex items-center gap-1.5">Sans carte bancaire</span>
+                          <span className="flex items-center gap-1.5">Annulable à tout moment</span>
                       </p>
                   </form>
               </div>

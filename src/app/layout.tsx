@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,32 +18,41 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://facturavis.fr'),
 
   title: {
-    default: "FacturAvis — Logiciel de Facturation & Avis Google pour Praticiens Libéraux",
+    default: "FacturAvis — Logiciel Facturation & Avis Google | Réforme 2026 Incluse",
     template: "%s | FacturAvis",
   },
-  description: "Ostéopathes, Psychologues, Chiropracteurs, Diététiciens : générez vos factures conformes Factur-X 2026 en 10 secondes et récoltez automatiquement vos avis Google. Essai gratuit, sans CB.",
+  description: "Réforme sept. 2026 : recevez vos factures fournisseurs gratuitement via Plateforme Agréée DGFiP. Facturation Factur-X + avis Google automatiques pour ostéopathes, psychologues, chiropracteurs. Sans CB.",
 
   keywords: [
-    "logiciel ostéopathe",
-    "logiciel facturation praticien libéral",
-    "facture ostéopathie mutuelle",
-    "factur-x praticien santé",
-    "facturation électronique 2026",
-    "logiciel psychologue facturation",
-    "logiciel chiropracteur",
-    "avis Google cabinet médical",
-    "automatiser avis Google praticien",
-    "gestion cabinet libéral",
+    // Réforme 2026
+    "réforme facturation électronique 2026",
+    "facture électronique thérapeute 2026",
+    "plateforme agréée dgfip praticien santé",
+    "obligation facture électronique professionnel santé",
+    "réception facture électronique ostéopathe",
+    "se conformer réforme 2026 thérapeute",
+    "factur-x praticien libéral",
+    // Facturation par profession
+    "logiciel facturation ostéopathe",
+    "logiciel facturation psychologue",
+    "logiciel facturation chiropracteur",
+    "logiciel facturation diététicien",
+    "logiciel facturation naturopathe",
+    "logiciel facturation sophrologue",
+    "logiciel facturation kinésithérapeute",
     "note d'honoraires ostéopathe",
     "note d'honoraires psychologue",
-    "logiciel diététicien facturation",
-    "logiciel naturopathe",
-    "logiciel sophrologue",
-    "facturation hypnothérapeute",
-    "reçu honoraires kinésiologue",
-    "logiciel réflexologue",
-    "dossier patient sécurisé",
-    "réforme facturation 2026 professionnel santé",
+    "note d'honoraires praticien libéral",
+    "logiciel praticien libéral",
+    "logiciel gestion cabinet libéral",
+    // Avis Google
+    "avis Google cabinet médical automatique",
+    "augmenter avis Google ostéopathe",
+    "avis Google automatique thérapeute",
+    // Divers
+    "dossier patient sécurisé thérapeute",
+    "logiciel hypnothérapeute",
+    "logiciel sophrologue facturation",
     "FacturAvis",
   ],
 
@@ -63,8 +73,8 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "FacturAvis — Factures Factur-X + Avis Google automatisés pour Praticiens",
-    description: "Générez vos factures conformes aux normes 2026 en 10s et récoltez 3× plus d'avis Google automatiquement. Logiciel tout-en-un pour praticiens libéraux.",
+    title: "FacturAvis — Réforme 2026 + Avis Google automatisés pour Praticiens",
+    description: "Réforme sept. 2026 : Plateforme Agréée DGFiP incluse gratuitement. Facturation Factur-X + 3× plus d'avis Google. Logiciel tout-en-un pour praticiens libéraux.",
     url: "https://facturavis.fr",
     siteName: "FacturAvis",
     images: [{
@@ -101,6 +111,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
+        <WhatsAppButton />
       </body>
     </html>
   );

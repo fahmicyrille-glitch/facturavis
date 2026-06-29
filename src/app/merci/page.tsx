@@ -24,7 +24,7 @@ export default function MerciPage() {
       // 3. Déclenchement de VOTRE conversion via l'objet window
       w.gtag('event', 'conversion', {
         'send_to': 'AW-18043378456/ipOTCJrQkpAcEJi24JtD',
-        'value': 1.0,
+        'value': 19.0,
         'currency': 'EUR'
       });
 
