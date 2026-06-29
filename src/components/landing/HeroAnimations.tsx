@@ -130,7 +130,7 @@ export default function HeroAnimations() {
           <div className="hidden sm:block h-8 w-px bg-[#f0e6de]" />
           <p className="text-xs text-[#7a6a5f] font-bold italic max-w-[220px] text-center sm:text-left">
             "J'ai eu 45 avis Google le mois dernier — le logiciel se paie tout seul."
-            <span className="block text-[10px] text-[#a9825a] font-black mt-0.5">— Dr. Nicolas I., Ostéopathe D.O.</span>
+            <span className="block text-[10px] text-[#a9825a] font-black mt-0.5">— Nicolas I., Ostéopathe D.O.</span>
           </p>
         </div>
 

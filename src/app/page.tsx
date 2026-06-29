@@ -605,7 +605,7 @@ export default function LandingPage() {
              <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6 border-b border-white/10 pb-4 md:pb-6">
                <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-[#d4b494] to-[#a9825a] flex items-center justify-center font-black text-white shadow-lg shrink-0 text-xl">N</div>
                <div className="flex-1 min-w-0">
-                 <p className="font-black text-base md:text-xl text-white truncate">Dr. Nicolas I.</p>
+                 <p className="font-black text-base md:text-xl text-white truncate">Nicolas I.</p>
                  <p className="text-[10px] md:text-xs text-[#d4b494] font-black uppercase tracking-widest truncate">Ostéopathe D.O.</p>
                </div>
              </div>
