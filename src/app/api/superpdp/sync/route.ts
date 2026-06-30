@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { listInvoiceIds, getInvoice, getInvoiceDocument, isSuperPDPConfigured } from '@/lib/superpdp';
+import { listInvoiceIds, getInvoice, getInvoiceDocument, isSuperPDPConfigured, refreshUserToken } from '@/lib/superpdp';
 import { guessCategorie } from '@/lib/categorize';
 
 export async function POST(request: Request) {
@@ -8,8 +8,8 @@ export async function POST(request: Request) {
   if (!authHeader?.startsWith('Bearer ')) {
     return new NextResponse('Non autorisé', { status: 401 });
   }
-  const token = authHeader.slice(7);
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  const supabaseToken = authHeader.slice(7);
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(supabaseToken);
   if (authError || !user) {
     return new NextResponse('Non autorisé', { status: 401 });
   }
@@ -18,10 +18,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Super PDP non configuré' }, { status: 503 });
   }
 
-  // Block sync if company is still being validated by SuperPDP
   const { data: profile } = await supabaseAdmin
     .from('therapeutes')
-    .select('iopole_status')
+    .select('iopole_status, superpdp_access_token, superpdp_refresh_token, superpdp_token_expires_at')
     .eq('id', user.id)
     .single();
 
@@ -36,8 +35,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Réception non activée' }, { status: 403 });
   }
 
+  // Résoudre le token du client (OAuth stocké après activation)
+  let userToken: string | undefined = profile.superpdp_access_token || undefined;
+
+  if (userToken) {
+    const expiresAt = profile.superpdp_token_expires_at
+      ? new Date(profile.superpdp_token_expires_at).getTime()
+      : 0;
+
+    // Rafraîchir si proche de l'expiration
+    if (Date.now() > expiresAt - 60_000 && profile.superpdp_refresh_token) {
+      const newToken = await refreshUserToken(profile.superpdp_refresh_token);
+      if (newToken) {
+        userToken = newToken;
+        await supabaseAdmin
+          .from('therapeutes')
+          .update({ superpdp_access_token: newToken })
+          .eq('id', user.id);
+      } else {
+        // Refresh échoué — le token client est mort, on continue sans (fallback master)
+        userToken = undefined;
+      }
+    }
+  }
+
+  // userToken = token du client → ses factures uniquement
+  // undefined → fallback master token (toutes les factures du compte Cyrille — à éviter en prod)
+  if (!userToken) {
+    console.warn(`[sync] Pas de token client pour user ${user.id} — fallback master token`);
+  }
+
   try {
-    const result = await listInvoiceIds('in');
+    const result = await listInvoiceIds('in', userToken);
 
     if (!result.ids || result.ids.length === 0) {
       return NextResponse.json({ message: 'Aucune facture reçue', synced: 0 });
@@ -61,18 +90,18 @@ export async function POST(request: Request) {
       if (existingIds.has(invIdStr)) continue;
 
       try {
-        const inv = await getInvoice(invId);
+        const inv = await getInvoice(invId, userToken);
 
         let filePath = `superpdp-${invIdStr}`;
         try {
-          const pdfBuffer = await getInvoiceDocument(invId);
+          const pdfBuffer = await getInvoiceDocument(invId, userToken);
           const fileName = `${user.id}/${Date.now()}-superpdp-${invIdStr}.pdf`;
           const { error: uploadError } = await supabaseAdmin.storage
             .from('factures_recues')
             .upload(fileName, pdfBuffer, { contentType: 'application/pdf' });
           if (!uploadError) filePath = fileName;
         } catch {
-          // PDF not available yet
+          // PDF pas encore disponible
         }
 
         const fournisseur = inv.sellerName || `SIRET ${inv.sellerSiren || 'inconnu'}`;
@@ -128,4 +157,3 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ message: 'Factures Super PDP purgées' });
 }
-

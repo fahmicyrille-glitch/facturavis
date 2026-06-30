@@ -1,31 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { refreshUserToken } from '@/lib/superpdp';
 
 const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.tech';
-const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID_PUBLIC || process.env.SUPERPDP_CLIENT_ID || '';
-const SUPERPDP_CLIENT_SECRET = process.env.SUPERPDP_CLIENT_SECRET_PUBLIC || '';
-
-
-async function refreshToken(refreshToken: string): Promise<string | null> {
-  try {
-    const res = await fetch(`${SUPERPDP_API_URL}/oauth2/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        client_id: SUPERPDP_CLIENT_ID,
-        ...(SUPERPDP_CLIENT_SECRET ? { client_secret: SUPERPDP_CLIENT_SECRET } : {}),
-      }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-
-    return data.access_token || null;
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
@@ -60,7 +37,7 @@ export async function POST(request: Request) {
 
   // Pre-emptive refresh if token is near expiry
   if ((!accessToken || Date.now() > expiresAt - 60_000) && profile.superpdp_refresh_token) {
-    const newToken = await refreshToken(profile.superpdp_refresh_token);
+    const newToken = await refreshUserToken(profile.superpdp_refresh_token);
     if (newToken) {
       accessToken = newToken;
       await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
@@ -83,7 +60,7 @@ export async function POST(request: Request) {
     // On 401 the token may be expired — try refresh once
     if (sessionRes.status === 401 && profile.superpdp_refresh_token) {
       console.log(`[check-status] Token expired, refreshing for user ${user.id}`);
-      const newToken = await refreshToken(profile.superpdp_refresh_token);
+      const newToken = await refreshUserToken(profile.superpdp_refresh_token);
       if (newToken) {
         accessToken = newToken;
         await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);

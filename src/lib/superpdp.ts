@@ -3,12 +3,12 @@ const SUPERPDP_TOKEN_URL = `${SUPERPDP_API_URL}/oauth2/token`;
 const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID || '';
 const SUPERPDP_CLIENT_SECRET = process.env.SUPERPDP_CLIENT_SECRET || '';
 
-let cachedToken: string | null = null;
-let tokenExpiresAt = 0;
+let cachedMasterToken: string | null = null;
+let masterTokenExpiresAt = 0;
 
-async function getAccessToken(): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiresAt - 60000) {
-    return cachedToken;
+async function getMasterAccessToken(): Promise<string> {
+  if (cachedMasterToken && Date.now() < masterTokenExpiresAt - 60000) {
+    return cachedMasterToken;
   }
 
   const res = await fetch(SUPERPDP_TOKEN_URL, {
@@ -21,20 +21,45 @@ async function getAccessToken(): Promise<string> {
     }),
   });
 
-  if (!res.ok) {
-    throw new Error(`Super PDP auth failed: ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Super PDP auth failed: ${res.status}`);
 
   const data = await res.json();
-  cachedToken = data.access_token;
-  tokenExpiresAt = Date.now() + (data.expires_in * 1000);
-  return cachedToken!;
+  cachedMasterToken = data.access_token;
+  masterTokenExpiresAt = Date.now() + data.expires_in * 1000;
+  return cachedMasterToken!;
 }
 
-async function apiGet(path: string, accept = 'application/json'): Promise<Response> {
-  const token = await getAccessToken();
+export async function refreshUserToken(refreshTokenStr: string): Promise<string | null> {
+  try {
+    const res = await fetch(SUPERPDP_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshTokenStr,
+        client_id: SUPERPDP_CLIENT_ID,
+        ...(SUPERPDP_CLIENT_SECRET ? { client_secret: SUPERPDP_CLIENT_SECRET } : {}),
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+// userToken: token OAuth du client stocké après activation
+// Si absent → fallback sur le token master (Cyrille)
+async function resolveToken(userToken?: string): Promise<string> {
+  if (userToken) return userToken;
+  return getMasterAccessToken();
+}
+
+async function apiGet(path: string, userToken?: string, accept = 'application/json'): Promise<Response> {
+  const token = await resolveToken(userToken);
   return fetch(`${SUPERPDP_API_URL}${path}`, {
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': accept },
+    headers: { Authorization: `Bearer ${token}`, Accept: accept },
   });
 }
 
@@ -100,31 +125,34 @@ function parseInvoice(raw: SuperPDPInvoiceRaw): SuperPDPInvoiceParsed {
   };
 }
 
-export async function getCompanyInfo(): Promise<unknown> {
-  const res = await apiGet('/v1.beta/companies/me');
+export async function getCompanyInfo(userToken?: string): Promise<unknown> {
+  const res = await apiGet('/v1.beta/companies/me', userToken);
   if (!res.ok) throw new Error(`Super PDP company error ${res.status}`);
   return res.json();
 }
 
-export async function listInvoiceIds(direction: 'in' | 'out' = 'in'): Promise<{ ids: number[]; count: number }> {
-  const res = await apiGet(`/v1.beta/invoices?direction=${direction}`);
+export async function listInvoiceIds(
+  direction: 'in' | 'out' = 'in',
+  userToken?: string,
+): Promise<{ ids: number[]; count: number }> {
+  const res = await apiGet(`/v1.beta/invoices?direction=${direction}`, userToken);
   if (!res.ok) throw new Error(`Super PDP invoices error ${res.status}`);
   const result = await res.json();
   const ids = (result.data || []).map((r: { id: number }) => r.id);
   return { ids, count: result.count || 0 };
 }
 
-export async function getInvoice(id: number): Promise<SuperPDPInvoiceParsed> {
-  const res = await apiGet(`/v1.beta/invoices/${id}`);
+export async function getInvoice(id: number, userToken?: string): Promise<SuperPDPInvoiceParsed> {
+  const res = await apiGet(`/v1.beta/invoices/${id}`, userToken);
   if (!res.ok) throw new Error(`Super PDP invoice ${id} error ${res.status}`);
   const raw = await res.json();
   return parseInvoice(raw);
 }
 
-export async function getInvoiceDocument(id: number): Promise<ArrayBuffer> {
-  const token = await getAccessToken();
+export async function getInvoiceDocument(id: number, userToken?: string): Promise<ArrayBuffer> {
+  const token = await resolveToken(userToken);
   const res = await fetch(`${SUPERPDP_API_URL}/v1.beta/invoices/${id}/download`, {
-    headers: { 'Authorization': `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error(`Super PDP document ${id} error ${res.status}`);
   return res.arrayBuffer();
