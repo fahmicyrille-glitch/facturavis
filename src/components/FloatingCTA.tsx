@@ -2,15 +2,31 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function FloatingCTA() {
   const [visible, setVisible] = useState(false);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 300);
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session);
+    });
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      subscription.unsubscribe();
+    };
   }, []);
+
+  if (loggedIn === null || loggedIn) return null;
 
   return (
     <div
