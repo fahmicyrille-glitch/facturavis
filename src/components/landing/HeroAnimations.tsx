@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, ShieldCheck, Star } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Star, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const praticiens = [
@@ -13,14 +13,13 @@ const praticiens = [
 const COUNTDOWN_TARGET = new Date('2026-09-01T00:00:00');
 
 function useCountdown() {
-  const [diff, setDiff] = useState(0);
+  const [days, setDays] = useState(0);
   useEffect(() => {
-    const tick = () => setDiff(Math.max(0, COUNTDOWN_TARGET.getTime() - Date.now()));
+    const tick = () => setDays(Math.max(0, Math.floor((COUNTDOWN_TARGET.getTime() - Date.now()) / 86400000)));
     tick();
-    const id = setInterval(tick, 1000);
+    const id = setInterval(tick, 60000);
     return () => clearInterval(id);
   }, []);
-  const days = Math.floor(diff / 86400000);
   return days;
 }
 
@@ -28,49 +27,57 @@ export default function HeroAnimations() {
   const [isVisible, setIsVisible] = useState(false);
   const daysLeft = useCountdown();
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  useEffect(() => { setIsVisible(true); }, []);
 
   return (
-    <section className="relative pt-28 md:pt-40 pb-16 md:pb-20 px-4 overflow-hidden text-center">
-      {/* Fond doux */}
+    <section className="relative pt-24 md:pt-36 pb-12 md:pb-16 px-4 overflow-hidden text-center">
+      {/* Fond ambiant */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-[#fdf2e9] via-[#fdf9f5] to-transparent rounded-full blur-3xl -z-10 opacity-80" />
 
-      <div className={`max-w-5xl mx-auto transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+      <div className={`max-w-4xl mx-auto transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
 
-        {/* Badge urgence réforme */}
-        <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 border border-red-200 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-6 shadow-sm">
-          <span className="relative flex h-2 w-2">
+        {/* Badge urgence */}
+        <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 border border-red-200 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-8 shadow-sm">
+          <span className="relative flex h-2 w-2 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
           </span>
-          Réforme sept. 2026 — {daysLeft} jours restants — Conforme Plateforme Agréée DGFiP
+          Réforme sept. 2026 — {daysLeft} jours restants
         </div>
 
-        {/* H1 */}
-        <h1 className="text-4xl sm:text-5xl md:text-[68px] font-black tracking-tighter mb-5 leading-[1.05] text-[#3e2f25]">
-          Recevez vos factures fournisseurs.{' '}
+        {/* H1 — réforme 2026 en premier */}
+        <h1 className="text-4xl sm:text-5xl md:text-[64px] font-black tracking-tighter mb-6 leading-[1.05] text-[#3e2f25]">
           <span className="relative inline-block">
-            <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">Gratuitement.</span>
-            <div className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-green-200/40 -z-10 -rotate-1 rounded" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Conforme 2026.</span>
+            <div className="absolute bottom-1 left-0 w-full h-3 bg-green-200/40 -z-10 -rotate-1 rounded" />
           </span>
+          <br />
+          Plus d'avis Google.
+          <br />
+          Zéro paperasse.
         </h1>
 
         {/* Sous-titre */}
-        <p className="text-base sm:text-lg md:text-xl text-[#7a6a5f] max-w-2xl mx-auto mb-3 leading-relaxed font-medium">
-          <strong className="text-[#3e2f25]">Ostéopathes, Psychologues, Chiropracteurs, Diététiciens…</strong>{' '}
-          Dès septembre 2026 vous devez pouvoir recevoir les factures électroniques de vos fournisseurs.
-          Avec FacturAvis, c'est <span className="text-green-600 font-black">gratuit et automatique</span>.
-        </p>
-        <p className="text-sm text-[#7a6a5f] max-w-xl mx-auto mb-10 font-medium">
-          Et quand vous êtes prêt : facturation Factur-X, avis Google +300%, dossiers patients — à partir de 19€/mois.
+        <p className="text-base sm:text-lg md:text-xl text-[#7a6a5f] max-w-2xl mx-auto mb-8 leading-relaxed font-medium">
+          Recevez les factures fournisseurs au format électronique dès septembre 2026 — <strong className="text-[#3e2f25]">gratuitement</strong>. Le même outil gère aussi votre <strong className="text-[#3e2f25]">facturation patients</strong>, vos <strong className="text-[#3e2f25]">dossiers patients</strong> et multiplie vos <strong className="text-[#3e2f25]">avis Google Maps</strong>.
         </p>
 
-        {/* CTA BLOC */}
+        {/* "Pour qui" — 3 bullets */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-10 text-sm font-bold text-[#3e2f25]">
+          {[
+            "Praticien libéral (ostéo, psychologue, kiné...)",
+            "Vous voulez dominer Google Maps dans votre ville",
+            "La réforme 2026 vous concerne",
+          ].map((txt, i) => (
+            <span key={i} className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500 shrink-0" />
+              <span className="text-[#7a6a5f]">{txt}</span>
+            </span>
+          ))}
+        </div>
+
+        {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-
-          {/* CTA Principal */}
           <Link href="/inscription" className="w-full sm:w-auto relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#d4b494] to-[#a9825a] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500" />
             <button className="relative w-full sm:w-auto flex items-center justify-center bg-[#3e2f25] text-white px-8 py-5 rounded-2xl font-black text-base md:text-lg hover:scale-[1.02] active:scale-[0.98] transition-transform gap-2">
@@ -78,38 +85,27 @@ export default function HeroAnimations() {
               <ArrowRight className="group-hover:translate-x-1 transition-transform shrink-0" size={18} />
             </button>
           </Link>
-
-          {/* CTA Secondaire */}
-          <Link
-            href="/inscription"
+          <a
+            href="#demo"
             className="w-full sm:w-auto flex items-center justify-center gap-2 border-2 border-[#d4b494] text-[#3e2f25] hover:border-[#a9825a] hover:bg-[#fdf2e9] px-7 py-5 rounded-2xl font-bold text-sm md:text-base transition-all"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/><line x1="7" y1="15" x2="7.01" y2="15"/></svg>
-            Sans carte bancaire
-          </Link>
+            Voir la démo ↓
+          </a>
         </div>
 
-        {/* Badges de confiance */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-12 text-[11px] font-bold text-[#7a6a5f]">
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck size={14} className="text-green-600" />
-            Données sécurisées RGPD
-          </span>
+        {/* Trust badges */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-10 text-[11px] font-bold text-[#7a6a5f]">
+          <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-green-600" />RGPD</span>
           <span className="text-[#d4b494]">·</span>
-          <span className="flex items-center gap-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><polyline points="20 6 9 17 4 12"/></svg>
-            Annulable à tout moment
-          </span>
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-600" />Sans carte bancaire</span>
           <span className="text-[#d4b494]">·</span>
-          <span className="flex items-center gap-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><polyline points="20 6 9 17 4 12"/></svg>
-            Plateforme Agréée DGFiP incluse
-          </span>
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-600" />Annulable à tout moment</span>
+          <span className="text-[#d4b494]">·</span>
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-600" />Plateforme Agréée DGFiP</span>
         </div>
 
         {/* Preuve sociale */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14 sm:mb-20">
-          {/* Avatars */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 sm:mb-16">
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
               {['bg-[#d4b494]','bg-[#a9825a]','bg-green-400','bg-blue-400','bg-[#3e2f25]'].map((c, i) => (
@@ -119,22 +115,18 @@ export default function HeroAnimations() {
               ))}
             </div>
             <div className="text-left">
-              <div className="flex gap-0.5">
-                {[1,2,3,4,5].map(s => <Star key={s} size={13} className="text-yellow-400 fill-yellow-400" />)}
-              </div>
-              <p className="text-xs font-black text-[#3e2f25]">
-                <span className="text-green-600">+340 praticiens</span> déjà inscrits
-              </p>
+              <div className="flex gap-0.5">{[1,2,3,4,5].map(s => <Star key={s} size={13} className="text-yellow-400 fill-yellow-400" />)}</div>
+              <p className="text-xs font-black text-[#3e2f25]"><span className="text-green-600">+340 praticiens</span> déjà inscrits</p>
             </div>
           </div>
           <div className="hidden sm:block h-8 w-px bg-[#f0e6de]" />
           <p className="text-xs text-[#7a6a5f] font-bold italic max-w-[220px] text-center sm:text-left">
-            "J'ai eu 45 avis Google le mois dernier — le logiciel se paie tout seul."
+            "45 avis Google le mois dernier — le logiciel se paie tout seul."
             <span className="block text-[10px] text-[#a9825a] font-black mt-0.5">— Nicolas I., Ostéopathe D.O.</span>
           </p>
         </div>
 
-        {/* Bandeau défilant professions */}
+        {/* Bandeau défilant */}
         <div className="overflow-hidden relative">
           <div className="flex gap-4 animate-marquee whitespace-nowrap">
             {[...praticiens, ...praticiens].map((p, i) => (

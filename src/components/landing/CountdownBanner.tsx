@@ -11,7 +11,7 @@ export default function CountdownBanner() {
   useEffect(() => {
     const target = new Date('2026-09-01T00:00:00');
     const now = new Date();
-    const diff = Math.max(0, Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    const diff = Math.max(0, Math.floor((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     setDays(diff);
   }, []);
 

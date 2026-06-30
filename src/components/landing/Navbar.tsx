@@ -30,9 +30,9 @@ export default function Navbar() {
           <span className="text-lg md:text-xl font-black tracking-tighter text-[#3e2f25]">FacturAvis</span>
         </Link>
         <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-[#7a6a5f]">
-          <a href="#fonctionnalites" className="hover:text-[#a9825a] transition">Fonctionnalit&eacute;s</a>
           <a href="#reforme" className="flex items-center gap-1 text-orange-600 hover:text-orange-700 transition"><AlertCircle size={14}/> R&eacute;forme 2026</a>
-          <a href="#avis" className="hover:text-[#a9825a] transition">Avis Google</a>
+          <a href="#fonctionnalites" className="hover:text-[#a9825a] transition">Fonctionnalit&eacute;s</a>
+          <a href="#tarifs" className="hover:text-[#a9825a] transition">Tarifs</a>
           <a href="#contact" className="hover:text-[#a9825a] transition">Contact</a>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
@@ -59,14 +59,14 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white/95 backdrop-blur-md border-t border-[#f0e6de] shadow-lg animate-slideDown">
           <div className="flex flex-col px-4 py-4 space-y-1 max-w-7xl mx-auto">
-            <a href="#fonctionnalites" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
-              Fonctionnalit&eacute;s
-            </a>
             <a href="#reforme" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-all">
               <AlertCircle size={14}/> R&eacute;forme 2026
             </a>
-            <a href="#avis" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
-              Avis Google
+            <a href="#fonctionnalites" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
+              Fonctionnalit&eacute;s
+            </a>
+            <a href="#tarifs" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
+              Tarifs
             </a>
             <a href="#contact" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
               Contact
