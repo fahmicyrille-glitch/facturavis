@@ -45,12 +45,16 @@ export async function POST(request: Request) {
 
     // Rafraîchir si proche de l'expiration
     if (Date.now() > expiresAt - 60_000 && profile.superpdp_refresh_token) {
-      const newToken = await refreshUserToken(profile.superpdp_refresh_token);
-      if (newToken) {
-        userToken = newToken;
+      const refreshed = await refreshUserToken(profile.superpdp_refresh_token);
+      if (refreshed) {
+        userToken = refreshed.access_token;
         await supabaseAdmin
           .from('therapeutes')
-          .update({ superpdp_access_token: newToken })
+          .update({
+            superpdp_access_token: refreshed.access_token,
+            superpdp_token_expires_at: new Date(refreshed.expires_at).toISOString(),
+            ...(refreshed.refresh_token ? { superpdp_refresh_token: refreshed.refresh_token } : {}),
+          })
           .eq('id', user.id);
       } else {
         // Refresh échoué — le token client est mort, on continue sans (fallback master)

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireStripe, PLANS } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { env } from '@/lib/env';
+import { sendAdminNewSignupEmail } from '@/lib/send-notification-email';
 
 export async function POST(request: Request) {
   try {
@@ -45,6 +46,10 @@ export async function POST(request: Request) {
       telephone: telephone?.trim() || '',
       plan: 'free', // mis à jour par le webhook Stripe après paiement
     }]);
+
+    // Notification admin
+    sendAdminNewSignupEmail(fullName || email, email.trim().toLowerCase(), 'fondateur (en attente paiement)')
+      .catch(err => console.error('[fondateur/checkout] Admin email error:', err));
 
     // Créer la session Stripe Checkout pour le plan Fondateur
     const stripeClient = requireStripe();

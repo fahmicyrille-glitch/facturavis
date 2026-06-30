@@ -36,10 +36,14 @@ export async function GET(request: Request) {
     ? new Date(profile.superpdp_token_expires_at).getTime() : 0;
 
   if ((!accessToken || Date.now() > expiresAt - 60_000) && profile.superpdp_refresh_token) {
-    const newToken = await refreshUserToken(profile.superpdp_refresh_token);
-    if (newToken) {
-      accessToken = newToken;
-      await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
+    const refreshed = await refreshUserToken(profile.superpdp_refresh_token);
+    if (refreshed) {
+      accessToken = refreshed.access_token;
+      await supabaseAdmin.from('therapeutes').update({
+        superpdp_access_token: refreshed.access_token,
+        superpdp_token_expires_at: new Date(refreshed.expires_at).toISOString(),
+        ...(refreshed.refresh_token ? { superpdp_refresh_token: refreshed.refresh_token } : {}),
+      }).eq('id', user.id);
     }
   }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { sendAdminNewSignupEmail } from '@/lib/send-notification-email';
 
 export async function POST(request: Request) {
   try {
@@ -43,6 +44,10 @@ export async function POST(request: Request) {
       console.error('Profile creation error:', profileError);
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
+
+    // Notification admin
+    sendAdminNewSignupEmail(nom?.trim() || email, email, 'free')
+      .catch(err => console.error('[setup-profile] Admin email error:', err));
 
     // Create cabinet if provided
     if (nomCabinet?.trim()) {

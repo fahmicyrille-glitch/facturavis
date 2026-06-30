@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { sendClientSuperPDPStatusEmail, sendAdminSuperPDPStatusEmail } from '@/lib/send-notification-email';
 
 const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.tech';
 const SUPERPDP_CLIENT_ID = process.env.SUPERPDP_CLIENT_ID_PUBLIC || process.env.SUPERPDP_CLIENT_ID || '';
@@ -100,6 +101,24 @@ export async function GET(request: Request) {
       // Non-blocking — keep 'pending' as safe default
     }
 
+    // Ne pas écraser un token existant avec une nouvelle session pending
+    // Règle : on écrase seulement si la nouvelle session est meilleure (active)
+    //         ou si le statut actuel est failed/null (recommencer est légitime)
+    const { data: currentProfile } = await supabaseAdmin
+      .from('therapeutes')
+      .select('iopole_status')
+      .eq('id', userId)
+      .single();
+
+    const currentStatus = currentProfile?.iopole_status;
+    const isDowngrade = companyStatus === 'pending' && (currentStatus === 'active' || currentStatus === 'pending');
+
+    if (isDowngrade) {
+      // Token déjà en place pour une session en cours ou validée — on ne touche à rien
+      const redirectParam = currentStatus === 'active' ? 'success' : 'pending';
+      return NextResponse.redirect(`${siteUrl}/dashboard/settings?reception=${redirectParam}`);
+    }
+
     // Store tokens and update status
     await supabaseAdmin.from('therapeutes').update({
       iopole_status: companyStatus,
@@ -111,6 +130,24 @@ export async function GET(request: Request) {
       superpdp_company_name: companyName || null,
       superpdp_company_siren: companySiren || null,
     }).eq('id', userId);
+
+    // Notification admin à chaque nouvelle tentative d'activation
+    {
+      const { data: p } = await supabaseAdmin
+        .from('therapeutes')
+        .select('nom, email')
+        .eq('id', userId)
+        .single();
+      const clientEmail = p?.email || '';
+      const clientName = p?.nom || clientEmail;
+      const emailTasks: Promise<void>[] = [
+        sendAdminSuperPDPStatusEmail(clientName, clientEmail, currentStatus ?? null, companyStatus),
+      ];
+      if (companyStatus === 'active') {
+        emailTasks.push(sendClientSuperPDPStatusEmail(clientEmail, clientName, 'active'));
+      }
+      Promise.all(emailTasks).catch(err => console.error('[callback] Email notification error:', err));
+    }
 
     if (companyStatus === 'pending') {
       return NextResponse.redirect(`${siteUrl}/dashboard/settings?reception=pending`);

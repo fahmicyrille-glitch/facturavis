@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { refreshUserToken } from '@/lib/superpdp';
+import { sendClientSuperPDPStatusEmail, sendAdminSuperPDPStatusEmail } from '@/lib/send-notification-email';
 
 const SUPERPDP_API_URL = process.env.SUPERPDP_API_URL || 'https://api.superpdp.tech';
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabaseAdmin
     .from('therapeutes')
-    .select('iopole_status, superpdp_access_token, superpdp_refresh_token, superpdp_token_expires_at')
+    .select('iopole_status, nom, email, superpdp_access_token, superpdp_refresh_token, superpdp_token_expires_at')
     .eq('id', user.id)
     .single();
 
@@ -37,10 +38,14 @@ export async function POST(request: Request) {
 
   // Pre-emptive refresh if token is near expiry
   if ((!accessToken || Date.now() > expiresAt - 60_000) && profile.superpdp_refresh_token) {
-    const newToken = await refreshUserToken(profile.superpdp_refresh_token);
-    if (newToken) {
-      accessToken = newToken;
-      await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
+    const refreshed = await refreshUserToken(profile.superpdp_refresh_token);
+    if (refreshed) {
+      accessToken = refreshed.access_token;
+      await supabaseAdmin.from('therapeutes').update({
+        superpdp_access_token: refreshed.access_token,
+        superpdp_token_expires_at: new Date(refreshed.expires_at).toISOString(),
+        ...(refreshed.refresh_token ? { superpdp_refresh_token: refreshed.refresh_token } : {}),
+      }).eq('id', user.id);
     }
   }
 
@@ -60,10 +65,14 @@ export async function POST(request: Request) {
     // On 401 the token may be expired — try refresh once
     if (sessionRes.status === 401 && profile.superpdp_refresh_token) {
       console.log(`[check-status] Token expired, refreshing for user ${user.id}`);
-      const newToken = await refreshUserToken(profile.superpdp_refresh_token);
-      if (newToken) {
-        accessToken = newToken;
-        await supabaseAdmin.from('therapeutes').update({ superpdp_access_token: newToken }).eq('id', user.id);
+      const refreshed = await refreshUserToken(profile.superpdp_refresh_token);
+      if (refreshed) {
+        accessToken = refreshed.access_token;
+        await supabaseAdmin.from('therapeutes').update({
+          superpdp_access_token: refreshed.access_token,
+          superpdp_token_expires_at: new Date(refreshed.expires_at).toISOString(),
+          ...(refreshed.refresh_token ? { superpdp_refresh_token: refreshed.refresh_token } : {}),
+        }).eq('id', user.id);
         sessionRes = await fetchSession(accessToken);
       }
     }
@@ -91,6 +100,18 @@ export async function POST(request: Request) {
         .from('therapeutes')
         .update({ iopole_status: newStatus })
         .eq('id', user.id);
+
+      // Notifications email (non-bloquantes)
+      const clientEmail = profile.email || user.email || '';
+      const clientName = profile.nom || clientEmail;
+      const emailTasks: Promise<void>[] = [
+        sendAdminSuperPDPStatusEmail(clientName, clientEmail, profile.iopole_status, newStatus),
+      ];
+      if (newStatus === 'active' || newStatus === 'failed') {
+        emailTasks.push(sendClientSuperPDPStatusEmail(clientEmail, clientName, newStatus as 'active' | 'failed'));
+      }
+      Promise.all(emailTasks).catch(err => console.error('[check-status] Email notification error:', err));
+
       return NextResponse.json({ status: newStatus, changed: true, verificationStatus, userIdentityStatus });
     }
 

@@ -29,7 +29,13 @@ async function getMasterAccessToken(): Promise<string> {
   return cachedMasterToken!;
 }
 
-export async function refreshUserToken(refreshTokenStr: string): Promise<string | null> {
+export interface RefreshedToken {
+  access_token: string;
+  expires_at: number;
+  refresh_token?: string;
+}
+
+export async function refreshUserToken(refreshTokenStr: string): Promise<RefreshedToken | null> {
   try {
     const res = await fetch(SUPERPDP_TOKEN_URL, {
       method: 'POST',
@@ -43,7 +49,12 @@ export async function refreshUserToken(refreshTokenStr: string): Promise<string 
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.access_token || null;
+    if (!data.access_token) return null;
+    return {
+      access_token: data.access_token,
+      expires_at: Date.now() + (data.expires_in ?? 3600) * 1000,
+      refresh_token: data.refresh_token,
+    };
   } catch {
     return null;
   }
