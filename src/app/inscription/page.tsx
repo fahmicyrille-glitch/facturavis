@@ -100,7 +100,16 @@ export default function InscriptionPage() {
         return;
       }
 
-      // 4. Show success screen (user must confirm email before logging in)
+      // 4. Fire Google Ads conversion (inscription gratuite)
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'conversion', {
+          send_to: 'AW-18043378456/j3InCJL9r8kcEJi24JtD',
+          value: 0,
+          currency: 'EUR',
+        });
+      }
+
+      // 5. Show success screen (user must confirm email before logging in)
       setSignupComplete(true);
 
     } catch (err) {
