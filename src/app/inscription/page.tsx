@@ -169,7 +169,13 @@ export default function InscriptionPage() {
         <Link href="/" className="block">
           <h1 className="text-4xl font-black tracking-tight text-[#3e2f25]">FacturAvis</h1>
         </Link>
-        <p className="text-[#7a6a5f] font-medium mt-2">Créez votre espace praticien en 2 minutes</p>
+        <div className="mt-3 mb-2">
+          <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 font-black text-sm px-4 py-1.5 rounded-full border border-green-200">
+            <CheckCircle size={14} /> 100% gratuit — sans carte bancaire
+          </span>
+        </div>
+        <h2 className="text-2xl font-black text-[#3e2f25] mt-3">Créer mon compte</h2>
+        <p className="text-[#7a6a5f] font-medium mt-1">Votre espace praticien en 2 minutes chrono</p>
       </div>
 
       <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl shadow-[#a9825a]/10 p-8 md:p-10 border border-[#f0e6de]">
@@ -355,7 +361,7 @@ export default function InscriptionPage() {
       </div>
 
       <p className="mt-8 text-[10px] text-[#9ca3af] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-        <Lock size={12} /> Données sécurisées &bull; 14 jours d&apos;essai gratuit &bull; Sans CB
+        <Lock size={12} /> Données sécurisées &bull; 100% gratuit &bull; Sans CB
       </p>
     </div>
   );
