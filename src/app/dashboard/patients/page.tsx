@@ -16,6 +16,8 @@ import PatientDetail from '@/components/patients/PatientDetail';
 import DeletePatientModal from '@/components/patients/DeletePatientModal';
 
 export default function PatientsAnnuaire() {
+  useEffect(() => { document.title = 'Mes Patients — FacturAvis'; }, []);
+
   const router = useRouter();
   const { isPro, daysLeft, hasUsedTrial, loading: planLoading } = usePlan();
   const [patients, setPatients] = useState<Patient[]>([]);

@@ -38,6 +38,8 @@ interface Cabinet {
 }
 
 function NouvelleFactureContent() {
+  useEffect(() => { document.title = 'Nouvelle Facture — FacturAvis'; }, []);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get('email');

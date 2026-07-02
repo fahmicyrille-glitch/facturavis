@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import {
   CheckCircle2, Star, ShieldCheck,
   FilePlus, Users, Inbox, BarChart3, Sparkles,
   MessageSquare, ArrowRight, Zap, TrendingUp
 } from 'lucide-react';
+
+export const metadata: Metadata = { title: "Homepage — FacturAvis" };
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import CountdownBanner from '@/components/landing/CountdownBanner';

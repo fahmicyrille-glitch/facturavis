@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { Loader2, ArrowRight, ArrowLeft, Lock, Mail, User, Eye, EyeOff, Stethoscope, Building, ShieldCheck, CheckCircle } from 'lucide-react';
 
 export default function InscriptionPage() {
+  useEffect(() => { document.title = 'Inscription — FacturAvis'; }, []);
+
   const [step, setStep] = useState(1);
 
   // Step 1: Account

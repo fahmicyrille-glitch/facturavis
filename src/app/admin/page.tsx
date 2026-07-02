@@ -40,6 +40,8 @@ interface Facture {
 }
 
 export default function SuperAdmin() {
+  useEffect(() => { document.title = 'Admin — FacturAvis'; }, []);
+
   const [loading, setLoading] = useState(true);
   const [therapeutes, setTherapeutes] = useState<Therapeute[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);

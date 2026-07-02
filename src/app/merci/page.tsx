@@ -6,6 +6,8 @@ import { CheckCircle, ArrowLeft, Calendar, Sparkles } from 'lucide-react';
 
 export default function MerciPage() {
 
+  useEffect(() => { document.title = 'Confirmation Fondateur — FacturAvis'; }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // On utilise "any" pour que TypeScript nous laisse tranquille

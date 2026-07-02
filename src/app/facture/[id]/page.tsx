@@ -7,6 +7,8 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 
 export default function PagePatient() {
+  useEffect(() => { document.title = 'Votre Facture — FacturAvis'; }, []);
+
   const params = useParams();
   const factureId = params?.id;
 

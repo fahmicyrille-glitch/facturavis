@@ -14,6 +14,8 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import ReceptionActivationModal from '@/components/settings/ReceptionActivationModal';
 
 function SettingsContent() {
+  useEffect(() => { document.title = 'Paramètres Cabinet — FacturAvis'; }, []);
+
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();

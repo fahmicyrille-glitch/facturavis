@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Loader2, Lock, CheckCircle, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function UpdatePassword() {
+  useEffect(() => { document.title = 'Nouveau Mot de Passe — FacturAvis'; }, []);
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);

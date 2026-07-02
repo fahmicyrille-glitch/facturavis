@@ -42,6 +42,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function FacturesRecuesPage() {
+  useEffect(() => { document.title = 'Factures Reçues — FacturAvis'; }, []);
+
   const router = useRouter();
   const { toast, showToast } = useToast();
 

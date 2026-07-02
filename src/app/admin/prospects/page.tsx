@@ -27,6 +27,8 @@ const STATUT_OPTIONS = [
 ];
 
 export default function ProspectsAdminPage() {
+  useEffect(() => { document.title = 'Prospects — Admin FacturAvis'; }, []);
+
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);

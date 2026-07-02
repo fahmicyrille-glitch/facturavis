@@ -47,6 +47,8 @@ interface ToastMessage {
 }
 
 export default function Dashboard() {
+  useEffect(() => { document.title = 'Dashboard — FacturAvis'; }, []);
+
   // ── Upload form state ──
   const [file, setFile] = useState<File | null>(null);
   const [patientEmail, setPatientEmail] = useState('');

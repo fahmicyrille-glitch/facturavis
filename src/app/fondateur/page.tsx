@@ -29,6 +29,8 @@ function getRelativeTime(dateStr: string): string {
 }
 
 export default function FondateurPage() {
+  useEffect(() => { document.title = 'Offre Fondateur — FacturAvis'; }, []);
+
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');

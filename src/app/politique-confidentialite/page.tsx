@@ -1,5 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Politique de Confidentialité — FacturAvis" };
 
 export default function PolitiqueConfidentialite() {
   return (

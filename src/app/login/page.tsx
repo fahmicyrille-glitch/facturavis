@@ -7,6 +7,8 @@ import { Loader2, Lock, Mail, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, F
 import Link from 'next/link';
 
 function LoginContent() {
+  useEffect(() => { document.title = 'Connexion — FacturAvis'; }, []);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
