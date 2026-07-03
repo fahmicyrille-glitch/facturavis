@@ -170,6 +170,11 @@ function SettingsContent() {
   }, [router, forcedId]);
 
   useEffect(() => {
+    if (!isOnboarding || loading) return;
+    document.getElementById('profil-infos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [isOnboarding, loading]);
+
+  useEffect(() => {
     if (!receptionResult) return;
     // Si la page se charge à l'intérieur de la fenêtre popup ouverte par FacturAvis,
     // on prévient la fenêtre parente du résultat puis on ferme automatiquement le popup.
@@ -828,6 +833,7 @@ function SettingsContent() {
         </div>
 
         {/* PROFILE FORM */}
+        <div id="profil-infos" className="scroll-mt-6">
         <ProfileForm
           nom={nom} setNom={setNom}
           titre={titre} setTitre={setTitre}
@@ -844,6 +850,7 @@ function SettingsContent() {
           onSignatureUpload={handleSignatureUpload} onDeleteSignature={handleDeleteSignature}
           saving={saving} onSave={handleSaveProfile} message={message}
         />
+        </div>
 
         {/* PRESTATIONS */}
         <PrestationsSection

@@ -64,7 +64,7 @@ function LoginContent() {
         .eq('id', signInData.user.id)
         .single();
       if (!profile?.nom) {
-        router.push('/dashboard/settings?onboarding=true');
+        router.push('/dashboard/settings?onboarding=true#profil-infos');
       } else {
         router.push('/dashboard');
       }

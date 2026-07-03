@@ -477,7 +477,7 @@ export default function Dashboard() {
               Vous devez renseigner vos informations (nom, profession, SIRET, cabinet) pour commencer à utiliser FacturAvis.
             </p>
             <Link
-              href="/dashboard/settings?onboarding=true"
+              href="/dashboard/settings?onboarding=true#profil-infos"
               className="inline-flex items-center justify-center gap-2 bg-[#a9825a] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#8b6a48] transition-colors w-full"
             >
               Compléter mon profil
