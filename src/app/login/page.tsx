@@ -42,7 +42,7 @@ function LoginContent() {
     setNeedsEmailConfirmation(false);
     setConfirmationResent(false);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -57,7 +57,17 @@ function LoginContent() {
       }
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      // Profil pas encore complété (inscription minimale) → onboarding avant le dashboard.
+      const { data: profile } = await supabase
+        .from('therapeutes')
+        .select('nom')
+        .eq('id', signInData.user.id)
+        .single();
+      if (!profile?.nom) {
+        router.push('/dashboard/settings?onboarding=true');
+      } else {
+        router.push('/dashboard');
+      }
     }
   };
 

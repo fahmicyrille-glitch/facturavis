@@ -22,6 +22,7 @@ function SettingsContent() {
   const forcedId = searchParams.get('as');
   const receptionResult = searchParams.get('reception');
   const receptionReason = searchParams.get('reason');
+  const isOnboarding = searchParams.get('onboarding') === 'true';
 
   // Profile state
   const [nom, setNom] = useState('');
@@ -335,6 +336,9 @@ function SettingsContent() {
       setSiret(cleanSiret); setAdeli(cleanAdeli); setCodeApe(codeApe.trim().toUpperCase());
       setMessage({ text: 'Profil et informations mis à jour !', type: 'success' });
       setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+      if (isOnboarding) {
+        setTimeout(() => router.push('/dashboard'), 1200);
+      }
     } else {
       setMessage({ text: "Erreur lors de la sauvegarde : " + error.message, type: 'error' });
     }
@@ -507,6 +511,16 @@ function SettingsContent() {
           <Link href="/dashboard" className="mr-4 p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition"><ArrowLeft size={20} className="text-gray-600" /></Link>
           <h1 className="text-2xl font-bold text-gray-900">Paramètres {forcedId && <span className="text-sm font-normal text-orange-500">(Mode Admin)</span>}</h1>
         </div>
+
+        {isOnboarding && (
+          <div className="bg-[#fdf2e9] border border-[#d4b494]/40 rounded-xl p-5 flex items-start gap-3">
+            <span className="text-2xl">👋</span>
+            <div>
+              <p className="font-bold text-[#3e2f25]">Bienvenue sur FacturAvis !</p>
+              <p className="text-sm text-[#7a6a5f] mt-1">Complétez votre profil ci-dessous (nom, profession, SIRET) pour pouvoir facturer et activer la réception de vos factures fournisseurs. Ça prend 30 secondes.</p>
+            </div>
+          </div>
+        )}
 
         {/* SUBSCRIPTION SECTION */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8">

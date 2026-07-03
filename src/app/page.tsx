@@ -235,7 +235,7 @@ export default function LandingPage() {
               { icon: Zap, title: "Facturation Express", desc: "Factures patients conformes Factur-X en 10 secondes. PDF, email, tout est automatique." },
               { icon: Star, title: "Machine à Avis Google", desc: "Le patient télécharge sa facture pour sa mutuelle = invitation à laisser 5 étoiles. +300% d'avis en moyenne." },
               { icon: Users, title: "Dossiers Patients", desc: "Fiches complètes, observations auto-sauvegardées. Ne perdez plus jamais une information patient." },
-              { icon: Inbox, title: "Réception Fournisseurs", desc: "Factures fournisseurs reçues automatiquement via Plateforme Agréée certifiée DGFiP. Conforme 2026." },
+              { icon: Inbox, title: "Réception Fournisseurs", desc: "Factures fournisseurs reçues automatiquement via notre partenaire Plateforme Agréée certifié DGFiP. Conforme 2026." },
               { icon: BarChart3, title: "Dashboard & Analytics", desc: "CA mensuel, taux d'avis, performances en temps réel. Export FEC en 1 clic pour votre comptable." },
               { icon: FilePlus, title: "Import de PDF existants", desc: "Vous avez déjà un logiciel ? Importez votre PDF, on gère l'envoi et la récolte d'avis." },
             ].map((feat, i) => (
@@ -386,7 +386,7 @@ export default function LandingPage() {
         </div>
 
         <footer className="mt-24 pt-8 border-t border-[#f0e6de] flex flex-col md:flex-row justify-between items-center gap-6 text-[#7a6a5f] text-[10px] font-black uppercase tracking-widest max-w-7xl mx-auto">
-          <p className="text-[10px]">Plateforme Agréée certifiée par la Direction Générale des Finances Publiques (DGFiP)</p>
+          <p className="text-[10px]">Connecté à une Plateforme Agréée certifiée par la Direction Générale des Finances Publiques (DGFiP)</p>
           <p>&copy; 2026 FacturAvis</p>
           <div className="flex gap-6">
             <Link href="/login" className="hover:text-[#3e2f25] transition-colors">Accès Praticien</Link>

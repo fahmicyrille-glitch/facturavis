@@ -220,7 +220,7 @@ export default function FondateurPage() {
                   { icon: Check, title: "Dossiers Patients Pro", desc: "Fiches complètes, observations auto-sauvegardées, import CSV. Ne perdez plus jamais une information patient." },
                   { icon: Sparkles, title: "Boost Réputation Google", desc: "Récoltez automatiquement des avis 5 étoiles après chaque séance. Dominez les recherches de votre ville." },
                   { icon: ShieldCheck, title: "Logiciel de Facturation 2026", desc: "Factures multi-lignes, prévisualisation PDF, export CSV et FEC. Conforme Factur-X à l'émission ET réception via Plateforme Agréée." },
-                  { icon: Inbox, title: "Réception Fournisseurs Automatique", desc: "Vos factures fournisseurs arrivent automatiquement via notre Plateforme Agréée certifiée DGFiP. Conforme à la réforme sept. 2026 sans effort." },
+                  { icon: Inbox, title: "Réception Fournisseurs Automatique", desc: "Vos factures fournisseurs arrivent automatiquement via notre partenaire Plateforme Agréée certifié DGFiP. Conforme à la réforme sept. 2026 sans effort." },
                   { icon: BarChart3, title: "Dashboard & Analytics", desc: "Suivez votre CA, vos avis et vos performances avec des graphiques en temps réel. Export FEC en 1 clic pour votre comptable." }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-4 md:gap-5 group cursor-default" style={{ animationDelay: `${(i + 1) * 200}ms` }}>
@@ -285,7 +285,7 @@ export default function FondateurPage() {
 
                       <div className="flex items-center gap-2 mt-3 bg-white px-3 py-2 rounded-full border border-green-200 text-[10px] font-bold text-green-800 w-fit">
                         <ShieldCheck size={14} className="text-green-600" />
-                        Plateforme Agréée certifiée DGFiP
+                        Connecté à une Plateforme Agréée DGFiP
                       </div>
                   </div>
 
