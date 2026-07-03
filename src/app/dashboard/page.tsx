@@ -462,8 +462,29 @@ export default function Dashboard() {
     </div>
   );
 
+  const profileIncomplete = !therapeuteInfo?.nom;
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 relative">
+      {profileIncomplete && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-14 h-14 bg-[#fdf2e9] text-[#a9825a] rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <Settings size={26} />
+            </div>
+            <h2 className="text-xl font-black text-gray-900 mb-2">Complétez votre profil</h2>
+            <p className="text-gray-500 mb-6">
+              Vous devez renseigner vos informations (nom, profession, SIRET, cabinet) pour commencer à utiliser FacturAvis.
+            </p>
+            <Link
+              href="/dashboard/settings?onboarding=true"
+              className="inline-flex items-center justify-center gap-2 bg-[#a9825a] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#8b6a48] transition-colors w-full"
+            >
+              Compléter mon profil
+            </Link>
+          </div>
+        </div>
+      )}
       <div className="max-w-[1500px] w-[96%] mx-auto space-y-6">
 
         {/* EN-TETE */}
