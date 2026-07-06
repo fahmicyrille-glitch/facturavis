@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import {
-  Loader2, LogOut, Settings, Users, CheckCircle, X, Inbox, Sparkles,
+  Loader2, LogOut, Settings, Users, CheckCircle, X, Inbox, Sparkles, Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePlan } from '@/hooks/usePlan';
@@ -516,6 +516,9 @@ export default function Dashboard() {
             )}
             <Link href="/dashboard/factures-recues" className="min-w-0 flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
               <Inbox size={16} className="mr-2 shrink-0" /> Factures Reçues
+            </Link>
+            <Link href="/dashboard/agenda" className="min-w-0 flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+              <Calendar size={16} className="mr-2 shrink-0" /> Agenda
             </Link>
             <Link href="/dashboard/patients" className="min-w-0 flex items-center justify-center text-sm text-gray-700 hover:text-blue-600 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap">
               <Users size={16} className="mr-2 shrink-0" /> Fiches Patients

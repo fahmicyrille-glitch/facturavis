@@ -109,6 +109,19 @@ export interface Attachment {
   created_at: string;
 }
 
+export interface RendezVous {
+  id: string;
+  therapeute_id: string;
+  patient_id: string | null;
+  cabinet_id: string | null;
+  titre: string;
+  date_debut: string;
+  date_fin: string;
+  statut: 'confirme' | 'en_attente' | 'annule' | 'termine';
+  notes: string;
+  created_at: string;
+}
+
 export interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';

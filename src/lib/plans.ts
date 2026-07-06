@@ -15,6 +15,7 @@ const PRO_FEATURES = [
   'multi_cabinets',
   'export_csv',
   'upload_facture',
+  'agenda',
 ] as const;
 
 const FREE_FEATURES = [

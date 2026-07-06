@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Lock, Sparkles, Star, FileText, Users, BarChart3, Loader2, CheckCircle } from 'lucide-react';
+import { Lock, Sparkles, Star, FileText, Users, BarChart3, Calendar, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface UpgradePromptProps {
@@ -38,6 +38,11 @@ export default function UpgradePrompt({ feature, trialDaysLeft, hasUsedTrial }: 
       title: 'Avis Google Automatiques',
       desc: 'Récoltez 3x plus d\'avis Google automatiquement après chaque séance.',
       icon: Star,
+    },
+    agenda: {
+      title: 'Agenda',
+      desc: 'Planifiez vos rendez-vous en vue semaine ou jour, liés à vos fiches patients.',
+      icon: Calendar,
     },
   };
 
