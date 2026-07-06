@@ -37,7 +37,7 @@ export default function LandingPage() {
       { "@type": "Question", "name": "Est-ce que FacturAvis remplace Doctolib ?", "acceptedAnswer": { "@type": "Answer", "text": "Non, c'est complémentaire. Doctolib gère l'agenda, FacturAvis gère tout ce qui se passe APRÈS la séance : dossier patient, édition de la facture conforme aux normes Factur-X 2026, comptabilité et réputation Google." } },
       { "@type": "Question", "name": "Quel est le prix de FacturAvis ?", "acceptedAnswer": { "@type": "Answer", "text": "La réception de factures fournisseurs est totalement gratuite, sans limite dans le temps et sans carte bancaire. Le plan Pro à 19€/mois débloque la facturation patients Factur-X, l'automatisation des avis Google, les dossiers patients et le dashboard analytique." } },
       { "@type": "Question", "name": "Je suis exonéré de TVA, suis-je concerné par la réforme 2026 ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui. Vous n'êtes pas obligé d'émettre des factures électroniques à vos patients. En revanche, vous devez pouvoir recevoir celles de vos fournisseurs dès septembre 2026. FacturAvis vous met en conformité automatiquement." } },
-      { "@type": "Question", "name": "Comment FacturAvis collecte-t-il des avis Google ?", "acceptedAnswer": { "@type": "Answer", "text": "Lors du téléchargement de sa facture, le patient est invité à laisser un avis sur Google Maps. Résultat : +300% d'avis en moyenne." } },
+      { "@type": "Question", "name": "Comment FacturAvis collecte-t-il des avis Google ?", "acceptedAnswer": { "@type": "Answer", "text": "Lors du téléchargement de sa facture, le patient est invité à laisser un avis sur Google Maps. C'est une simple invitation, sans contrepartie ni récompense : 100% organique. Résultat : +300% d'avis en moyenne." } },
       { "@type": "Question", "name": "Puis-je utiliser FacturAvis si j'ai déjà un logiciel de facturation ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui ! Déposez simplement votre PDF existant sur notre plateforme. Nous gérons l'envoi sécurisé au patient et la récolte automatique d'avis Google Maps." } },
     ],
   };
@@ -102,39 +102,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. DEMO ANIMÉE — show don't tell */}
-      <div id="demo">
-        <AnimatedDemo />
-      </div>
-
-      {/* 4. COMMENT ÇA MARCHE */}
-      <section className="py-12 md:py-20 bg-[#fdf2e9]/50 border-t border-[#f0e6de]">
-        <div className="max-w-5xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-10">
-            <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Simple comme bonjour</p>
-            <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] tracking-tighter">
-              De la séance à l'avis Google <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">en 3 étapes.</span>
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center relative">
-            <div className="hidden md:block absolute top-1/2 left-[15%] right-[15%] h-0.5 bg-[#d4b494]/30 -z-10" />
-            {[
-              { num: "1", title: "Vous facturez", desc: "En 10 secondes depuis votre téléphone. Formulaire pré-rempli, conforme à votre profession.", color: "bg-[#3e2f25]" },
-              { num: "2", title: "Le patient reçoit", desc: "La note d'honoraires arrive par email instantanément, prête pour sa mutuelle.", color: "bg-gradient-to-br from-[#d4b494] to-[#a9825a]" },
-              { num: "3", title: "L'avis tombe", desc: "En téléchargeant sa facture, le patient est invité à noter votre cabinet sur Google Maps.", color: "bg-yellow-400" },
-            ].map((step, i) => (
-              <div key={i} className="bg-white p-6 md:p-8 rounded-3xl border border-[#f0e6de] shadow-sm relative z-10 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                <div className={`w-12 h-12 ${step.color} text-white font-black text-xl flex items-center justify-center rounded-2xl mx-auto mb-5 shadow-lg`}>{step.num}</div>
-                <h3 className="font-black text-lg md:text-xl mb-2">{step.title}</h3>
-                <p className="text-sm text-[#7a6a5f]">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. DOSSIERS PATIENTS */}
+      {/* 3. DOSSIERS PATIENTS — remonté plus tôt dans le tunnel, différenciateur clé */}
       <section className="py-16 md:py-24 bg-[#fcfaf8] border-t border-[#f0e6de] px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
@@ -169,6 +137,39 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 4. DEMO ANIMÉE — show don't tell */}
+      <div id="demo">
+        <AnimatedDemo />
+      </div>
+
+      {/* 5. COMMENT ÇA MARCHE */}
+      <section className="py-12 md:py-20 bg-[#fdf2e9]/50 border-t border-[#f0e6de]">
+        <div className="max-w-5xl mx-auto px-4 md:px-6">
+          <div className="text-center mb-10">
+            <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Simple comme bonjour</p>
+            <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] tracking-tighter">
+              De la séance à l'avis Google <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">en 3 étapes.</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center relative">
+            <div className="hidden md:block absolute top-1/2 left-[15%] right-[15%] h-0.5 bg-[#d4b494]/30 -z-10" />
+            {[
+              { num: "1", title: "Vous facturez", desc: "En 10 secondes depuis votre téléphone. Formulaire pré-rempli, conforme à votre profession.", color: "bg-[#3e2f25]" },
+              { num: "2", title: "Le patient reçoit", desc: "La note d'honoraires arrive par email instantanément, prête pour sa mutuelle.", color: "bg-gradient-to-br from-[#d4b494] to-[#a9825a]" },
+              { num: "3", title: "L'avis tombe", desc: "En téléchargeant sa facture, le patient est invité à noter votre cabinet sur Google Maps.", color: "bg-yellow-400" },
+            ].map((step, i) => (
+              <div key={i} className="bg-white p-6 md:p-8 rounded-3xl border border-[#f0e6de] shadow-sm relative z-10 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className={`w-12 h-12 ${step.color} text-white font-black text-xl flex items-center justify-center rounded-2xl mx-auto mb-5 shadow-lg`}>{step.num}</div>
+                <h3 className="font-black text-lg md:text-xl mb-2">{step.title}</h3>
+                <p className="text-sm text-[#7a6a5f]">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       {/* 6. AVIS GOOGLE — preuve sociale, émotion */}
       <section id="avis" className="py-16 md:py-24 px-4 md:px-6 scroll-mt-20">
         <div className="max-w-6xl mx-auto bg-gradient-to-br from-[#3e2f25] to-black rounded-[32px] md:rounded-[40px] p-8 sm:p-12 md:p-20 text-white flex flex-col lg:flex-row items-center gap-10 md:gap-16 overflow-hidden relative shadow-2xl">
@@ -184,6 +185,9 @@ export default function LandingPage() {
             </h2>
             <p className="text-gray-300 text-base md:text-lg font-medium leading-relaxed">
               Vos patients téléchargent leur facture pour leur mutuelle. FacturAvis en profite pour les inviter à noter votre cabinet. <strong className="text-white">C'est automatique. Vous ne faites rien.</strong>
+            </p>
+            <p className="text-[#d4b494] text-xs font-black uppercase tracking-widest">
+              100% organique — aucun avis acheté, aucune récompense promise au patient
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Link href="/inscription" className="inline-flex items-center gap-2 bg-white text-[#3e2f25] px-6 py-3 rounded-2xl font-black text-sm hover:bg-yellow-50 transition-colors">
@@ -233,7 +237,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Zap, title: "Facturation Express", desc: "Factures patients conformes Factur-X en 10 secondes. PDF, email, tout est automatique." },
-              { icon: Star, title: "Machine à Avis Google", desc: "Le patient télécharge sa facture pour sa mutuelle = invitation à laisser 5 étoiles. +300% d'avis en moyenne." },
+              { icon: Star, title: "Machine à Avis Google", desc: "Le patient télécharge sa facture pour sa mutuelle = invitation à laisser 5 étoiles. 100% organique, sans contrepartie. +300% d'avis en moyenne." },
               { icon: Users, title: "Dossiers Patients", desc: "Fiches complètes, observations auto-sauvegardées. Ne perdez plus jamais une information patient." },
               { icon: Inbox, title: "Réception Fournisseurs", desc: "Factures fournisseurs reçues automatiquement via notre partenaire Plateforme Agréée certifié DGFiP. Conforme 2026." },
               { icon: BarChart3, title: "Dashboard & Analytics", desc: "CA mensuel, taux d'avis, performances en temps réel. Export FEC en 1 clic pour votre comptable." },
@@ -327,7 +331,7 @@ export default function LandingPage() {
               { q: "Est-ce que FacturAvis remplace Doctolib ?", a: "Non, c'est complémentaire. Doctolib gère l'agenda, FacturAvis gère tout ce qui se passe APRÈS la séance : dossier patient, édition de la facture conforme, comptabilité et réputation Google." },
               { q: "Je suis exonéré de TVA, suis-je concerné par la réforme 2026 ?", a: "Oui, partiellement. Vous n'êtes pas obligé d'émettre des factures électroniques à vos patients. En revanche, vous devez pouvoir recevoir celles de vos fournisseurs dès septembre 2026. FacturAvis vous met en conformité automatiquement et gratuitement." },
               { q: "Puis-je l'utiliser si j'ai déjà un logiciel de facturation ?", a: "Oui ! Importez simplement votre PDF existant sur FacturAvis. On s'occupe de l'envoi au patient et de la récolte d'avis Google. Vous gardez votre logiciel actuel." },
-              { q: "Comment FacturAvis génère-t-il des avis Google ?", a: "Quand le patient clique pour télécharger sa facture, FacturAvis l'invite à noter votre cabinet sur Google Maps. Le timing est parfait : il vient de finir sa séance. Résultat : +300% d'avis en moyenne." },
+              { q: "Comment FacturAvis génère-t-il des avis Google ?", a: "Quand le patient clique pour télécharger sa facture, FacturAvis l'invite à noter votre cabinet sur Google Maps. Aucune contrepartie n'est offerte : l'invitation est 100% organique, seul le timing (juste après la séance) fait la différence. Résultat : +300% d'avis en moyenne." },
               { q: "C'est vraiment gratuit pour la réception fournisseurs ?", a: "Oui, sans condition et sans limite dans le temps. Pas de carte bancaire demandée. La réception automatique de vos factures fournisseurs via notre Plateforme Agréée DGFiP est 100% gratuite pour toujours." },
             ].map((faq, i) => (
               <div key={i} className="p-6 md:p-8 bg-[#fcfaf8] rounded-2xl border border-[#f0e6de] hover:border-[#d4b494] hover:shadow-md transition-all">
