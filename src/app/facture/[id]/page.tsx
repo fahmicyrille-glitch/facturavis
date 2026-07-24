@@ -7,9 +7,15 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { buildReviewHref } from '@/lib/review-link';
 
-export default function PagePatient() {
-  useEffect(() => { document.title = 'Votre Facture — FacturAvis'; }, []);
+// Normalise un nom stocké en base ("Mme FARID Hilary") en casse propre ("Mme Farid Hilary"),
+// pour une adresse plus soignée au patient qu'un nom tout en majuscules.
+function formatNomPropre(nom: string): string {
+  return (nom || '')
+    .toLowerCase()
+    .replace(/(^|[\s'-])([a-zà-ÿ])/g, (_, sep, char) => sep + char.toUpperCase());
+}
 
+export default function PagePatient() {
   const params = useParams();
   const factureId = params?.id;
 
@@ -47,30 +53,25 @@ export default function PagePatient() {
           if (dataFacture.commentaire) setFeedback(dataFacture.commentaire);
         }
 
+        // Marquage "ouvert" en tâche de fond : ne bloque pas l'affichage de la facture
         if (dataFacture.statut_email !== 'Ouvert') {
-          await supabase
-            .from('factures')
-            .update({ statut_email: 'Ouvert' })
-            .eq('id', factureId);
+          supabase.from('factures').update({ statut_email: 'Ouvert' }).eq('id', factureId).then(() => {});
         }
 
-        const { data: dataCabinet, error: errCabinet } = await supabase
-          .from('cabinets')
-          .select('*')
-          .eq('id', dataFacture.cabinet_id)
-          .single();
+        // Cabinet + praticien en parallèle (au lieu d'en série) pour un affichage plus rapide
+        const [cabinetRes, therapeuteRes] = await Promise.all([
+          supabase.from('cabinets').select('*').eq('id', dataFacture.cabinet_id).single(),
+          supabase.from('therapeutes').select('nom, titre, telephone, email, logo_url').eq('id', dataFacture.therapeute_id).single(),
+        ]);
 
-        if (errCabinet) throw new Error("Informations du cabinet introuvables.");
-        setCabinet(dataCabinet);
+        if (cabinetRes.error) throw new Error("Informations du cabinet introuvables.");
+        setCabinet(cabinetRes.data);
 
-        const { data: dataTherapeute, error: errTherapeute } = await supabase
-          .from('therapeutes')
-          .select('nom, titre, telephone, email, logo_url')
-          .eq('id', dataFacture.therapeute_id)
-          .single();
+        if (therapeuteRes.error) throw new Error("Thérapeute introuvable.");
+        setTherapeute(therapeuteRes.data);
 
-        if (errTherapeute) throw new Error("Thérapeute introuvable.");
-        setTherapeute(dataTherapeute);
+        // Onglet à l'image du praticien plutôt que "FacturAvis" (ressenti premium, marque blanche)
+        if (therapeuteRes.data?.nom) document.title = `Facture — ${therapeuteRes.data.nom}`;
 
       } catch (err: any) {
         setError(err.message);
@@ -179,8 +180,17 @@ export default function PagePatient() {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f7f4f1] text-[#7a6a5f]">
-      <Loader2 className="animate-spin mr-2" size={32} /> Chargement de votre document...
+    <div className="min-h-screen bg-[#f7f4f1] flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 sm:p-10 animate-pulse">
+        <div className="flex justify-center mb-6">
+          <div className="h-28 w-28 rounded-full bg-[#f0e6de]" />
+        </div>
+        <div className="h-7 bg-[#f0e6de] rounded-lg w-2/3 mx-auto mb-4" />
+        <div className="h-4 bg-[#f3ece5] rounded w-5/6 mx-auto mb-2" />
+        <div className="h-4 bg-[#f3ece5] rounded w-3/4 mx-auto mb-8" />
+        <div className="h-14 bg-[#e9ddd0] rounded-xl w-full mb-6" />
+        <div className="h-20 bg-[#fdfaf8] border border-[#f0e6de] rounded-xl w-full" />
+      </div>
     </div>
   );
 
@@ -218,7 +228,7 @@ export default function PagePatient() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#3e2f25] mb-4">
-          Bonjour {facture.patient_nom} !
+          Bonjour {formatNomPropre(facture.patient_nom)} !
         </h1>
         <p className="text-[#7a6a5f] mb-8 text-base sm:text-lg leading-relaxed">
           Voici votre facture pour votre séance avec <span className="font-bold text-[#3e2f25]">{therapeute?.nom}</span>.
@@ -289,7 +299,7 @@ export default function PagePatient() {
                         <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z" />
                       </svg>
                     </span>
-                    <span className="group-hover:scale-[1.02] transition-transform">Oui, déposer mon avis</span>
+                    <span className="group-hover:scale-[1.02] transition-transform">Oui, déposer mon avis sur Google</span>
                   </a>
 
                   <p className="text-sm text-[#a9825a] mb-5">
