@@ -1,16 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
+// Le support WhatsApp s'adresse aux utilisateurs de FacturAvis et aux visiteurs de la
+// landing — pas aux patients qui récupèrent leur facture ou réservent un RDV. On le masque
+// donc sur les pages publiques destinées aux patients.
+const HIDDEN_PREFIXES = ['/facture/', '/rdv/', '/reserver/'];
 
 export default function WhatsAppButton() {
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Affiche la bulle après 3 secondes
     const t = setTimeout(() => setBubbleVisible(true), 3000);
     return () => clearTimeout(t);
   }, []);
+
+  if (pathname && HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   const message = encodeURIComponent(
     "Bonjour, j'ai une question sur FacturAvis ou la réforme 2026/2027."

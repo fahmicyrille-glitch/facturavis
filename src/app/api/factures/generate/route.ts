@@ -6,6 +6,31 @@ function escapeXml(str: string): string {
   return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 }
 
+// Découpe un texte en plusieurs lignes qui tiennent dans maxWidth (points PDF),
+// pour éviter qu'une adresse longue ne déborde de la facture. Un mot plus large que
+// maxWidth reste seul sur sa ligne (débordement rare, préférable à une coupe en plein mot).
+function wrapText(
+  text: string,
+  font: { widthOfTextAtSize: (t: string, s: number) => number },
+  size: number,
+  maxWidth: number,
+): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (!current || font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 function generateFacturXXML(data: any, totalAmount?: number) {
   const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
   const amount = totalAmount !== undefined ? totalAmount : Number(data.prix);
@@ -225,8 +250,11 @@ export async function POST(request: Request) {
     patientY -= 15;
 
     if (patientAdresse) {
-      page.drawText(patientAdresse, { x: rightX, y: patientY, size: 10, font: fontRegular, color: colorBlack });
-      patientY -= 15;
+      const addrLines = wrapText(patientAdresse, fontRegular, 10, width - rightX - 30);
+      for (const line of addrLines) {
+        page.drawText(line, { x: rightX, y: patientY, size: 10, font: fontRegular, color: colorBlack });
+        patientY -= 15;
+      }
     }
 
     if (patientSecu) {
@@ -287,8 +315,11 @@ export async function POST(request: Request) {
     if (adresseCabinet) {
       const parts = adresseCabinet.split(',');
       parts.forEach((p: string) => {
-        page.drawText(p.trim().toUpperCase(), { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
-        stampY -= 16;
+        const partLines = wrapText(p.trim().toUpperCase(), fontBold, 11, width - stampX - 20);
+        partLines.forEach((line) => {
+          page.drawText(line, { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
+          stampY -= 16;
+        });
       });
     }
 
