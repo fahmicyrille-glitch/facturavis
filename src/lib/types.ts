@@ -44,6 +44,9 @@ export interface Facture {
   mode_reglement: string | null;
   statut: string | null;
   therapeute_id?: string;
+  note_at?: string | null;
+  avis_google_click_at?: string | null;
+  relance_avis_envoye?: boolean;
 }
 
 export interface Prestation {

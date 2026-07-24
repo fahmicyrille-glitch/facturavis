@@ -18,6 +18,7 @@ interface PatientMin {
 }
 
 import StatsCards from '@/components/dashboard/StatsCards';
+import AvisFunnel from '@/components/dashboard/AvisFunnel';
 import ChartCA from '@/components/dashboard/ChartCA';
 import ChartAvis from '@/components/dashboard/ChartAvis';
 import UploadForm from '@/components/dashboard/UploadForm';
@@ -598,6 +599,9 @@ export default function Dashboard() {
                 <ChartAvis factures={facturesFiltered} />
               </div>
             </div>
+
+            {/* TUNNEL D'AVIS GOOGLE */}
+            <AvisFunnel factures={facturesFiltered} />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* COLONNE GAUCHE */}

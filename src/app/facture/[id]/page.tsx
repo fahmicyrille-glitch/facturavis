@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Download, Star, Loader2, MessageSquare, CheckCircle, X, Info } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
+import { buildReviewHref } from '@/lib/review-link';
 
 export default function PagePatient() {
   useEffect(() => { document.title = 'Votre Facture — FacturAvis'; }, []);
@@ -22,7 +23,6 @@ export default function PagePatient() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
   const [rating, setRating] = useState(0);
-  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const [feedback, setFeedback] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -120,29 +120,42 @@ export default function PagePatient() {
 
       setRating(selectedStar);
 
-      const donneesASauvegarder: any = { note: selectedStar };
+      const donneesASauvegarder: any = { note: selectedStar, note_at: new Date().toISOString() };
 
       if (selectedStar >= 4) {
         donneesASauvegarder.commentaire = null;
         setFeedback('');
       }
 
+      // Mesure : note enregistrée (permet de suivre 5★ → clic Google côté GA)
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'avis_note', { event_category: 'avis', value: selectedStar });
+      }
+
       await supabase
         .from('factures')
         .update(donneesASauvegarder)
         .eq('id', factureId);
-
-      // CORRECTION : Si 5 étoiles MAIS que le thérapeute n'a pas mis de lien Google
-      if (selectedStar === 5) {
-        const googleLink = cabinet?.lien_avis_google;
-        if (googleLink && (googleLink.startsWith('https://') || googleLink.startsWith('http://'))) {
-          setIsRedirecting(true);
-          setTimeout(() => {
-            window.location.href = googleLink;
-          }, 800);
-        }
-      }
     };
+
+  const googleLink = cabinet?.lien_avis_google || '';
+  const hasValidGoogleLink = googleLink.startsWith('https://') || googleLink.startsWith('http://');
+  const reviewHref = hasValidGoogleLink && typeof navigator !== 'undefined'
+    ? buildReviewHref(googleLink, navigator.userAgent)
+    : { href: googleLink, newTab: true };
+
+  // Enregistre le clic réel vers Google (mesure first-party, indépendante de GA/adblock)
+  // sans bloquer la navigation. sendBeacon survit à la navigation immédiate vers Google
+  // (cas mobile en navigation directe), là où un fetch classique serait annulé.
+  const handleGoogleClick = () => {
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify({ factureId })], { type: 'application/json' });
+      navigator.sendBeacon('/api/avis-click', blob);
+    }
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'avis_google_click', { event_category: 'avis', event_label: cabinet?.nom || '' });
+    }
+  };
 
   const handleSendFeedback = async () => {
     await supabase
@@ -244,7 +257,7 @@ export default function PagePatient() {
               )}
             </div>
 
-            {!isRedirecting && (!feedbackSent || hasAlreadyVoted) && (
+            {(!feedbackSent || hasAlreadyVoted) && (
               <button
                 onClick={() => setShowModal(false)}
                 className="absolute top-16 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors z-10"
@@ -254,12 +267,31 @@ export default function PagePatient() {
             )}
 
             <div className="p-8 text-center pt-10">
-              {isRedirecting ? (
-                <div className="py-8">
+              {rating === 5 && hasValidGoogleLink ? (
+                <div className="py-8 animate-in zoom-in duration-300">
                   <div className="text-5xl mb-4">🎉</div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Merci infiniment !</h3>
-                  <p className="text-lg text-gray-600 mb-6 font-medium">Redirection vers Google en cours...</p>
-                  <Loader2 className="animate-spin mx-auto text-blue-500" size={36} />
+                  <h3 className="text-2xl font-bold text-[#3e2f25] mb-2">Merci infiniment&nbsp;!</h3>
+                  <p className="text-base font-semibold text-[#3e2f25] mb-6">
+                    Soutenez <span className="font-extrabold">{therapeute?.nom || 'le cabinet'}</span> — votre avis l&apos;aide à faire connaître son cabinet.
+                  </p>
+
+                  <a
+                    href={reviewHref.href}
+                    onClick={handleGoogleClick}
+                    {...(reviewHref.newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    className="w-full inline-flex items-center justify-center py-4 px-4 rounded-xl text-white font-bold text-lg bg-[#4285F4] hover:bg-[#3367d6] transition-all transform hover:-translate-y-1 shadow-md hover:shadow-lg mb-3"
+                  >
+                    <Star size={22} className="mr-2 fill-white" />
+                    Oui, déposer mon avis sur Google
+                  </a>
+
+                  <p className="text-sm text-[#a9825a] mb-5">
+                    💬 Un petit mot sur votre séance aide encore plus&nbsp;!
+                  </p>
+
+                  <button onClick={() => setShowModal(false)} className="text-sm text-gray-500 hover:text-gray-700 font-semibold underline underline-offset-2">
+                    Peut-être plus tard
+                  </button>
                 </div>
               ) : (rating >= 4 || hasAlreadyVoted) ? (
                 <div className="py-8 animate-in zoom-in duration-300">
