@@ -309,8 +309,18 @@ export async function POST(request: Request) {
     const stampX = width - 240;
     let stampY = basDePageY - 20;
 
-    page.drawText(`${nomHeader} ${titreHeader || ''}`, { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
-    stampY -= 16;
+    const stampMaxWidth = width - stampX - 20;
+    // Nom du praticien, puis métier/fonction sur la ligne en dessous (chacun replié si trop long)
+    wrapText(nomHeader, fontBold, 11, stampMaxWidth).forEach((line) => {
+      page.drawText(line, { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
+      stampY -= 16;
+    });
+    if (titreHeader) {
+      wrapText(titreHeader, fontBold, 11, stampMaxWidth).forEach((line) => {
+        page.drawText(line, { x: stampX, y: stampY, size: 11, font: fontBold, color: colorBlack });
+        stampY -= 16;
+      });
+    }
 
     if (adresseCabinet) {
       const parts = adresseCabinet.split(',');
