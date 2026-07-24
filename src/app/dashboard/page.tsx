@@ -600,8 +600,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* TUNNEL D'AVIS GOOGLE */}
-            <AvisFunnel factures={facturesFiltered} />
+            {/* TUNNEL D'AVIS GOOGLE — respecte les filtres actifs (cabinet, recherche, dates) */}
+            <AvisFunnel factures={facturesFiltrees} />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* COLONNE GAUCHE */}
