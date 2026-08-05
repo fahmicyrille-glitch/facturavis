@@ -3,13 +3,16 @@
 import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Loader2, CreditCard, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Loader2, CreditCard, ArrowRight, Lock, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import type { Cabinet, Prestation } from '@/lib/types';
+import { usePlan } from '@/hooks/usePlan';
 
 import ProfileForm from '@/components/settings/ProfileForm';
 import PrestationsSection from '@/components/settings/PrestationsSection';
 import CabinetsSection from '@/components/settings/CabinetsSection';
+import HorairesSection from '@/components/settings/HorairesSection';
+import MotifsSection from '@/components/settings/MotifsSection';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import ReceptionActivationModal from '@/components/settings/ReceptionActivationModal';
 
@@ -19,6 +22,7 @@ function SettingsContent() {
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isPro, loading: planLoading } = usePlan();
   const forcedId = searchParams.get('as');
   const receptionResult = searchParams.get('reception');
   const receptionReason = searchParams.get('reason');
@@ -883,6 +887,39 @@ function SettingsContent() {
           onUpdateCabinet={handleUpdateCabinet}
           deletingId={deletingId} onDeleteCabinet={handleDeleteCabinet}
         />
+
+        {/* AGENDA & RESERVATION EN LIGNE (Pro) */}
+        {planLoading ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-8 flex justify-center">
+            <Loader2 className="animate-spin text-gray-400" size={24} />
+          </div>
+        ) : isPro ? (
+          <>
+            <HorairesSection userId={userId} />
+            <MotifsSection userId={userId} />
+          </>
+        ) : (
+          <div className="bg-gradient-to-r from-[#fdf2e9] to-white rounded-xl border border-[#f0e6de] p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="bg-[#a9825a] text-white p-3 rounded-xl shrink-0">
+                <Calendar size={22} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock size={13} className="text-[#a9825a]" />
+                  <span className="text-[11px] font-black uppercase tracking-widest text-[#a9825a]">Plan Pro</span>
+                </div>
+                <h3 className="font-black text-lg text-[#3e2f25] mb-1">Agenda & réservation en ligne</h3>
+                <p className="text-sm text-[#7a6a5f] mb-4">
+                  Vos patients réservent seuls, 24h/24, sur vos créneaux libres, en choisissant leur motif de consultation — comme sur Doctolib.
+                </p>
+                <Link href="/dashboard/agenda" className="inline-flex items-center gap-2 bg-[#a9825a] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#8b6a48] transition-colors">
+                  Débloquer avec le plan Pro
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
