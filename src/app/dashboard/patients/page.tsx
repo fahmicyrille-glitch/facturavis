@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   Loader2, ArrowLeft, UserPlus, CheckCircle, AlertCircle
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { Patient, FactureHistorique } from '@/lib/types';
 import ImportCSV from '@/components/patients/ImportCSV';
 import { usePlan } from '@/hooks/usePlan';
@@ -15,10 +15,12 @@ import PatientList from '@/components/patients/PatientList';
 import PatientDetail from '@/components/patients/PatientDetail';
 import DeletePatientModal from '@/components/patients/DeletePatientModal';
 
-export default function PatientsAnnuaire() {
+function PatientsAnnuaireContent() {
   useEffect(() => { document.title = 'Mes Patients — FacturAvis'; }, []);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const patientIdParam = searchParams.get('id');
   const { isPro, daysLeft, hasUsedTrial, loading: planLoading } = usePlan();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -40,6 +42,15 @@ export default function PatientsAnnuaire() {
   useEffect(() => {
     fetchPatients();
   }, []);
+
+  // --- AUTO-SELECT depuis un lien externe (ex: "Voir la fiche" depuis l'agenda) ---
+  const autoSelectDone = useRef(false);
+  useEffect(() => {
+    if (autoSelectDone.current || !patientIdParam || patients.length === 0) return;
+    autoSelectDone.current = true;
+    const found = patients.find((p) => p.id === patientIdParam);
+    if (found) handleSelectPatient(found);
+  }, [patientIdParam, patients]);
 
   // --- AUTO-SAVE LOGIC ---
   useEffect(() => {
@@ -79,6 +90,7 @@ export default function PatientsAnnuaire() {
         telephone: selectedPatient.telephone?.trim() || '',
         adresse: selectedPatient.adresse?.trim() || '',
         num_secu: selectedPatient.num_secu?.trim() || '',
+        date_naissance: selectedPatient.date_naissance || null,
         notes_consultation: selectedPatient.notes_consultation || '',
       }]).select().single();
 
@@ -236,7 +248,9 @@ export default function PatientsAnnuaire() {
           adresse: selectedPatient.adresse,
           num_secu: selectedPatient.num_secu,
           telephone: cleanedPhone,
-          notes_consultation: selectedPatient.notes_consultation
+          date_naissance: selectedPatient.date_naissance || null,
+          notes_consultation: selectedPatient.notes_consultation,
+          anamnese: selectedPatient.anamnese || {}
         }])
         .select()
         .single();
@@ -258,7 +272,9 @@ export default function PatientsAnnuaire() {
           adresse: selectedPatient.adresse,
           num_secu: selectedPatient.num_secu,
           telephone: cleanedPhone,
-          notes_consultation: selectedPatient.notes_consultation
+          date_naissance: selectedPatient.date_naissance || null,
+          notes_consultation: selectedPatient.notes_consultation,
+          anamnese: selectedPatient.anamnese || {}
         })
         .eq('id', selectedPatient.id)
         .eq('therapeute_id', userId!);
@@ -287,7 +303,9 @@ export default function PatientsAnnuaire() {
       telephone: "",
       adresse: "",
       num_secu: "",
-      notes_consultation: ""
+      date_naissance: null,
+      notes_consultation: "",
+      anamnese: {}
     };
 
     setPatients([draftPatient, ...patients.filter(p => p.id !== 'temp-new-patient')]);
@@ -419,5 +437,13 @@ export default function PatientsAnnuaire() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PatientsAnnuaire() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-blue-600" size={40} /></div>}>
+      <PatientsAnnuaireContent />
+    </Suspense>
   );
 }

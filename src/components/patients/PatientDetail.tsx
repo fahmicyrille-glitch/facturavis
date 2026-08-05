@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Patient, FactureHistorique, Consultation, Attachment } from '@/lib/types';
+import AnamneseSection from '@/components/patients/AnamneseSection';
 
 interface PatientDetailProps {
   selectedPatient: Patient | null;
@@ -405,9 +406,28 @@ export default function PatientDetail({
                   <input className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800" placeholder="15 chiffres" value={selectedPatient.num_secu || ''} onChange={(e) => setSelectedPatient({ ...selectedPatient, num_secu: e.target.value })} />
                 </div>
               </div>
+              <div className="group">
+                <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-1.5 block">Date de naissance</label>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl group-focus-within:bg-white border border-gray-100 group-focus-within:border-blue-300 group-focus-within:ring-2 group-focus-within:ring-blue-500/10 transition-all">
+                  <Calendar size={16} className="text-gray-400" />
+                  <input
+                    type="date"
+                    className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800"
+                    value={selectedPatient.date_naissance || ''}
+                    onChange={(e) => setSelectedPatient({ ...selectedPatient, date_naissance: e.target.value })}
+                    onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* ANAMNESE STRUCTUREE */}
+        <AnamneseSection
+          anamnese={selectedPatient.anamnese || {}}
+          onChange={(anamnese) => setSelectedPatient({ ...selectedPatient, anamnese })}
+        />
 
         {/* OBSERVATIONS THERAPEUTIQUES */}
         <div className="bg-[#fcfaf8] p-6 rounded-2xl border border-[#f0e6de] relative">
