@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GoogleAnalytics from '@/components/GoogleAnalytics';
@@ -100,6 +100,10 @@ export const metadata: Metadata = {
     description: "Agenda en ligne 24h/24, facturation en 10s, 3× plus d'avis Google. L'outil complet des praticiens libéraux modernes. Essai gratuit.",
     images: ["/og-image.jpg"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#3e2f25",
 };
 
 export default function RootLayout({
