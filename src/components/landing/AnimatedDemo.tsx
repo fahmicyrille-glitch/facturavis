@@ -3,10 +3,16 @@
 import { useState, useEffect } from 'react';
 import {
   FileText, Send, Star, CheckCircle, Download, Mail,
-  Clock, ArrowRight, Sparkles, User, Euro
+  Clock, ArrowRight, Sparkles, User, Euro, CalendarCheck
 } from 'lucide-react';
+import Reveal from './Reveal';
 
 const STEPS = [
+  {
+    id: 'booking',
+    title: 'Le patient réserve en ligne',
+    subtitle: 'Un créneau choisi, sans un seul appel',
+  },
   {
     id: 'form',
     title: 'Le praticien facture en 10 secondes',
@@ -42,16 +48,16 @@ export default function AnimatedDemo() {
   return (
     <section className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
+        <Reveal variant="up" className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-[#fdf2e9] text-[#a9825a] px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-[#f0e6de] mb-6">
             <Clock size={14} /> Démo en direct
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
-            De la séance à l&apos;avis Google <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">en 30 secondes.</span>
+            Du rendez-vous à l&apos;avis Google, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">sans effort.</span>
           </h2>
-        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+        <Reveal variant="zoom" delay={150} className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Left: Steps indicator */}
           <div className="space-y-4">
             {STEPS.map((step, i) => (
@@ -108,13 +114,14 @@ export default function AnimatedDemo() {
 
               {/* Screen content */}
               <div className={`p-6 min-h-[320px] md:min-h-[380px] transition-opacity duration-400 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-                {activeStep === 0 && <StepForm />}
-                {activeStep === 1 && <StepEmail />}
-                {activeStep === 2 && <StepReview />}
+                {activeStep === 0 && <StepBooking />}
+                {activeStep === 1 && <StepForm />}
+                {activeStep === 2 && <StepEmail />}
+                {activeStep === 3 && <StepReview />}
               </div>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
 
       <style jsx>{`
@@ -127,6 +134,47 @@ export default function AnimatedDemo() {
         }
       `}</style>
     </section>
+  );
+}
+
+function StepBooking() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-black text-gray-900 flex items-center gap-2">
+          <CalendarCheck size={18} className="text-[#a9825a]" /> Réservation en ligne
+        </h3>
+        <span className="text-[9px] bg-[#fdf2e9] text-[#a9825a] px-2 py-1 rounded-full font-bold">24h/24</span>
+      </div>
+
+      <div className="bg-[#fdf2e9] rounded-xl p-3 border border-[#f0e6de] flex items-center justify-between text-sm">
+        <span className="text-gray-700 font-medium">Consultation de suivi &middot; 45 min</span>
+        <span className="text-[#a9825a] font-black text-xs">Jeu. 14 août</span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {['09:00', '11:00', '15:00'].map((h, i) => (
+          <div
+            key={h}
+            className={`text-center text-xs font-bold py-2.5 rounded-lg border transition-colors ${
+              i === 2 ? 'bg-[#a9825a] border-[#a9825a] text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600'
+            }`}
+          >
+            {h}
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-green-50 border border-green-100 rounded-xl p-3 flex items-center gap-2">
+        <CheckCircle size={16} className="text-green-600 shrink-0" />
+        <span className="text-xs font-bold text-green-800">RDV confirmé + rappel 24h avant programmé</span>
+      </div>
+
+      <div className="flex items-center gap-2 text-[10px] text-gray-400">
+        <Clock size={12} />
+        <span>Aucun appel, aucun email échangé avec le cabinet</span>
+      </div>
+    </div>
   );
 }
 

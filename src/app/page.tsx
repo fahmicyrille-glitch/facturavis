@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
 import {
   CheckCircle2, Star, ShieldCheck,
   FilePlus, Users, Inbox, BarChart3, Sparkles,
   MessageSquare, ArrowRight, Zap, TrendingUp, CalendarDays, X,
-  RefreshCw, Video, Bell
+  RefreshCw, Video, Bell, ClipboardList, Hourglass, Ban, RotateCw
 } from 'lucide-react';
-
-export const metadata: Metadata = { title: "Homepage — FacturAvis" };
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import CountdownBanner from '@/components/landing/CountdownBanner';
@@ -16,8 +13,26 @@ import MockupFacturesRecues from '@/components/landing/MockupFacturesRecues';
 import AnimatedDemo from '@/components/landing/AnimatedDemo';
 import MockupPatients from '@/components/landing/MockupPatients';
 import MockupAgenda from '@/components/landing/MockupAgenda';
+import MockupReserver from '@/components/landing/MockupReserver';
+import Reveal from '@/components/landing/Reveal';
 
 export default function LandingPage() {
+  const jsonLdOrg = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "FacturAvis",
+    "url": "https://facturavis.fr",
+    "logo": "https://facturavis.fr/logo/logo.png",
+    "description": "Logiciel tout-en-un pour praticiens libéraux : agenda et réservation en ligne, facturation Factur-X, avis Google automatiques et réception de factures fournisseurs conforme à la réforme 2026.",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "url": "https://facturavis.fr/#contact",
+      "areaServed": "FR",
+      "availableLanguage": "French",
+    },
+  };
+
   const jsonLdApp = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -48,6 +63,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fcfaf8] text-[#3e2f25] font-sans selection:bg-[#a9825a] selection:text-white overflow-x-clip scroll-smooth">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
@@ -63,7 +79,7 @@ export default function LandingPage() {
       {/* 2. RÉCEPTION FOURNISSEURS 2026 — angle chaud, remonté en priorité */}
       <section id="reforme" className="py-16 md:py-24 bg-[#fcfaf8] border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+          <Reveal variant="up" className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-red-100 mb-5">
               <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" /></span>
               Obligatoire dès septembre 2026
@@ -75,7 +91,7 @@ export default function LandingPage() {
             <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
               Même exonéré de TVA, vous devez pouvoir recevoir les factures de vos fournisseurs au format électronique dès septembre 2026. FacturAvis le fait automatiquement. <strong className="text-[#3e2f25]">Gratuit. Pour toujours.</strong>
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {[
@@ -83,70 +99,99 @@ export default function LandingPage() {
               { icon: Inbox, color: "bg-green-50 text-green-600", title: "Réception automatique", desc: "Comptable, loyer, télécom, matériel médical... tout arrive dans votre espace sans manipulation." },
               { icon: TrendingUp, color: "bg-amber-50 text-amber-600", title: "Envoi comptable en 1 clic", desc: "Sélectionnez une période, saisissez l'email de votre comptable. Il reçoit un ZIP avec tout." },
             ].map((f, i) => (
-              <div key={i} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm text-center hover:-translate-y-1 transition-transform duration-300">
+              <Reveal key={i} variant="up" delay={i * 100} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm text-center hover:-translate-y-1 transition-transform duration-300">
                 <div className={`w-16 h-16 ${f.color} rounded-2xl flex items-center justify-center mx-auto mb-5`}><f.icon size={32} /></div>
                 <h3 className="font-black text-lg mb-2 text-[#3e2f25]">{f.title}</h3>
                 <p className="text-sm text-[#7a6a5f]">{f.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
-          <div className="relative group">
+          <Reveal variant="zoom" className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-b from-green-200/30 to-transparent rounded-2xl blur-xl -z-10 opacity-70" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 pointer-events-none rounded-b-2xl" />
             <MockupFacturesRecues />
-          </div>
+          </Reveal>
 
-          <div className="mt-8 text-center">
+          <Reveal variant="up" className="mt-8 text-center">
             <Link href="/inscription" className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-black text-base transition-all hover:scale-105 shadow-lg shadow-green-600/20">
               Me mettre en conformité gratuitement <ArrowRight size={18} />
             </Link>
             <p className="text-xs text-[#7a6a5f] font-bold mt-3">Sans carte bancaire · Gratuit pour toujours</p>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* 2bis. AGENDA & RDV EN LIGNE — flagship différenciateur, prime position */}
       <section id="agenda" className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+          <Reveal variant="up" className="text-center mb-10">
             <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Nouveau — Agenda & réservation en ligne</p>
             <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
               Vos patients réservent seuls,<br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]"> vous ne faites rien.</span>
             </h2>
             <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
-              Partagez votre lien de réservation. Vos patients choisissent un créneau libre 24h/24, en cabinet ou en visio. Confirmation, rappel 24h avant et reprogrammation en ligne : tout est automatique.
+              Partagez votre lien de réservation. Vos patients choisissent un créneau libre 24h/24, selon vos horaires et vos motifs de consultation, en cabinet ou en visio. Confirmation, rappel 24h avant et reprogrammation en ligne : tout est automatique.
             </p>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-10 items-start">
+            <Reveal variant="left" className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-b from-[#fdf2e9]/50 to-transparent rounded-2xl blur-xl -z-10 opacity-70" />
+              <p className="text-center text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Ce que voit votre patient</p>
+              <MockupReserver />
+            </Reveal>
+            <Reveal variant="right" delay={150} className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-b from-[#fdf2e9]/50 to-transparent rounded-2xl blur-xl -z-10 opacity-70" />
+              <p className="text-center text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Ce que vous voyez</p>
+              <MockupAgenda />
+            </Reveal>
           </div>
 
-          <div className="relative mb-10">
-            <div className="absolute -inset-1 bg-gradient-to-b from-[#fdf2e9]/50 to-transparent rounded-2xl blur-xl -z-10 opacity-70" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 pointer-events-none rounded-b-2xl" />
-            <MockupAgenda />
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
             {[
               { icon: CalendarDays, title: "Réservation 24h/24", desc: "Lien personnel à partager partout" },
               { icon: RefreshCw, title: "Reprogrammation en ligne", desc: "Le patient change sa date lui-même" },
               { icon: Video, title: "Visio intégrée", desc: "Lien de consultation à distance" },
               { icon: Bell, title: "Liste d'attente", desc: "Alerte auto dès qu'un créneau se libère" },
+              { icon: ClipboardList, title: "Motifs personnalisés", desc: "Une durée différente par type de séance" },
+              { icon: Hourglass, title: "Délais configurables", desc: "Bloquez les annulations de dernière minute" },
+              { icon: Ban, title: "Congés & indisponibilités", desc: "Bloqués automatiquement, sans y penser" },
+              { icon: RotateCw, title: "Sync Google/Apple Calendar", desc: "Votre agenda perso toujours à jour" },
             ].map((f, i) => (
-              <div key={i} className="bg-[#fcfaf8] rounded-2xl p-5 border border-[#f0e6de] text-center hover:border-[#a9825a] transition-colors">
+              <Reveal key={i} variant="up" delay={i * 60} className="bg-[#fcfaf8] rounded-2xl p-5 border border-[#f0e6de] text-center hover:border-[#a9825a] transition-colors">
                 <f.icon size={22} className="text-[#a9825a] mx-auto mb-2" />
                 <p className="text-xs font-black text-[#3e2f25] mb-1">{f.title}</p>
                 <p className="text-[10px] text-[#7a6a5f] font-medium">{f.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
+
+          {/* Widget intégrable — différenciateur fort, mis en avant à part */}
+          <Reveal variant="zoom" className="max-w-4xl mx-auto bg-gradient-to-br from-[#3e2f25] to-[#2a201a] rounded-3xl p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="flex-1 text-center md:text-left">
+              <p className="text-[#d4b494] text-xs font-black uppercase tracking-widest mb-2">Bonus — Widget intégrable</p>
+              <h3 className="text-xl md:text-2xl font-black text-white mb-2 tracking-tight">
+                Votre agenda directement sur votre site.
+              </h3>
+              <p className="text-gray-300 text-sm md:text-base font-medium">
+                Un lien à coller dans votre site Wix/WordPress, votre bio Instagram ou votre Linktree. Vos patients réservent sans jamais quitter votre page.
+              </p>
+            </div>
+            <div className="flex-1 w-full">
+              <div className="bg-black/40 border border-white/10 rounded-2xl p-4 font-mono text-[11px] md:text-xs text-[#d4b494] overflow-x-auto">
+                <span className="text-gray-500">&lt;</span>iframe<span className="text-gray-500"> src=</span><span className="text-green-400">&quot;facturavis.fr/reserver/vous&quot;</span><span className="text-gray-500">&gt;&lt;/</span>iframe<span className="text-gray-500">&gt;</span>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* 3. DOSSIERS PATIENTS — remonté plus tôt dans le tunnel, différenciateur clé */}
       <section className="py-16 md:py-24 bg-[#fcfaf8] border-t border-[#f0e6de] px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+          <Reveal variant="up" className="text-center mb-10">
             <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Dossiers patients</p>
             <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
               Tout l'historique de vos patients,<br className="hidden md:block" />
@@ -155,13 +200,13 @@ export default function LandingPage() {
             <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
               Fiche complète, observations de séance, historique de facturation. Tout est lié — vous facturez en 10 secondes depuis la fiche patient.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="relative">
+          <Reveal variant="zoom" className="relative">
             <div className="absolute -inset-1 bg-gradient-to-b from-[#fdf2e9]/50 to-transparent rounded-2xl blur-xl -z-10 opacity-70" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 pointer-events-none rounded-b-2xl" />
             <MockupPatients />
-          </div>
+          </Reveal>
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-center">
             {[
@@ -169,10 +214,10 @@ export default function LandingPage() {
               { val: "100%", label: "sécurisé RGPD" },
               { val: "∞", label: "patients & observations" },
             ].map((s, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 border border-[#f0e6de] shadow-sm">
+              <Reveal key={i} variant="up" delay={i * 100} className="bg-white rounded-2xl p-5 border border-[#f0e6de] shadow-sm">
                 <p className="text-3xl font-black text-[#3e2f25]">{s.val}</p>
                 <p className="text-xs text-[#7a6a5f] font-bold mt-1">{s.label}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -186,13 +231,13 @@ export default function LandingPage() {
       {/* 5. COMMENT ÇA MARCHE */}
       <section className="py-12 md:py-20 bg-[#fdf2e9]/50 border-t border-[#f0e6de]">
         <div className="max-w-5xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-10">
+          <Reveal variant="up" className="text-center mb-10">
             <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Simple comme bonjour</p>
             <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] tracking-tighter">
               De la séance à l'avis Google <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">en 3 étapes.</span>
             </h2>
-          </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center relative">
             <div className="hidden md:block absolute top-1/2 left-[15%] right-[15%] h-0.5 bg-[#d4b494]/30 -z-10" />
             {[
@@ -200,11 +245,11 @@ export default function LandingPage() {
               { num: "2", title: "Le patient reçoit", desc: "La note d'honoraires arrive par email instantanément, prête pour sa mutuelle.", color: "bg-gradient-to-br from-[#d4b494] to-[#a9825a]" },
               { num: "3", title: "L'avis tombe", desc: "En téléchargeant sa facture, le patient est invité à noter votre cabinet sur Google Maps.", color: "bg-yellow-400" },
             ].map((step, i) => (
-              <div key={i} className="bg-white p-6 md:p-8 rounded-3xl border border-[#f0e6de] shadow-sm relative z-10 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+              <Reveal key={i} variant="up" delay={i * 120} className="bg-white p-6 md:p-8 rounded-3xl border border-[#f0e6de] shadow-sm relative z-10 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                 <div className={`w-12 h-12 ${step.color} text-white font-black text-xl flex items-center justify-center rounded-2xl mx-auto mb-5 shadow-lg`}>{step.num}</div>
                 <h3 className="font-black text-lg md:text-xl mb-2">{step.title}</h3>
                 <p className="text-sm text-[#7a6a5f]">{step.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -216,7 +261,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto bg-gradient-to-br from-[#3e2f25] to-black rounded-[32px] md:rounded-[40px] p-8 sm:p-12 md:p-20 text-white flex flex-col lg:flex-row items-center gap-10 md:gap-16 overflow-hidden relative shadow-2xl">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#a9825a]/20 rounded-full blur-[100px] pointer-events-none" />
 
-          <div className="flex-1 space-y-6 text-center lg:text-left relative z-10">
+          <Reveal variant="left" className="flex-1 space-y-6 text-center lg:text-left relative z-10">
             <div className="flex justify-center lg:justify-start gap-1 text-yellow-400">
               {[1,2,3,4,5].map(s => <Star key={s} fill="currentColor" size={24} />)}
             </div>
@@ -235,9 +280,9 @@ export default function LandingPage() {
                 Commencer gratuitement <ArrowRight size={16} />
               </Link>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="flex-1 bg-white/5 backdrop-blur-xl rounded-[24px] p-6 md:p-8 border border-white/10 w-full relative z-10 space-y-4">
+          <Reveal variant="right" delay={150} className="flex-1 bg-white/5 backdrop-blur-xl rounded-[24px] p-6 md:p-8 border border-white/10 w-full relative z-10 space-y-4">
             {/* Témoignage */}
             <div className="flex items-center gap-3 pb-4 border-b border-white/10">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#d4b494] to-[#a9825a] flex items-center justify-center font-black text-white text-lg shrink-0">N</div>
@@ -263,7 +308,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -271,27 +316,27 @@ export default function LandingPage() {
       {/* 6. FONCTIONNALITÉS */}
       <section id="fonctionnalites" className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <Reveal variant="up" className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 text-[#3e2f25] tracking-tighter">Un outil. Sept super-pouvoirs.</h2>
             <p className="text-[#7a6a5f] font-bold text-base md:text-lg">Tout ce dont un praticien libéral a besoin, sans le superflu.</p>
-          </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: CalendarDays, title: "Agenda & RDV en ligne", desc: "Vos patients réservent seuls sur vos créneaux libres, 24h/24, via votre lien personnel. Confirmations, rappels 24h avant, reprogrammation, visio et liste d'attente : fini les no-shows et le secrétariat." },
+              { icon: CalendarDays, title: "Agenda & RDV en ligne", desc: "Vos patients réservent seuls sur vos créneaux libres, 24h/24, via votre lien ou un widget intégrable à votre site. Motifs personnalisés, rappels 24h avant, reprogrammation, visio, liste d'attente et synchronisation Google/Apple Calendar." },
               { icon: Star, title: "Machine à Avis Google", desc: "Le patient télécharge sa facture pour sa mutuelle = invitation à laisser 5 étoiles. 100% organique, sans contrepartie. +300% d'avis en moyenne." },
               { icon: Zap, title: "Facturation Express", desc: "Factures patients conformes Factur-X en 10 secondes. PDF, email, tout est automatique." },
-              { icon: Users, title: "Dossiers Patients & Anamnèse", desc: "Fiches complètes, anamnèse structurée, séances liées à l'agenda, observations auto-sauvegardées." },
+              { icon: Users, title: "Dossiers Patients & Anamnèse", desc: "Fiches complètes, anamnèse structurée, pièces jointes, séances liées à l'agenda, observations auto-sauvegardées." },
               { icon: Inbox, title: "Réception Fournisseurs", desc: "Factures fournisseurs reçues automatiquement via notre partenaire Plateforme Agréée certifié DGFiP. Conforme 2026." },
-              { icon: BarChart3, title: "Dashboard & Analytics", desc: "CA mensuel, taux d'avis, performances en temps réel. Export FEC en 1 clic pour votre comptable." },
+              { icon: BarChart3, title: "Dashboard & Analytics", desc: "CA mensuel, taux d'avis, performances en temps réel, multi-cabinets. Export FEC en 1 clic pour votre comptable." },
               { icon: FilePlus, title: "Import de PDF existants", desc: "Vous avez déjà un logiciel ? Importez votre PDF, on gère l'envoi et la récolte d'avis." },
             ].map((feat, i) => (
-              <div key={i} className="bg-[#fcfaf8] p-6 md:p-8 rounded-3xl border border-[#f0e6de] hover:border-[#a9825a] hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+              <Reveal key={i} variant="up" delay={(i % 3) * 100} className="bg-[#fcfaf8] p-6 md:p-8 rounded-3xl border border-[#f0e6de] hover:border-[#a9825a] hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
                 <div className="w-14 h-14 bg-white text-[#a9825a] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-sm border border-[#f0e6de]">
                   <feat.icon size={26} />
                 </div>
                 <h3 className="text-xl font-black text-[#3e2f25] mb-2">{feat.title}</h3>
                 <p className="text-[#7a6a5f] font-medium leading-relaxed text-sm">{feat.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -300,7 +345,7 @@ export default function LandingPage() {
       {/* 7. PRICING */}
       <section id="tarifs" className="py-16 md:py-24 bg-[#fcfaf8] border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+          <Reveal variant="up" className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
               Commencez gratuitement.{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">Évoluez quand vous êtes prêt.</span>
@@ -308,11 +353,11 @@ export default function LandingPage() {
             <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
               La réception de factures fournisseurs est gratuite. Pour toujours. Sans carte bancaire.
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* FREE */}
-            <div className="bg-white p-8 md:p-10 rounded-[32px] border-2 border-gray-200 relative">
+            <Reveal variant="left" className="bg-white p-8 md:p-10 rounded-[32px] border-2 border-gray-200 relative">
               <div className="inline-block bg-green-100 text-green-700 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Gratuit</div>
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-5xl font-black text-[#3e2f25]">0€</span>
@@ -330,10 +375,10 @@ export default function LandingPage() {
                 S'inscrire gratuitement
               </Link>
               <p className="text-[10px] text-center text-[#7a6a5f] mt-3 font-bold">Sans carte bancaire · Pour toujours</p>
-            </div>
+            </Reveal>
 
             {/* PRO */}
-            <div className="bg-gradient-to-b from-[#fdf2e9] to-white p-8 md:p-10 rounded-[32px] border-2 border-[#a9825a] relative shadow-xl shadow-[#a9825a]/10">
+            <Reveal variant="right" delay={150} className="bg-gradient-to-b from-[#fdf2e9] to-white p-8 md:p-10 rounded-[32px] border-2 border-[#a9825a] relative shadow-xl shadow-[#a9825a]/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#a9825a] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full">Le plus populaire</div>
               <div className="inline-block bg-[#a9825a]/10 text-[#a9825a] text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Pro</div>
               <div className="flex items-baseline gap-2 mb-2">
@@ -360,7 +405,7 @@ export default function LandingPage() {
                 Essai gratuit 14 jours
               </Link>
               <p className="text-[10px] text-center text-[#7a6a5f] mt-3 font-bold">Sans carte bancaire · Annulable à tout moment</p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -368,7 +413,7 @@ export default function LandingPage() {
       {/* 7bis. COMPARATEUR — l'alternative Doctolib pour les praticiens bien-être */}
       <section id="comparatif" className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <Reveal variant="up" className="text-center mb-10">
             <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Exclu de Doctolib depuis 2023 ?</p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#3e2f25] tracking-tighter mb-4">
               L&apos;alternative complète.<br />
@@ -377,9 +422,9 @@ export default function LandingPage() {
             <p className="text-[#7a6a5f] font-medium text-base md:text-lg max-w-2xl mx-auto">
               Doctolib est réservé aux professions RPPS/ADELI. Les alternatives pour praticiens bien-être coûtent 30 à 40€/mois — sans facturation conforme 2026, et sans machine à avis Google.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="overflow-x-auto rounded-3xl border border-[#f0e6de] shadow-sm">
+          <Reveal variant="zoom" className="overflow-x-auto rounded-3xl border border-[#f0e6de] shadow-sm">
             <table className="w-full min-w-[640px] text-sm bg-white">
               <thead>
                 <tr className="border-b border-[#f0e6de]">
@@ -426,23 +471,25 @@ export default function LandingPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </Reveal>
           <p className="text-[10px] text-[#7a6a5f] mt-3 text-center font-medium">
             Tarifs publics constatés en juillet 2026 sur les sites des éditeurs (Crenolibre Pro 29,95€ HT, Resalib 29,99€ TTC, Therapeutes.com 39,90€ TTC). Fonctionnalités selon leurs pages tarifs.
           </p>
 
-          <div className="text-center mt-8">
+          <Reveal variant="up" className="text-center mt-8">
             <Link href="/inscription" className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white px-8 py-4 rounded-2xl font-black text-base hover:opacity-90 transition-all shadow-lg shadow-[#a9825a]/20">
               Essayer FacturAvis gratuitement <ArrowRight size={18} />
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* 8. FAQ — juste après le pricing */}
       <section className="py-16 md:py-20 bg-white border-t border-[#f0e6de] px-4 md:px-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black text-center text-[#3e2f25] mb-10 tracking-tight">Questions fréquentes</h2>
+          <Reveal variant="up">
+            <h2 className="text-3xl md:text-4xl font-black text-center text-[#3e2f25] mb-10 tracking-tight">Questions fréquentes</h2>
+          </Reveal>
           <div className="space-y-4">
             {[
               { q: "Est-ce que FacturAvis remplace Doctolib ?", a: "Oui, et il va plus loin. Depuis 2023, Doctolib est réservé aux professions RPPS/ADELI : les praticiens bien-être en sont exclus. FacturAvis vous donne l'agenda avec réservation en ligne par vos patients, les rappels automatiques, les dossiers patients, la facturation conforme 2026 ET les avis Google automatiques — à 19€/mois." },
@@ -453,10 +500,10 @@ export default function LandingPage() {
               { q: "Comment mes patients réservent-ils un rendez-vous en ligne ?", a: "Vous partagez votre lien de réservation personnel (site, Instagram, WhatsApp...). Le patient choisit un créneau réellement libre selon vos horaires, en cabinet ou en visio. Il reçoit une confirmation avec fichier calendrier, un rappel automatique 24h avant, et peut annuler ou reprogrammer lui-même en ligne." },
               { q: "Puis-je proposer des consultations en visio ?", a: "Oui. Ajoutez votre lien de visioconférence dans vos réglages : vos patients peuvent choisir une consultation à distance lors de la réservation, et le lien leur est envoyé automatiquement par email." },
             ].map((faq, i) => (
-              <div key={i} className="p-6 md:p-8 bg-[#fcfaf8] rounded-2xl border border-[#f0e6de] hover:border-[#d4b494] hover:shadow-md transition-all">
+              <Reveal key={i} variant="up" delay={Math.min(i, 4) * 60} duration={500} className="p-6 md:p-8 bg-[#fcfaf8] rounded-2xl border border-[#f0e6de] hover:border-[#d4b494] hover:shadow-md transition-all">
                 <h3 className="font-black text-base md:text-lg mb-2 text-[#3e2f25]">{faq.q}</h3>
                 <p className="text-[#7a6a5f] text-sm md:text-base leading-relaxed font-medium">{faq.a}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -464,7 +511,7 @@ export default function LandingPage() {
 
       {/* 9. CONTACT — renforcé */}
       <section className="py-12 bg-[#3e2f25] border-t border-white/10 px-4 md:px-6">
-        <div className="max-w-3xl mx-auto text-center mb-10">
+        <Reveal variant="up" className="max-w-3xl mx-auto text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-5">
             <MessageSquare size={14} /> Réponse en moins de 24h
           </div>
@@ -486,13 +533,13 @@ export default function LandingPage() {
             </svg>
             Poser ma question sur WhatsApp
           </a>
-        </div>
+        </Reveal>
       </section>
       <ContactForm />
 
       {/* 10. FOOTER CTA */}
       <section className="py-20 md:py-32 text-center px-4 md:px-6 bg-[#fcfaf8] border-t border-[#f0e6de]">
-        <div className="max-w-3xl mx-auto">
+        <Reveal variant="zoom" duration={800} className="max-w-3xl mx-auto">
           <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-4">Rejoignez +340 praticiens</p>
           <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter text-[#3e2f25]">Votre cabinet mérite mieux.</h2>
           <p className="text-[#7a6a5f] text-lg md:text-xl mb-10 max-w-xl mx-auto font-medium">
@@ -506,7 +553,7 @@ export default function LandingPage() {
             </button>
           </Link>
           <p className="mt-4 text-sm text-[#7a6a5f] font-bold">14 jours offerts · Aucune carte bancaire requise · Annulable en 1 clic</p>
-        </div>
+        </Reveal>
 
         <footer className="mt-24 pt-8 border-t border-[#f0e6de] flex flex-col md:flex-row justify-between items-center gap-6 text-[#7a6a5f] text-[10px] font-black uppercase tracking-widest max-w-7xl mx-auto">
           <p className="text-[10px]">Connecté à une Plateforme Agréée certifiée par la Direction Générale des Finances Publiques (DGFiP)</p>

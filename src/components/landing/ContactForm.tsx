@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import {
   CheckCircle2, Send, AlertCircle, MessageSquare,
 } from 'lucide-react';
+import Reveal from './Reveal';
 
 export default function ContactForm() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' });
@@ -45,7 +46,7 @@ export default function ContactForm() {
   return (
     <section id="contact" className="py-16 md:py-20 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-24 relative">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-[#f0e6de] to-transparent"></div>
-      <div className="max-w-3xl mx-auto text-center">
+      <Reveal variant="up" className="max-w-3xl mx-auto text-center">
         <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-[#fdf2e9] text-[#a9825a] rounded-full mb-6 shadow-sm border border-[#f0e6de]">
           <MessageSquare size={24} className="md:w-8 md:h-8" />
         </div>
@@ -124,7 +125,7 @@ export default function ContactForm() {
             )}
           </button>
         </form>
-      </div>
+      </Reveal>
     </section>
   );
 }
