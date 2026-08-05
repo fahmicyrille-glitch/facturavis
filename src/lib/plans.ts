@@ -52,6 +52,21 @@ export function canAccess(planInfo: PlanInfo, feature: Feature): boolean {
   return planInfo.isPro;
 }
 
+// Reproduit la logique de dégradation d'un plan payant résilié/impayé en 'free', partagée
+// entre le hook client (usePlan) et les vérifications serveur (routes API publiques).
+export function resolveEffectivePlan(
+  plan: string | null | undefined,
+  subscriptionStatus: string | null | undefined,
+): PlanType {
+  const raw = (plan || 'free') as PlanType;
+  if (raw === 'trial') return 'trial';
+  const activeStatuses = ['active', 'past_due', 'trialing'];
+  if ((raw === 'founder' || raw === 'standard') && activeStatuses.includes(subscriptionStatus || '')) {
+    return raw;
+  }
+  return 'free';
+}
+
 export function getDaysLeft(trialEndsAt: string | null): number | null {
   if (!trialEndsAt) return null;
   const diff = new Date(trialEndsAt).getTime() - Date.now();
