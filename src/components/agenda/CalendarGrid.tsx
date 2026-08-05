@@ -1,9 +1,9 @@
 'use client';
 
 import type { RendezVous } from '@/lib/types';
+import { HOUR_START, HOUR_END } from '@/lib/agenda-constants';
 
-export const HOUR_START = 8;
-export const HOUR_END = 20;
+export { HOUR_START, HOUR_END };
 const HOUR_HEIGHT = 60; // px
 
 interface PatientMin {
@@ -35,7 +35,8 @@ function isSameDay(a: Date, b: Date) {
 export default function CalendarGrid({ days, rendezVous, patients, onSlotClick, onRdvClick }: CalendarGridProps) {
   const hours = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i);
   const today = new Date();
-  const patientNom = (id: string | null) => patients.find((p) => p.id === id)?.nom_complet;
+  const patientNom = (rdv: RendezVous) =>
+    patients.find((p) => p.id === rdv.patient_id)?.nom_complet || rdv.patient_nom || undefined;
 
   return (
     <div className="flex bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -49,7 +50,10 @@ export default function CalendarGrid({ days, rendezVous, patients, onSlotClick, 
       </div>
 
       {days.map((day) => {
-        const dayRdv = rendezVous.filter((r) => isSameDay(new Date(r.date_debut), day));
+        // Un RDV annulé n'occupe plus le créneau (contrainte SQL anti-chevauchement exclut
+        // 'annule') : l'afficher quand même pourrait visuellement masquer le RDV actif qui
+        // a pris sa place.
+        const dayRdv = rendezVous.filter((r) => isSameDay(new Date(r.date_debut), day) && r.statut !== 'annule');
         return (
           <div key={day.toISOString()} className="flex-1 border-r border-gray-100 last:border-r-0 min-w-[100px]">
             <div className="h-[57px] flex flex-col items-center justify-center border-b border-gray-100">
@@ -71,7 +75,8 @@ export default function CalendarGrid({ days, rendezVous, patients, onSlotClick, 
                 const end = new Date(rdv.date_fin);
                 const startMin = (start.getHours() - HOUR_START) * 60 + start.getMinutes();
                 const durationMin = Math.max((end.getTime() - start.getTime()) / 60000, 15);
-                const nom = patientNom(rdv.patient_id);
+                const nom = patientNom(rdv);
+                const isIndispo = rdv.type === 'indisponibilite';
                 return (
                   <button
                     key={rdv.id}
@@ -79,11 +84,14 @@ export default function CalendarGrid({ days, rendezVous, patients, onSlotClick, 
                     style={{
                       top: (startMin / 60) * HOUR_HEIGHT,
                       height: (durationMin / 60) * HOUR_HEIGHT,
+                      ...(isIndispo ? { backgroundImage: 'repeating-linear-gradient(45deg, rgba(107,114,128,0.12), rgba(107,114,128,0.12) 6px, transparent 6px, transparent 12px)' } : {}),
                     }}
-                    className={`absolute left-1 right-1 rounded-lg border px-2 py-1 text-left overflow-hidden shadow-sm hover:shadow-md transition-shadow z-10 ${STATUT_STYLES[rdv.statut]}`}
+                    className={`absolute left-1 right-1 rounded-lg border px-2 py-1 text-left overflow-hidden shadow-sm hover:shadow-md transition-shadow z-10 ${
+                      isIndispo ? 'bg-gray-100 border-gray-300 text-gray-600' : STATUT_STYLES[rdv.statut]
+                    }`}
                   >
-                    <p className="text-[11px] font-black truncate">{rdv.titre}</p>
-                    {nom && <p className="text-[10px] font-medium truncate">{nom}</p>}
+                    <p className="text-[11px] font-black truncate">{isIndispo ? `🚫 ${rdv.titre || 'Indisponible'}` : rdv.titre}</p>
+                    {!isIndispo && nom && <p className="text-[10px] font-medium truncate">{nom}</p>}
                   </button>
                 );
               })}
