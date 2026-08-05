@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/sync-factures",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/rdv-reminder",
+      "schedule": "0 17 * * *"
     }
   ]
 }
