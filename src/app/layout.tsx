@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://facturavis.fr'),
 
   title: {
-    default: "FacturAvis — Logiciel Facturation & Avis Google | Réforme 2026 Incluse",
+    default: "FacturAvis — Agenda en Ligne, Facturation & Avis Google | Réforme 2026",
     template: "%s | FacturAvis",
   },
-  description: "Réforme sept. 2026 : recevez vos factures fournisseurs gratuitement via Plateforme Agréée DGFiP. Facturation Factur-X + avis Google automatiques pour ostéopathes, psychologues, chiropracteurs. Sans CB.",
+  description: "Agenda en ligne : vos patients réservent 24h/24 avec rappels automatiques. Facturation Factur-X, avis Google automatiques et réception gratuite des factures fournisseurs (réforme sept. 2026). Pour ostéopathes, psychologues, praticiens bien-être. Sans CB.",
 
   keywords: [
     // Réforme 2026
@@ -50,6 +50,12 @@ export const metadata: Metadata = {
     "avis Google cabinet médical automatique",
     "augmenter avis Google ostéopathe",
     "avis Google automatique thérapeute",
+    // Agenda & RDV en ligne
+    "prise de rendez-vous en ligne thérapeute",
+    "agenda en ligne praticien bien-être",
+    "alternative doctolib médecine douce",
+    "logiciel agenda ostéopathe",
+    "rappel rdv automatique praticien",
     // Divers
     "dossier patient sécurisé thérapeute",
     "logiciel hypnothérapeute",
@@ -74,8 +80,8 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "FacturAvis — Réforme 2026 + Avis Google automatisés pour Praticiens",
-    description: "Réforme sept. 2026 : Plateforme Agréée DGFiP incluse gratuitement. Facturation Factur-X + 3× plus d'avis Google. Logiciel tout-en-un pour praticiens libéraux.",
+    title: "FacturAvis — Agenda en Ligne + Facturation + Avis Google pour Praticiens",
+    description: "Agenda avec réservation en ligne 24h/24, facturation Factur-X, 3× plus d'avis Google et réception gratuite des factures fournisseurs (réforme 2026). Logiciel tout-en-un pour praticiens libéraux.",
     url: "https://facturavis.fr",
     siteName: "FacturAvis",
     images: [{
@@ -90,8 +96,8 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "FacturAvis — Factures Factur-X & Avis Google pour Praticiens",
-    description: "10 secondes pour facturer. 3× plus d'avis Google. L'outil des praticiens libéraux modernes. Essai gratuit.",
+    title: "FacturAvis — Agenda, Factures Factur-X & Avis Google pour Praticiens",
+    description: "Agenda en ligne 24h/24, facturation en 10s, 3× plus d'avis Google. L'outil complet des praticiens libéraux modernes. Essai gratuit.",
     images: ["/og-image.jpg"],
   },
 };

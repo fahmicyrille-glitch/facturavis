@@ -45,10 +45,10 @@ export default function HeroAnimations() {
           Réforme sept. 2026 — {daysLeft} jours restants
         </div>
 
-        {/* H1 — réforme 2026 en premier */}
+        {/* H1 — agenda + avis Google + conformité, les 3 piliers */}
         <h1 className="text-4xl sm:text-5xl md:text-[64px] font-black tracking-tighter mb-6 leading-[1.05] text-[#3e2f25]">
           <span className="relative inline-block">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Conforme 2026.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Agenda en ligne.</span>
             <div className="absolute bottom-1 left-0 w-full h-3 bg-green-200/40 -z-10 -rotate-1 rounded" />
           </span>
           <br />
@@ -59,13 +59,13 @@ export default function HeroAnimations() {
 
         {/* Sous-titre */}
         <p className="text-base sm:text-lg md:text-xl text-[#7a6a5f] max-w-2xl mx-auto mb-8 leading-relaxed font-medium">
-          Recevez les factures fournisseurs au format électronique dès septembre 2026 — <strong className="text-[#3e2f25]">gratuitement</strong>. Le même outil gère aussi votre <strong className="text-[#3e2f25]">facturation patients</strong>, vos <strong className="text-[#3e2f25]">dossiers patients</strong> et multiplie vos <strong className="text-[#3e2f25]">avis Google Maps</strong>.
+          Vos patients réservent seuls leur créneau <strong className="text-[#3e2f25]">24h/24</strong>, avec rappels automatiques anti no-show. Le même outil gère aussi votre <strong className="text-[#3e2f25]">facturation patients</strong>, vos <strong className="text-[#3e2f25]">dossiers patients</strong>, multiplie vos <strong className="text-[#3e2f25]">avis Google</strong> et reçoit vos <strong className="text-[#3e2f25]">factures fournisseurs</strong> — conforme à la réforme de septembre 2026, gratuitement.
         </p>
 
         {/* "Pour qui" — 3 bullets */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-10 text-sm font-bold text-[#3e2f25]">
           {[
-            "Praticien libéral (ostéo, psychologue, kiné...)",
+            "Fini le secrétariat : vos patients réservent seuls",
             "Vous voulez dominer Google Maps dans votre ville",
             "La réforme 2026 vous concerne",
           ].map((txt, i) => (
@@ -95,6 +95,8 @@ export default function HeroAnimations() {
 
         {/* Trust badges */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-10 text-[11px] font-bold text-[#7a6a5f]">
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-600" />Réservation en ligne 24h/24</span>
+          <span className="text-[#d4b494]">·</span>
           <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-green-600" />RGPD</span>
           <span className="text-[#d4b494]">·</span>
           <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-green-600" />Sans carte bancaire</span>

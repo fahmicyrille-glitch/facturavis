@@ -31,6 +31,7 @@ export default function Navbar() {
         </Link>
         <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-[#7a6a5f]">
           <a href="#reforme" className="flex items-center gap-1 text-orange-600 hover:text-orange-700 transition"><AlertCircle size={14}/> R&eacute;forme 2026</a>
+          <a href="#agenda" className="hover:text-[#a9825a] transition">Agenda</a>
           <a href="#fonctionnalites" className="hover:text-[#a9825a] transition">Fonctionnalit&eacute;s</a>
           <a href="#tarifs" className="hover:text-[#a9825a] transition">Tarifs</a>
           <a href="#contact" className="hover:text-[#a9825a] transition">Contact</a>
@@ -61,6 +62,9 @@ export default function Navbar() {
           <div className="flex flex-col px-4 py-4 space-y-1 max-w-7xl mx-auto">
             <a href="#reforme" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-all">
               <AlertCircle size={14}/> R&eacute;forme 2026
+            </a>
+            <a href="#agenda" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
+              Agenda
             </a>
             <a href="#fonctionnalites" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#7a6a5f] hover:text-[#a9825a] hover:bg-[#fdf2e9] transition-all">
               Fonctionnalit&eacute;s

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import {
   CheckCircle2, Star, ShieldCheck,
   FilePlus, Users, Inbox, BarChart3, Sparkles,
-  MessageSquare, ArrowRight, Zap, TrendingUp
+  MessageSquare, ArrowRight, Zap, TrendingUp, CalendarDays, X,
+  RefreshCw, Video, Bell
 } from 'lucide-react';
 
 export const metadata: Metadata = { title: "Homepage — FacturAvis" };
@@ -14,6 +15,7 @@ import ContactForm from '@/components/landing/ContactForm';
 import MockupFacturesRecues from '@/components/landing/MockupFacturesRecues';
 import AnimatedDemo from '@/components/landing/AnimatedDemo';
 import MockupPatients from '@/components/landing/MockupPatients';
+import MockupAgenda from '@/components/landing/MockupAgenda';
 
 export default function LandingPage() {
   const jsonLdApp = {
@@ -23,7 +25,7 @@ export default function LandingPage() {
     "applicationCategory": "HealthBusinessApplication",
     "operatingSystem": "Web",
     "url": "https://facturavis.fr",
-    "description": "Logiciel de facturation Factur-X, automatisation d'avis Google et réception de factures fournisseurs via Plateforme Agréée DGFiP pour praticiens libéraux.",
+    "description": "Alternative à Doctolib pour praticiens bien-être : agenda et prise de rendez-vous en ligne, facturation Factur-X, automatisation d'avis Google et réception de factures fournisseurs via Plateforme Agréée DGFiP.",
     "offers": [
       { "@type": "Offer", "name": "Gratuit", "price": "0", "priceCurrency": "EUR" },
       { "@type": "Offer", "name": "Pro", "price": "19.00", "priceCurrency": "EUR", "priceValidUntil": "2026-12-31" },
@@ -34,11 +36,13 @@ export default function LandingPage() {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
-      { "@type": "Question", "name": "Est-ce que FacturAvis remplace Doctolib ?", "acceptedAnswer": { "@type": "Answer", "text": "Non, c'est complémentaire. Doctolib gère l'agenda, FacturAvis gère tout ce qui se passe APRÈS la séance : dossier patient, édition de la facture conforme aux normes Factur-X 2026, comptabilité et réputation Google." } },
+      { "@type": "Question", "name": "Est-ce que FacturAvis remplace Doctolib ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui, et il va plus loin. Depuis 2023, Doctolib est réservé aux professions à numéro RPPS/ADELI : les praticiens bien-être en sont exclus. FacturAvis vous donne un agenda avec prise de rendez-vous en ligne par vos patients, rappels automatiques, dossiers patients, facturation conforme 2026 et avis Google automatiques — à 19€/mois, contre 30 à 40€ chez les alternatives." } },
       { "@type": "Question", "name": "Quel est le prix de FacturAvis ?", "acceptedAnswer": { "@type": "Answer", "text": "La réception de factures fournisseurs est totalement gratuite, sans limite dans le temps et sans carte bancaire. Le plan Pro à 19€/mois débloque la facturation patients Factur-X, l'automatisation des avis Google, les dossiers patients et le dashboard analytique." } },
       { "@type": "Question", "name": "Je suis exonéré de TVA, suis-je concerné par la réforme 2026 ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui. Vous n'êtes pas obligé d'émettre des factures électroniques à vos patients. En revanche, vous devez pouvoir recevoir celles de vos fournisseurs dès septembre 2026. FacturAvis vous met en conformité automatiquement." } },
       { "@type": "Question", "name": "Comment FacturAvis collecte-t-il des avis Google ?", "acceptedAnswer": { "@type": "Answer", "text": "Lors du téléchargement de sa facture, le patient est invité à laisser un avis sur Google Maps. C'est une simple invitation, sans contrepartie ni récompense : 100% organique. Résultat : +300% d'avis en moyenne." } },
       { "@type": "Question", "name": "Puis-je utiliser FacturAvis si j'ai déjà un logiciel de facturation ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui ! Déposez simplement votre PDF existant sur notre plateforme. Nous gérons l'envoi sécurisé au patient et la récolte automatique d'avis Google Maps." } },
+      { "@type": "Question", "name": "Comment mes patients réservent-ils un rendez-vous en ligne ?", "acceptedAnswer": { "@type": "Answer", "text": "Vous partagez votre lien de réservation personnel (sur votre site, Instagram, WhatsApp...). Le patient choisit un créneau réellement libre selon vos horaires, en cabinet ou en visio. Il reçoit une confirmation avec fichier calendrier, un rappel automatique 24h avant, et peut annuler ou reprogrammer lui-même en ligne." } },
+      { "@type": "Question", "name": "Puis-je proposer des consultations en visio ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui. Ajoutez votre lien de visioconférence dans vos réglages : vos patients pourront choisir une consultation à distance lors de la réservation, et le lien leur est envoyé automatiquement par email." } },
     ],
   };
 
@@ -98,6 +102,43 @@ export default function LandingPage() {
               Me mettre en conformité gratuitement <ArrowRight size={18} />
             </Link>
             <p className="text-xs text-[#7a6a5f] font-bold mt-3">Sans carte bancaire · Gratuit pour toujours</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 2bis. AGENDA & RDV EN LIGNE — flagship différenciateur, prime position */}
+      <section id="agenda" className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Nouveau — Agenda & réservation en ligne</p>
+            <h2 className="text-3xl md:text-5xl font-black text-[#3e2f25] mb-4 tracking-tighter">
+              Vos patients réservent seuls,<br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]"> vous ne faites rien.</span>
+            </h2>
+            <p className="text-[#7a6a5f] text-lg font-medium max-w-2xl mx-auto">
+              Partagez votre lien de réservation. Vos patients choisissent un créneau libre 24h/24, en cabinet ou en visio. Confirmation, rappel 24h avant et reprogrammation en ligne : tout est automatique.
+            </p>
+          </div>
+
+          <div className="relative mb-10">
+            <div className="absolute -inset-1 bg-gradient-to-b from-[#fdf2e9]/50 to-transparent rounded-2xl blur-xl -z-10 opacity-70" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#fcfaf8] via-transparent to-transparent z-10 pointer-events-none rounded-b-2xl" />
+            <MockupAgenda />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              { icon: CalendarDays, title: "Réservation 24h/24", desc: "Lien personnel à partager partout" },
+              { icon: RefreshCw, title: "Reprogrammation en ligne", desc: "Le patient change sa date lui-même" },
+              { icon: Video, title: "Visio intégrée", desc: "Lien de consultation à distance" },
+              { icon: Bell, title: "Liste d'attente", desc: "Alerte auto dès qu'un créneau se libère" },
+            ].map((f, i) => (
+              <div key={i} className="bg-[#fcfaf8] rounded-2xl p-5 border border-[#f0e6de] text-center hover:border-[#a9825a] transition-colors">
+                <f.icon size={22} className="text-[#a9825a] mx-auto mb-2" />
+                <p className="text-xs font-black text-[#3e2f25] mb-1">{f.title}</p>
+                <p className="text-[10px] text-[#7a6a5f] font-medium">{f.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -231,14 +272,15 @@ export default function LandingPage() {
       <section id="fonctionnalites" className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 text-[#3e2f25] tracking-tighter">Un outil. Six super-pouvoirs.</h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 text-[#3e2f25] tracking-tighter">Un outil. Sept super-pouvoirs.</h2>
             <p className="text-[#7a6a5f] font-bold text-base md:text-lg">Tout ce dont un praticien libéral a besoin, sans le superflu.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Zap, title: "Facturation Express", desc: "Factures patients conformes Factur-X en 10 secondes. PDF, email, tout est automatique." },
+              { icon: CalendarDays, title: "Agenda & RDV en ligne", desc: "Vos patients réservent seuls sur vos créneaux libres, 24h/24, via votre lien personnel. Confirmations, rappels 24h avant, reprogrammation, visio et liste d'attente : fini les no-shows et le secrétariat." },
               { icon: Star, title: "Machine à Avis Google", desc: "Le patient télécharge sa facture pour sa mutuelle = invitation à laisser 5 étoiles. 100% organique, sans contrepartie. +300% d'avis en moyenne." },
-              { icon: Users, title: "Dossiers Patients", desc: "Fiches complètes, observations auto-sauvegardées. Ne perdez plus jamais une information patient." },
+              { icon: Zap, title: "Facturation Express", desc: "Factures patients conformes Factur-X en 10 secondes. PDF, email, tout est automatique." },
+              { icon: Users, title: "Dossiers Patients & Anamnèse", desc: "Fiches complètes, anamnèse structurée, séances liées à l'agenda, observations auto-sauvegardées." },
               { icon: Inbox, title: "Réception Fournisseurs", desc: "Factures fournisseurs reçues automatiquement via notre partenaire Plateforme Agréée certifié DGFiP. Conforme 2026." },
               { icon: BarChart3, title: "Dashboard & Analytics", desc: "CA mensuel, taux d'avis, performances en temps réel. Export FEC en 1 clic pour votre comptable." },
               { icon: FilePlus, title: "Import de PDF existants", desc: "Vous avez déjà un logiciel ? Importez votre PDF, on gère l'envoi et la récolte d'avis." },
@@ -302,11 +344,12 @@ export default function LandingPage() {
               <ul className="space-y-3 mb-8">
                 {[
                   { text: "Tout le plan Gratuit +", highlight: true },
+                  { text: "Agenda + réservation en ligne 24h/24", highlight: false },
+                  { text: "Rappels RDV automatiques (anti no-show)", highlight: false },
                   { text: "Facturation patients Factur-X", highlight: false },
                   { text: "Avis Google automatiques (+300%)", highlight: false },
-                  { text: "Dossiers patients sécurisés", highlight: false },
-                  { text: "Dashboard & analytics temps réel", highlight: false },
-                  { text: "Multi-cabinets & relances auto", highlight: false },
+                  { text: "Dossiers patients & anamnèse", highlight: false },
+                  { text: "Dashboard, multi-cabinets & relances", highlight: false },
                 ].map((item, i) => (
                   <li key={i} className={`flex items-center gap-2 text-sm ${item.highlight ? 'font-bold text-[#a9825a]' : 'font-medium text-[#3e2f25]'}`}>
                     <CheckCircle2 size={18} className="text-[#a9825a] shrink-0" />{item.text}
@@ -322,17 +365,93 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 7bis. COMPARATEUR — l'alternative Doctolib pour les praticiens bien-être */}
+      <section id="comparatif" className="py-16 md:py-24 bg-white border-t border-[#f0e6de] px-4 md:px-6 scroll-mt-20">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-black text-[#a9825a] uppercase tracking-widest mb-3">Exclu de Doctolib depuis 2023 ?</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#3e2f25] tracking-tighter mb-4">
+              L&apos;alternative complète.<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4b494] to-[#a9825a]">À moitié prix.</span>
+            </h2>
+            <p className="text-[#7a6a5f] font-medium text-base md:text-lg max-w-2xl mx-auto">
+              Doctolib est réservé aux professions RPPS/ADELI. Les alternatives pour praticiens bien-être coûtent 30 à 40€/mois — sans facturation conforme 2026, et sans machine à avis Google.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-[#f0e6de] shadow-sm">
+            <table className="w-full min-w-[640px] text-sm bg-white">
+              <thead>
+                <tr className="border-b border-[#f0e6de]">
+                  <th className="text-left p-4 font-black text-[#7a6a5f] text-xs uppercase tracking-widest"></th>
+                  <th className="p-4 bg-[#fdf2e9]/60">
+                    <span className="block font-black text-[#3e2f25] text-base">FacturAvis</span>
+                    <span className="block text-[#a9825a] font-black text-xl mt-1">19€<span className="text-xs font-bold text-[#7a6a5f]">/mois TTC</span></span>
+                  </th>
+                  <th className="p-4">
+                    <span className="block font-bold text-[#7a6a5f]">Crenolibre</span>
+                    <span className="block text-[#3e2f25] font-black text-lg mt-1">~36€<span className="text-xs font-medium text-[#7a6a5f]">/mois TTC</span></span>
+                  </th>
+                  <th className="p-4">
+                    <span className="block font-bold text-[#7a6a5f]">Resalib</span>
+                    <span className="block text-[#3e2f25] font-black text-lg mt-1">~30€<span className="text-xs font-medium text-[#7a6a5f]">/mois TTC</span></span>
+                  </th>
+                  <th className="p-4">
+                    <span className="block font-bold text-[#7a6a5f]">Therapeutes.com</span>
+                    <span className="block text-[#3e2f25] font-black text-lg mt-1">~40€<span className="text-xs font-medium text-[#7a6a5f]">/mois TTC</span></span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { feat: "Prise de RDV en ligne 24h/24", fa: true, others: [true, true, true] },
+                  { feat: "Rappels automatiques anti no-show", fa: true, others: [true, true, true] },
+                  { feat: "Avis Google automatiques (+300%)", fa: true, others: [false, false, false] },
+                  { feat: "Facturation conforme Factur-X 2026", fa: true, others: [false, false, false] },
+                  { feat: "Réception factures fournisseurs (DGFiP)", fa: true, others: [false, false, false] },
+                  { feat: "Dossiers patients & anamnèse", fa: true, others: [true, false, false] },
+                  { feat: "Consultation en visio", fa: true, others: [true, false, false] },
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-[#f0e6de] last:border-b-0">
+                    <td className="p-4 font-bold text-[#3e2f25]">{row.feat}</td>
+                    <td className="p-4 text-center bg-[#fdf2e9]/60">
+                      <CheckCircle2 size={20} className="text-green-600 inline" />
+                    </td>
+                    {row.others.map((has, j) => (
+                      <td key={j} className="p-4 text-center">
+                        {has ? <CheckCircle2 size={20} className="text-gray-300 inline" /> : <X size={20} className="text-red-300 inline" />}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-[#7a6a5f] mt-3 text-center font-medium">
+            Tarifs publics constatés en juillet 2026 sur les sites des éditeurs (Crenolibre Pro 29,95€ HT, Resalib 29,99€ TTC, Therapeutes.com 39,90€ TTC). Fonctionnalités selon leurs pages tarifs.
+          </p>
+
+          <div className="text-center mt-8">
+            <Link href="/inscription" className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d4b494] to-[#a9825a] text-white px-8 py-4 rounded-2xl font-black text-base hover:opacity-90 transition-all shadow-lg shadow-[#a9825a]/20">
+              Essayer FacturAvis gratuitement <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* 8. FAQ — juste après le pricing */}
       <section className="py-16 md:py-20 bg-white border-t border-[#f0e6de] px-4 md:px-6">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-black text-center text-[#3e2f25] mb-10 tracking-tight">Questions fréquentes</h2>
           <div className="space-y-4">
             {[
-              { q: "Est-ce que FacturAvis remplace Doctolib ?", a: "Non, c'est complémentaire. Doctolib gère l'agenda, FacturAvis gère tout ce qui se passe APRÈS la séance : dossier patient, édition de la facture conforme, comptabilité et réputation Google." },
+              { q: "Est-ce que FacturAvis remplace Doctolib ?", a: "Oui, et il va plus loin. Depuis 2023, Doctolib est réservé aux professions RPPS/ADELI : les praticiens bien-être en sont exclus. FacturAvis vous donne l'agenda avec réservation en ligne par vos patients, les rappels automatiques, les dossiers patients, la facturation conforme 2026 ET les avis Google automatiques — à 19€/mois." },
               { q: "Je suis exonéré de TVA, suis-je concerné par la réforme 2026 ?", a: "Oui, partiellement. Vous n'êtes pas obligé d'émettre des factures électroniques à vos patients. En revanche, vous devez pouvoir recevoir celles de vos fournisseurs dès septembre 2026. FacturAvis vous met en conformité automatiquement et gratuitement." },
               { q: "Puis-je l'utiliser si j'ai déjà un logiciel de facturation ?", a: "Oui ! Importez simplement votre PDF existant sur FacturAvis. On s'occupe de l'envoi au patient et de la récolte d'avis Google. Vous gardez votre logiciel actuel." },
               { q: "Comment FacturAvis génère-t-il des avis Google ?", a: "Quand le patient clique pour télécharger sa facture, FacturAvis l'invite à noter votre cabinet sur Google Maps. Aucune contrepartie n'est offerte : l'invitation est 100% organique, seul le timing (juste après la séance) fait la différence. Résultat : +300% d'avis en moyenne." },
               { q: "C'est vraiment gratuit pour la réception fournisseurs ?", a: "Oui, sans condition et sans limite dans le temps. Pas de carte bancaire demandée. La réception automatique de vos factures fournisseurs via notre Plateforme Agréée DGFiP est 100% gratuite pour toujours." },
+              { q: "Comment mes patients réservent-ils un rendez-vous en ligne ?", a: "Vous partagez votre lien de réservation personnel (site, Instagram, WhatsApp...). Le patient choisit un créneau réellement libre selon vos horaires, en cabinet ou en visio. Il reçoit une confirmation avec fichier calendrier, un rappel automatique 24h avant, et peut annuler ou reprogrammer lui-même en ligne." },
+              { q: "Puis-je proposer des consultations en visio ?", a: "Oui. Ajoutez votre lien de visioconférence dans vos réglages : vos patients peuvent choisir une consultation à distance lors de la réservation, et le lien leur est envoyé automatiquement par email." },
             ].map((faq, i) => (
               <div key={i} className="p-6 md:p-8 bg-[#fcfaf8] rounded-2xl border border-[#f0e6de] hover:border-[#d4b494] hover:shadow-md transition-all">
                 <h3 className="font-black text-base md:text-lg mb-2 text-[#3e2f25]">{faq.q}</h3>
