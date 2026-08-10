@@ -74,6 +74,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
+  const [onlyGoogleClicks, setOnlyGoogleClicks] = useState(false);
 
   // ── Pagination state ──
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,10 +134,11 @@ export default function Dashboard() {
     setCurrentPage(1);
   };
 
-  const clearFilters = () => { setSearchTerm(''); setDateDebut(''); setDateFin(''); setCurrentPage(1); };
+  const clearFilters = () => { setSearchTerm(''); setDateDebut(''); setDateFin(''); setOnlyGoogleClicks(false); setCurrentPage(1); };
 
   const handleSearchTermChange = (val: string) => { setSearchTerm(val); setCurrentPage(1); };
   const handleDateFinChange = (val: string) => { setDateFin(val); setCurrentPage(1); };
+  const handleToggleGoogleClicks = () => { setOnlyGoogleClicks((v) => !v); setCurrentPage(1); };
 
   // ── Data fetching ──
 
@@ -386,7 +388,8 @@ export default function Dashboard() {
     const dateFacture = new Date(f.created_at).getTime();
     const matchDebut = dateDebut ? dateFacture >= new Date(dateDebut).getTime() : true;
     const matchFin = dateFin ? dateFacture <= new Date(dateFin).getTime() + 86400000 : true;
-    return matchRecherche && matchDebut && matchFin;
+    const matchGoogleClick = onlyGoogleClicks ? !!f.avis_google_click_at : true;
+    return matchRecherche && matchDebut && matchFin && matchGoogleClick;
   });
 
   const totalPages = Math.ceil(facturesFiltrees.length / ITEMS_PER_PAGE);
@@ -649,6 +652,8 @@ export default function Dashboard() {
                 setDateFin={handleDateFinChange}
                 setFilterToday={setFilterToday}
                 setFilterMonth={setFilterMonth}
+                onlyGoogleClicks={onlyGoogleClicks}
+                onToggleGoogleClicks={handleToggleGoogleClicks}
                 clearFilters={clearFilters}
                 exportCSV={exportCSV}
                 exportFEC={exportFEC}

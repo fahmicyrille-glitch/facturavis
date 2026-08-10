@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  Search, Calendar, Download, X, Edit, Copy, Star, Ban, FileText, Eye,
+  Search, Calendar, Download, X, Edit, Copy, Star, Ban, FileText, Eye, MapPin,
 } from 'lucide-react';
 import type { Cabinet, Facture } from '@/lib/types';
 
@@ -16,6 +16,8 @@ interface HistoriqueTableProps {
   setDateFin: (v: string) => void;
   setFilterToday: () => void;
   setFilterMonth: () => void;
+  onlyGoogleClicks: boolean;
+  onToggleGoogleClicks: () => void;
   clearFilters: () => void;
   exportCSV: () => void;
   exportFEC: () => void;
@@ -41,6 +43,8 @@ export default function HistoriqueTable({
   setDateFin,
   setFilterToday,
   setFilterMonth,
+  onlyGoogleClicks,
+  onToggleGoogleClicks,
   clearFilters,
   exportCSV,
   exportFEC,
@@ -156,8 +160,19 @@ export default function HistoriqueTable({
             }`}>
               Ce mois-ci
             </button>
+            <button
+              onClick={onToggleGoogleClicks}
+              className={`text-xs px-3 py-1 rounded-full transition-colors border flex items-center gap-1 ${
+                onlyGoogleClicks
+                  ? 'bg-green-600 text-white border-green-600 font-bold'
+                  : 'bg-white border-gray-200 text-gray-600 hover:text-green-600 hover:border-green-300'
+              }`}
+              title="N'afficher que les patients ayant cliqué vers l'avis Google"
+            >
+              <MapPin size={11} /> Clics Google
+            </button>
 
-            {(searchTerm || dateDebut || dateFin) && (
+            {(searchTerm || dateDebut || dateFin || onlyGoogleClicks) && (
               <button onClick={clearFilters} className="text-xs flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-full transition-colors ml-auto">
                 <X size={12} className="mr-1" /> Effacer les filtres
               </button>
@@ -248,6 +263,14 @@ export default function HistoriqueTable({
                             {facture.commentaire && (
                               <span className="text-[10px] text-gray-400 truncate max-w-[110px] italic" title={facture.commentaire}>
                                 &ldquo;{facture.commentaire}&rdquo;
+                              </span>
+                            )}
+                            {facture.avis_google_click_at && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-md w-fit"
+                                title={`A cliqué vers l'avis Google le ${new Date(facture.avis_google_click_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} à ${new Date(facture.avis_google_click_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
+                              >
+                                <MapPin size={10} /> A cliqué
                               </span>
                             )}
                           </div>
