@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin, escapeHtml, isAllowedStorageUrl } from '@/lib/supabase-admin';
+import { env } from '@/lib/env';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -192,6 +193,11 @@ async function relancerAvisGoogle(): Promise<number> {
     // Sans lien Google configuré, aucune relance possible
     if (!lienAvis.startsWith('http')) continue;
 
+    // Lien tracké : un email statique ne peut pas exécuter le sendBeacon utilisé sur la
+    // page facture, donc on passe par une redirection serveur qui pose avis_google_click_at
+    // avant de renvoyer vers Google (cf. GET /api/avis-click).
+    const lienAvisTracke = `${env.NEXT_PUBLIC_SITE_URL}/api/avis-click?facture=${facture.id}`;
+
     const { data: therapeute } = await supabaseAdmin
       .from('therapeutes')
       .select('nom, titre, telephone, email, logo_url')
@@ -244,7 +250,7 @@ async function relancerAvisGoogle(): Promise<number> {
             <p>Si vous avez un instant, <strong>partager ce ressenti en avis Google</strong> aiderait énormément le cabinet à se faire connaître et à accompagner de nouveaux patients. Il vous suffit d'un clic&nbsp;:</p>
 
             <div class="cta-container">
-              <a href="${lienAvis}" class="cta-button">⭐ Laisser mon avis Google</a>
+              <a href="${lienAvisTracke}" class="cta-button">⭐ Laisser mon avis Google</a>
             </div>
 
             <p style="font-size: 14px; color: #7a6a5f;">Un simple mot suffit — votre soutien compte vraiment.</p>
