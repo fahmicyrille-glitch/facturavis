@@ -186,7 +186,8 @@ export async function POST(request: Request) {
       nomTherapeute, titreTherapeute, telephone, emailTherapeute,
       patientNom, patientAdresse, patientSecu, acte, prix,
       numFacture, adresseCabinet, siteWeb, adeli, siret,
-      codeApe, logoUrl, signatureUrl, modeReglement, lignes
+      codeApe, logoUrl, signatureUrl, modeReglement, lignes,
+      mentionFacture1, mentionFacture2,
     } = body;
 
     // Multi-line support with backwards compatibility
@@ -241,6 +242,18 @@ export async function POST(request: Request) {
     drawLine("Tel", telephone);
     drawLine("ADELI", adeli);
     drawLine("APE", codeApe);
+
+    // Deux lignes libres (ex: conventionnement, assurance RCP...), l'une au-dessus de
+    // l'autre, juste en dessous des coordonnées du praticien.
+    const mentionMaxWidth = (width - 240) - 50 - 10;
+    [mentionFacture1, mentionFacture2].forEach((mention) => {
+      if (mention && mention.trim() !== "") {
+        wrapText(mention.trim(), fontRegular, 10, mentionMaxWidth).forEach((line) => {
+          page.drawText(line, { x: 50, y: practitionerY, size: 10, font: fontRegular, color: colorBlack });
+          practitionerY -= 15;
+        });
+      }
+    });
 
     // 3. INFOS PATIENT & NUMÉRO FACTURE
     let patientY = height - 200;

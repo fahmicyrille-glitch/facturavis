@@ -39,6 +39,8 @@ function SettingsContent() {
   const [adeli, setAdeli] = useState('');
   const [siteWeb, setSiteWeb] = useState('');
   const [comptableEmail, setComptableEmail] = useState('');
+  const [mentionFacture1, setMentionFacture1] = useState('');
+  const [mentionFacture2, setMentionFacture2] = useState('');
   const [signatureUrl, setSignatureUrl] = useState('');
 
   // Cabinets state
@@ -112,6 +114,8 @@ function SettingsContent() {
         setAdeli(profileData.adeli || '');
         setSiteWeb(profileData.site_web || '');
         setComptableEmail(profileData.comptable_email || '');
+        setMentionFacture1(profileData.mention_facture_1 || '');
+        setMentionFacture2(profileData.mention_facture_2 || '');
         setSignatureUrl(profileData.signature_url || '');
         setSubscriptionPlan(profileData.plan || null);
         setSubscriptionStatus(profileData.subscription_status || null);
@@ -337,6 +341,7 @@ function SettingsContent() {
         siret: cleanSiret, code_ape: codeApe.trim().toUpperCase(),
         adeli: cleanAdeli, site_web: siteWeb.trim(), signature_url: signatureUrl,
         comptable_email: comptableEmail.trim() || null,
+        mention_facture_1: mentionFacture1.trim(), mention_facture_2: mentionFacture2.trim(),
       })
       .eq('id', userId);
     setSaving(false);
@@ -848,6 +853,8 @@ function SettingsContent() {
           adeli={adeli} setAdeli={setAdeli}
           siteWeb={siteWeb} setSiteWeb={setSiteWeb}
           comptableEmail={comptableEmail} setComptableEmail={setComptableEmail}
+          mentionFacture1={mentionFacture1} setMentionFacture1={setMentionFacture1}
+          mentionFacture2={mentionFacture2} setMentionFacture2={setMentionFacture2}
           logoUrl={logoUrl} signatureUrl={signatureUrl}
           uploadingLogo={uploadingLogo} uploadingSig={uploadingSig}
           onLogoUpload={handleLogoUpload} onDeleteLogo={handleDeleteLogo}

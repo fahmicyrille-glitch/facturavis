@@ -39,6 +39,9 @@ export interface Therapeute {
   instructions_acces?: string;
   calendar_feed_token?: string;
   created_at?: string;
+  // Deux lignes libres imprimées sur la facture, sous les coordonnées du praticien.
+  mention_facture_1?: string;
+  mention_facture_2?: string;
 }
 
 export interface Anamnese {

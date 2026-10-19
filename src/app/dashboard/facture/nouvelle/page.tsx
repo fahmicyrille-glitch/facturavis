@@ -233,6 +233,8 @@ function NouvelleFactureContent() {
         codeApe: profile?.code_ape,
         adeli: profile?.adeli,
         siteWeb: profile?.site_web,
+        mentionFacture1: profile?.mention_facture_1,
+        mentionFacture2: profile?.mention_facture_2,
         logoUrl: profile?.logo_url,
         signatureUrl: profile?.signature_url
       };
@@ -319,6 +321,8 @@ function NouvelleFactureContent() {
         codeApe: profile?.code_ape,
         adeli: profile?.adeli,
         siteWeb: profile?.site_web,
+        mentionFacture1: profile?.mention_facture_1,
+        mentionFacture2: profile?.mention_facture_2,
         logoUrl: profile?.logo_url,
         signatureUrl: profile?.signature_url
       };

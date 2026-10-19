@@ -25,6 +25,10 @@ interface ProfileFormProps {
   setSiteWeb: (v: string) => void;
   comptableEmail: string;
   setComptableEmail: (v: string) => void;
+  mentionFacture1: string;
+  setMentionFacture1: (v: string) => void;
+  mentionFacture2: string;
+  setMentionFacture2: (v: string) => void;
   logoUrl: string;
   signatureUrl: string;
   uploadingLogo: boolean;
@@ -48,6 +52,8 @@ export default function ProfileForm({
   adeli, setAdeli,
   siteWeb, setSiteWeb,
   comptableEmail, setComptableEmail,
+  mentionFacture1, setMentionFacture1,
+  mentionFacture2, setMentionFacture2,
   logoUrl, signatureUrl,
   uploadingLogo, uploadingSig,
   onLogoUpload, onDeleteLogo,
@@ -163,6 +169,17 @@ export default function ProfileForm({
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Site Web (Optionnel)</label>
             <input type="url" placeholder="https://..." className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={siteWeb} onChange={(e) => setSiteWeb(e.target.value)} />
+          </div>
+
+          <div className="md:col-span-2 pt-2 border-t border-gray-100">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mentions sur la facture (Optionnel)</label>
+            <p className="text-xs text-gray-400 mb-2">
+              Deux lignes libres, affichées sur la facture juste en dessous de vos coordonnées (ex : mention de conventionnement, numéro d&apos;agrément, assurance RCP…).
+            </p>
+            <div className="space-y-2">
+              <input type="text" placeholder="Ligne 1" maxLength={120} className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={mentionFacture1} onChange={(e) => setMentionFacture1(e.target.value)} />
+              <input type="text" placeholder="Ligne 2" maxLength={120} className="w-full border rounded-md py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500/20" value={mentionFacture2} onChange={(e) => setMentionFacture2(e.target.value)} />
+            </div>
           </div>
 
           <div className="md:col-span-2 pt-2 border-t border-gray-100">
