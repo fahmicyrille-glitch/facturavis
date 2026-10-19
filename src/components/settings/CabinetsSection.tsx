@@ -60,8 +60,8 @@ export default function CabinetsSection({
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="font-bold text-gray-800 flex items-center"><MapPin size={16} className="mr-2 text-blue-500 shrink-0" /> {cab.nom}</div>
-                  <div className="text-xs text-blue-500 flex items-center mt-1 truncate max-w-[200px] sm:max-w-md">
-                    <LinkIcon size={12} className="mr-1 shrink-0" /> {cab.lien_avis_google}
+                  <div className={`text-xs flex items-center mt-1 truncate max-w-[200px] sm:max-w-md ${cab.lien_avis_google ? 'text-blue-500' : 'text-gray-400 italic'}`}>
+                    <LinkIcon size={12} className="mr-1 shrink-0" /> {cab.lien_avis_google || "Aucun lien Google renseigné — avis Google non proposé"}
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -82,7 +82,7 @@ export default function CabinetsSection({
         <h3 className="font-bold text-blue-800 mb-3 text-sm uppercase tracking-wider">Ajouter un nouveau lieu</h3>
         <form onSubmit={onAddCabinet} className="flex flex-col md:flex-row gap-3">
           <input type="text" required placeholder="Nom (ex: Cabinet de Sevres)" className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newCabinetNom} onChange={(e) => setNewCabinetNom(e.target.value)} />
-          <input type="url" required placeholder="Lien Google Avis" className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newCabinetLink} onChange={(e) => setNewCabinetLink(e.target.value)} />
+          <input type="url" placeholder="Lien Google Avis (optionnel)" className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={newCabinetLink} onChange={(e) => setNewCabinetLink(e.target.value)} />
           <button type="submit" disabled={addingCabinet} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-all flex items-center justify-center min-w-[100px]">
             {addingCabinet ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} className="mr-1" /> Ajouter</>}
           </button>

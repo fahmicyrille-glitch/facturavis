@@ -446,7 +446,7 @@ function SettingsContent() {
   // --- CABINETS ---
   const handleAddCabinet = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCabinetNom.trim() || !newCabinetLink.trim() || !userId) return;
+    if (!newCabinetNom.trim() || !userId) return;
     setAddingCabinet(true);
     const { data, error } = await supabase.from('cabinets')
       .insert([{ therapeute_id: userId, nom: newCabinetNom.trim(), lien_avis_google: newCabinetLink.trim() }])
